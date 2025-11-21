@@ -1,1221 +1,11 @@
-// Notification Permission
-document.getElementById('notification-btn').addEventListener('click', function() {
-    if ('Notification' in window) {
-        Notification.requestPermission().then(function(permission) {
-            if (permission === 'granted') {
-                alert('Notifications enabled! You will receive reminders for your health goals.');
-                this.textContent = 'Notifications Enabled';
-                this.disabled = true;
-            } else {
-                alert('Notifications disabled. You can enable them later in your browser settings.');
-            }
-        });
-    } else {
-        alert('This browser does not support notifications.');
-    }
-});
-
-// Tab Navigation
-const navTabs = document.querySelectorAll('.nav-tabs a');
-const tabContents = document.querySelectorAll('.tab-content');
-
-navTabs.forEach(tab => {
-    tab.addEventListener('click', (e) => {
-        e.preventDefault();
-        const targetTab = tab.dataset.tab;
-        
-        // Update active tab
-        navTabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        
-        // Show target tab content
-        tabContents.forEach(content => {
-            content.classList.remove('active');
-            if (content.id === targetTab) {
-                content.classList.add('active');
-            }
-        });
-    });
-});
-
-// HomeBase Navigation
-const homebaseNav = document.querySelectorAll('.homebase-nav a');
-const homebaseSections = document.querySelectorAll('.homebase-section');
-
-homebaseNav.forEach(tab => {
-    tab.addEventListener('click', (e) => {
-        e.preventDefault();
-        const targetSection = tab.dataset.section;
-        
-        // Update active tab
-        homebaseNav.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        
-        // Show target section
-        homebaseSections.forEach(section => {
-            section.classList.remove('active');
-            if (section.id === targetSection) {
-                section.classList.add('active');
-            }
-        });
-    });
-});
-
-// LifeLoop Navigation
-const lifeloopNav = document.querySelectorAll('.lifeloop-nav a');
-const lifeloopSections = document.querySelectorAll('.lifeloop-section');
-
-lifeloopNav.forEach(tab => {
-    tab.addEventListener('click', (e) => {
-        e.preventDefault();
-        const targetSection = tab.dataset.section;
-        
-        // Update active tab
-        lifeloopNav.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        
-        // Show target section
-        lifeloopSections.forEach(section => {
-            section.classList.remove('active');
-            if (section.id === targetSection) {
-                section.classList.add('active');
-            }
-        });
-    });
-});
-
-// TaskForge Navigation
-const taskforgeNav = document.querySelectorAll('.taskforge-nav a');
-const taskforgeSections = document.querySelectorAll('.taskforge-section');
-
-taskforgeNav.forEach(tab => {
-    tab.addEventListener('click', (e) => {
-        e.preventDefault();
-        const targetSection = tab.dataset.section;
-        
-        // Update active tab
-        taskforgeNav.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        
-        // Show target section
-        taskforgeSections.forEach(section => {
-            section.classList.remove('active');
-            if (section.id === targetSection) {
-                section.classList.add('active');
-            }
-        });
-    });
-});
-
-// EduPlan Navigation
-const eduplanNav = document.querySelectorAll('.eduplan-nav a');
-const eduplanSections = document.querySelectorAll('.eduplan-section');
-
-eduplanNav.forEach(tab => {
-    tab.addEventListener('click', (e) => {
-        e.preventDefault();
-        const targetSection = tab.dataset.section;
-        
-        // Update active tab
-        eduplanNav.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        
-        // Show target section
-        eduplanSections.forEach(section => {
-            section.classList.remove('active');
-            if (section.id === targetSection) {
-                section.classList.add('active');
-            }
-        });
-    });
-});
-
-// Water Tracker
-let waterGoal = 8;
-let waterConsumed = 0;
-
-document.getElementById('increase-goal').addEventListener('click', function() {
-    waterGoal++;
-    updateWaterGoal();
-});
-
-document.getElementById('decrease-goal').addEventListener('click', function() {
-    if (waterGoal > 1) {
-        waterGoal--;
-        updateWaterGoal();
-    }
-});
-
-document.getElementById('add-glass').addEventListener('click', function() {
-    waterConsumed++;
-    updateWaterDisplay();
-    saveWaterData();
-});
-
-document.getElementById('reset-water').addEventListener('click', function() {
-    waterConsumed = 0;
-    updateWaterDisplay();
-    saveWaterData();
-});
-
-// Water cups in dashboard
-document.querySelectorAll('.cup').forEach(cup => {
-    cup.addEventListener('click', function() {
-        const cupNumber = parseInt(this.dataset.cup);
-        waterConsumed = cupNumber;
-        updateWaterDisplay();
-        saveWaterData();
-    });
-});
-
-function updateWaterGoal() {
-    document.getElementById('water-goal').textContent = waterGoal;
-    document.getElementById('water-target').textContent = waterGoal;
-    updateWaterDisplay();
-    saveWaterData();
-}
-
-function updateWaterDisplay() {
-    const percentage = Math.min(100, (waterConsumed / waterGoal) * 100);
-    
-    // Update dashboard
-    document.getElementById('water-today').textContent = `${waterConsumed}/${waterGoal} glasses`;
-    document.getElementById('water-progress').style.width = `${percentage}%`;
-    
-    // Update water tracker tab
-    document.getElementById('water-consumed').textContent = waterConsumed;
-    document.getElementById('water-percentage').textContent = `${percentage.toFixed(0)}%`;
-    document.getElementById('water-fill').style.height = `${percentage}%`;
-    
-    // Update cups in dashboard
-    document.querySelectorAll('.cup').forEach((cup, index) => {
-        if (index < waterConsumed) {
-            cup.classList.add('drank');
-        } else {
-            cup.classList.remove('drank');
-        }
-    });
-}
-
-function saveWaterData() {
-    const today = new Date().toDateString();
-    const waterData = {
-        date: today,
-        consumed: waterConsumed,
-        goal: waterGoal
-    };
-    
-    let allWaterData = JSON.parse(localStorage.getItem('vitalsyncWater')) || {};
-    allWaterData[today] = waterData;
-    localStorage.setItem('vitalsyncWater', JSON.stringify(allWaterData));
-    
-    updateWaterHistory();
-}
-
-function loadWaterData() {
-    const today = new Date().toDateString();
-    const allWaterData = JSON.parse(localStorage.getItem('vitalsyncWater')) || {};
-    
-    if (allWaterData[today]) {
-        waterConsumed = allWaterData[today].consumed;
-        waterGoal = allWaterData[today].goal;
-    }
-    
-    updateWaterDisplay();
-    updateWaterHistory();
-}
-
-function updateWaterHistory() {
-    const allWaterData = JSON.parse(localStorage.getItem('vitalsyncWater')) || {};
-    const historyBody = document.getElementById('water-history-body');
-    
-    let historyHTML = '';
-    const sortedDates = Object.keys(allWaterData).sort((a, b) => new Date(b) - new Date(a));
-    
-    sortedDates.slice(0, 7).forEach(date => {
-        const data = allWaterData[date];
-        const percentage = Math.min(100, (data.consumed / data.goal) * 100);
-        const formattedDate = new Date(date).toLocaleDateString();
-        
-        historyHTML += `
-            <tr>
-                <td>${formattedDate}</td>
-                <td>${data.consumed}/${data.goal}</td>
-                <td>${percentage.toFixed(0)}%</td>
-            </tr>
-        `;
-    });
-    
-    historyBody.innerHTML = historyHTML;
-}
-
-// Workout Logger
-document.getElementById('workout-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const workout = {
-        id: Date.now(),
-        type: document.getElementById('workout-type').value,
-        name: document.getElementById('workout-name').value,
-        duration: parseInt(document.getElementById('workout-duration').value),
-        calories: document.getElementById('workout-calories').value ? parseInt(document.getElementById('workout-calories').value) : null,
-        notes: document.getElementById('workout-notes').value,
-        date: new Date().toISOString()
-    };
-    
-    saveWorkout(workout);
-    this.reset();
-});
-
-function saveWorkout(workout) {
-    let workouts = JSON.parse(localStorage.getItem('vitalsyncWorkouts')) || [];
-    workouts.push(workout);
-    localStorage.setItem('vitalsyncWorkouts', JSON.stringify(workouts));
-    
-    updateWorkoutDisplay();
-}
-
-function updateWorkoutDisplay() {
-    const workouts = JSON.parse(localStorage.getItem('vitalsyncWorkouts')) || [];
-    const workoutList = document.getElementById('workout-list');
-    const period = document.getElementById('workout-period').value;
-    
-    // Filter workouts by period
-    let filteredWorkouts = workouts;
-    const now = new Date();
-    
-    if (period === 'week') {
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        filteredWorkouts = workouts.filter(w => new Date(w.date) >= weekAgo);
-    } else if (period === 'month') {
-        const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-        filteredWorkouts = workouts.filter(w => new Date(w.date) >= monthAgo);
-    }
-    
-    // Update stats
-    const totalWorkouts = filteredWorkouts.length;
-    const totalDuration = filteredWorkouts.reduce((sum, w) => sum + w.duration, 0);
-    const totalCalories = filteredWorkouts.reduce((sum, w) => sum + (w.calories || 0), 0);
-    
-    document.getElementById('total-workouts').textContent = totalWorkouts;
-    document.getElementById('total-duration').textContent = `${totalDuration} min`;
-    document.getElementById('total-calories').textContent = totalCalories;
-    
-    // Update workout list
-    let workoutHTML = '';
-    
-    filteredWorkouts.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(workout => {
-        const date = new Date(workout.date).toLocaleDateString();
-        
-        workoutHTML += `
-            <div class="workout-item">
-                <div class="workout-item-header">
-                    <div class="workout-name">${workout.name}</div>
-                    <div class="workout-type">${workout.type}</div>
-                </div>
-                <div class="workout-details">
-                    <span>${workout.duration} min</span>
-                    ${workout.calories ? `<span>${workout.calories} cal</span>` : ''}
-                    <span>${date}</span>
-                </div>
-                ${workout.notes ? `<div class="workout-notes">${workout.notes}</div>` : ''}
-            </div>
-        `;
-    });
-    
-    workoutList.innerHTML = workoutHTML;
-    
-    // Update dashboard
-    const thisWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const weekWorkouts = workouts.filter(w => new Date(w.date) >= thisWeek).length;
-    document.getElementById('workouts-week').textContent = `${weekWorkouts} workouts`;
-}
-
-document.getElementById('workout-period').addEventListener('change', updateWorkoutDisplay);
-
-// Habit Tracker
-document.getElementById('habit-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const habit = {
-        id: Date.now(),
-        name: document.getElementById('habit-name').value,
-        category: document.getElementById('habit-category').value,
-        frequency: document.getElementById('habit-frequency').value,
-        reminder: document.getElementById('habit-reminder').value,
-        created: new Date().toISOString(),
-        completions: []
-    };
-    
-    saveHabit(habit);
-    this.reset();
-});
-
-function saveHabit(habit) {
-    let habits = JSON.parse(localStorage.getItem('vitalsyncHabits')) || [];
-    habits.push(habit);
-    localStorage.setItem('vitalsyncHabits', JSON.stringify(habits));
-    
-    updateHabitDisplay();
-}
-
-function updateHabitDisplay() {
-    const habits = JSON.parse(localStorage.getItem('vitalsyncHabits')) || [];
-    const habitsGrid = document.getElementById('habits-grid');
-    const todayHabitsList = document.getElementById('today-habits-list');
-    
-    // Update dashboard
-    const today = new Date().toDateString();
-    let todayCompleted = 0;
-    let todayTotal = 0;
-    
-    let todayHabitsHTML = '';
-    let habitsHTML = '';
-    
-    habits.forEach(habit => {
-        const isTodayCompleted = habit.completions.includes(today);
-        const habitElement = `
-            <div class="habit-item">
-                <div class="habit-name">${habit.name}</div>
-                <div class="habit-category">${habit.category}</div>
-                <div class="habit-actions">
-                    <div class="habit-check ${isTodayCompleted ? 'checked' : ''}" data-habit-id="${habit.id}">
-                        ${isTodayCompleted ? '✓' : ''}
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        habitsHTML += habitElement;
-        
-        if (habit.frequency === 'daily') {
-            todayTotal++;
-            if (isTodayCompleted) todayCompleted++;
-            
-            todayHabitsHTML += `
-                <div class="habit-item">
-                    <div class="habit-name">${habit.name}</div>
-                    <div class="habit-actions">
-                        <div class="habit-check ${isTodayCompleted ? 'checked' : ''}" data-habit-id="${habit.id}">
-                            ${isTodayCompleted ? '✓' : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-    });
-    
-    habitsGrid.innerHTML = habitsHTML;
-    todayHabitsList.innerHTML = todayHabitsHTML;
-    
-    // Update dashboard stats
-    document.getElementById('habits-today').textContent = `${todayCompleted}/${todayTotal} habits`;
-    const progressPercentage = todayTotal > 0 ? (todayCompleted / todayTotal) * 100 : 0;
-    document.getElementById('habits-progress').style.width = `${progressPercentage}%`;
-    
-    // Update habit stats
-    document.getElementById('today-progress').textContent = `${todayCompleted}/${todayTotal}`;
-    
-    // Add event listeners to habit checkboxes
-    document.querySelectorAll('.habit-check').forEach(check => {
-        check.addEventListener('click', function() {
-            const habitId = parseInt(this.dataset.habitId);
-            toggleHabitCompletion(habitId);
-        });
-    });
-}
-
-function toggleHabitCompletion(habitId) {
-    const habits = JSON.parse(localStorage.getItem('vitalsyncHabits')) || [];
-    const today = new Date().toDateString();
-    
-    const habitIndex = habits.findIndex(h => h.id === habitId);
-    if (habitIndex !== -1) {
-        const habit = habits[habitIndex];
-        const completionIndex = habit.completions.indexOf(today);
-        
-        if (completionIndex === -1) {
-            habit.completions.push(today);
-        } else {
-            habit.completions.splice(completionIndex, 1);
-        }
-        
-        localStorage.setItem('vitalsyncHabits', JSON.stringify(habits));
-        updateHabitDisplay();
-    }
-}
-
-// Medication Tracker
-document.getElementById('add-time').addEventListener('click', function() {
-    const timesContainer = document.getElementById('med-times');
-    const newTimeInput = document.createElement('input');
-    newTimeInput.type = 'time';
-    newTimeInput.className = 'form-control med-time';
-    newTimeInput.required = true;
-    timesContainer.appendChild(newTimeInput);
-});
-
-document.getElementById('medication-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const timeInputs = document.querySelectorAll('.med-time');
-    const times = Array.from(timeInputs).map(input => input.value).filter(time => time);
-    
-    const medication = {
-        id: Date.now(),
-        name: document.getElementById('med-name').value,
-        dosage: document.getElementById('med-dosage').value,
-        frequency: document.getElementById('med-frequency').value,
-        times: times,
-        notes: document.getElementById('med-notes').value,
-        created: new Date().toISOString()
-    };
-    
-    saveMedication(medication);
-    this.reset();
-    
-    // Reset to one time input
-    const timesContainer = document.getElementById('med-times');
-    timesContainer.innerHTML = '<input type="time" class="form-control med-time" required>';
-});
-
-function saveMedication(medication) {
-    let medications = JSON.parse(localStorage.getItem('vitalsyncMedications')) || [];
-    medications.push(medication);
-    localStorage.setItem('vitalsyncMedications', JSON.stringify(medications));
-    
-    updateMedicationDisplay();
-}
-
-function updateMedicationDisplay() {
-    const medications = JSON.parse(localStorage.getItem('vitalsyncMedications')) || [];
-    const todayMedsList = document.getElementById('today-meds-list');
-    const medsList = document.getElementById('meds-list');
-    
-    let todayMedsHTML = '';
-    let allMedsHTML = '';
-    
-    medications.forEach(med => {
-        const medElement = `
-            <div class="med-item">
-                <div class="med-info">
-                    <h4>${med.name}</h4>
-                    <div class="med-dosage">${med.dosage}</div>
-                </div>
-                <div class="med-times">
-                    ${med.times.map(time => `
-                        <div class="med-time-item">${time}</div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-        
-        allMedsHTML += medElement;
-        
-        // For today's medications, we'd check if it's scheduled for today
-        // For simplicity, we'll show all medications with daily frequency
-        if (med.frequency === 'once' || med.frequency === 'twice' || med.frequency === 'thrice') {
-            todayMedsHTML += medElement;
-        }
-    });
-    
-    todayMedsList.innerHTML = todayMedsHTML;
-    medsList.innerHTML = allMedsHTML;
-    
-    // Update dashboard
-    document.getElementById('meds-today').textContent = `0/${medications.filter(m => 
-        m.frequency === 'once' || m.frequency === 'twice' || m.frequency === 'thrice').length} taken`;
-}
-
-// Meal Planner
-document.getElementById('meal-plan-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const meal = {
-        id: Date.now(),
-        date: document.getElementById('meal-date').value,
-        type: document.getElementById('meal-type').value,
-        name: document.getElementById('meal-name').value,
-        calories: document.getElementById('meal-calories').value ? parseInt(document.getElementById('meal-calories').value) : null,
-        recipe: document.getElementById('meal-recipe').value,
-        created: new Date().toISOString()
-    };
-    
-    saveMeal(meal);
-    this.reset();
-});
-
-function saveMeal(meal) {
-    let meals = JSON.parse(localStorage.getItem('vitalsyncMeals')) || [];
-    meals.push(meal);
-    localStorage.setItem('vitalsyncMeals', JSON.stringify(meals));
-    
-    updateMealDisplay();
-}
-
-function updateMealDisplay() {
-    const meals = JSON.parse(localStorage.getItem('vitalsyncMeals')) || [];
-    const weeklyMealPlan = document.getElementById('weekly-meal-plan');
-    
-    // Group meals by date
-    const mealsByDate = {};
-    meals.forEach(meal => {
-        if (!mealsByDate[meal.date]) {
-            mealsByDate[meal.date] = [];
-        }
-        mealsByDate[meal.date].push(meal);
-    });
-    
-    // Generate weekly view (simplified - just show next 7 days)
-    let weeklyHTML = '';
-    const today = new Date();
-    
-    for (let i = 0; i < 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        const dateString = date.toISOString().split('T')[0];
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-        const dateFormatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        
-        const dayMeals = mealsByDate[dateString] || [];
-        
-        weeklyHTML += `
-            <div class="day-meals">
-                <div class="day-header">${dayName}<br>${dateFormatted}</div>
-                ${dayMeals.map(meal => `
-                    <div class="meal-item">
-                        <strong>${meal.type}:</strong> ${meal.name}
-                        ${meal.calories ? `<br>${meal.calories} cal` : ''}
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-    
-    weeklyMealPlan.innerHTML = weeklyHTML;
-    
-    // Update meal stats
-    const thisWeekMeals = meals.filter(meal => {
-        const mealDate = new Date(meal.date);
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - today.getDay());
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        
-        return mealDate >= weekStart && mealDate <= weekEnd;
-    });
-    
-    const totalCalories = thisWeekMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
-    const avgCalories = thisWeekMeals.length > 0 ? Math.round(totalCalories / thisWeekMeals.length) : 0;
-    
-    document.getElementById('avg-calories').textContent = `${avgCalories} cal`;
-    document.getElementById('planned-meals').textContent = thisWeekMeals.length;
-}
-
-// Screen Time Tracker
+// Global variables
+let screenTimeInterval;
+let screenTimeSeconds = 0;
 let screenTracking = false;
-let screenStartTime = null;
-let screenTimeToday = 0; // in minutes
+let currentWeekOffset = 0;
+let medicationAlarmAudio = null;
+let notificationTimeouts = new Map();
 
-document.getElementById('start-tracking').addEventListener('click', function() {
-    if (!screenTracking) {
-        screenTracking = true;
-        screenStartTime = new Date();
-        this.disabled = true;
-        document.getElementById('stop-tracking').disabled = false;
-        
-        // In a real app, you would start tracking actual screen time
-        // For this demo, we'll simulate with a timer
-        screenTimer = setInterval(() => {
-            screenTimeToday++;
-            updateScreenDisplay();
-        }, 1000); // Update every second for demo purposes
-    }
-});
-
-document.getElementById('stop-tracking').addEventListener('click', function() {
-    if (screenTracking) {
-        screenTracking = false;
-        document.getElementById('start-tracking').disabled = false;
-        this.disabled = true;
-        
-        if (screenTimer) {
-            clearInterval(screenTimer);
-        }
-        
-        saveScreenData();
-    }
-});
-
-document.getElementById('add-manual').addEventListener('click', function() {
-    const minutes = prompt('Enter screen time in minutes:');
-    if (minutes && !isNaN(minutes)) {
-        screenTimeToday += parseInt(minutes);
-        updateScreenDisplay();
-        saveScreenData();
-    }
-});
-
-document.getElementById('screen-goal').addEventListener('change', function() {
-    updateScreenDisplay();
-    saveScreenData();
-});
-
-function updateScreenDisplay() {
-    const hours = Math.floor(screenTimeToday / 60);
-    const minutes = screenTimeToday % 60;
-    
-    document.getElementById('screen-hours').textContent = hours;
-    document.getElementById('screen-minutes').textContent = minutes;
-    
-    // Update dashboard
-    document.getElementById('screen-today').textContent = `${hours}h ${minutes}m`;
-    
-    // Update progress
-    const goalHours = parseInt(document.getElementById('screen-goal').value);
-    const goalMinutes = goalHours * 60;
-    const percentage = Math.min(100, (screenTimeToday / goalMinutes) * 100);
-    
-    document.getElementById('screen-progress').style.width = `${percentage}%`;
-    document.getElementById('screen-goal-text').textContent = `${percentage.toFixed(0)}% of daily goal`;
-}
-
-function saveScreenData() {
-    const today = new Date().toDateString();
-    const screenData = {
-        date: today,
-        minutes: screenTimeToday,
-        goal: parseInt(document.getElementById('screen-goal').value)
-    };
-    
-    let allScreenData = JSON.parse(localStorage.getItem('vitalsyncScreen')) || {};
-    allScreenData[today] = screenData;
-    localStorage.setItem('vitalsyncScreen', JSON.stringify(allScreenData));
-}
-
-function loadScreenData() {
-    const today = new Date().toDateString();
-    const allScreenData = JSON.parse(localStorage.getItem('vitalsyncScreen')) || {};
-    
-    if (allScreenData[today]) {
-        screenTimeToday = allScreenData[today].minutes;
-        document.getElementById('screen-goal').value = allScreenData[today].goal;
-    }
-    
-    updateScreenDisplay();
-}
-
-// Sleep Tracker
-document.querySelectorAll('.quality-option').forEach(option => {
-    option.addEventListener('click', function() {
-        document.querySelectorAll('.quality-option').forEach(o => o.classList.remove('selected'));
-        this.classList.add('selected');
-        document.getElementById('sleep-quality-value').value = this.dataset.quality;
-    });
-});
-
-document.getElementById('sleep-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const bedtime = document.getElementById('bedtime').value;
-    const waketime = document.getElementById('waketime').value;
-    
-    // Calculate duration
-    const bedDate = new Date(`2000-01-01T${bedtime}`);
-    const wakeDate = new Date(`2000-01-01T${waketime}`);
-    
-    let duration = (wakeDate - bedDate) / (1000 * 60); // in minutes
-    
-    // Handle overnight sleep (if wake time is before bedtime, it's the next day)
-    if (duration < 0) {
-        duration += 24 * 60; // Add 24 hours
-    }
-    
-    const sleep = {
-        id: Date.now(),
-        date: document.getElementById('sleep-date').value,
-        bedtime: bedtime,
-        waketime: waketime,
-        duration: duration,
-        quality: parseInt(document.getElementById('sleep-quality-value').value),
-        notes: document.getElementById('sleep-notes').value
-    };
-    
-    saveSleep(sleep);
-    this.reset();
-    document.querySelectorAll('.quality-option').forEach(o => o.classList.remove('selected'));
-});
-
-function saveSleep(sleep) {
-    let sleeps = JSON.parse(localStorage.getItem('vitalsyncSleep')) || [];
-    sleeps.push(sleep);
-    localStorage.setItem('vitalsyncSleep', JSON.stringify(sleeps));
-    
-    updateSleepDisplay();
-}
-
-function updateSleepDisplay() {
-    const sleeps = JSON.parse(localStorage.getItem('vitalsyncSleep')) || [];
-    const sleepHistoryList = document.getElementById('sleep-history-list');
-    
-    // Update dashboard with last night's sleep
-    if (sleeps.length > 0) {
-        const lastSleep = sleeps[sleeps.length - 1];
-        const hours = Math.floor(lastSleep.duration / 60);
-        const minutes = lastSleep.duration % 60;
-        document.getElementById('sleep-last').textContent = `${hours}h ${minutes}m`;
-    }
-    
-    // Update sleep history
-    let historyHTML = '';
-    
-    sleeps.slice(-5).reverse().forEach(sleep => {
-        const hours = Math.floor(sleep.duration / 60);
-        const minutes = sleep.duration % 60;
-        const date = new Date(sleep.date).toLocaleDateString();
-        
-        historyHTML += `
-            <div class="sleep-item">
-                <div>${date}</div>
-                <div>${hours}h ${minutes}m</div>
-                <div>Quality: ${sleep.quality}/5</div>
-            </div>
-        `;
-    });
-    
-    sleepHistoryList.innerHTML = historyHTML;
-    
-    // Update sleep stats
-    if (sleeps.length > 0) {
-        const totalDuration = sleeps.reduce((sum, sleep) => sum + sleep.duration, 0);
-        const avgDuration = totalDuration / sleeps.length;
-        const avgHours = Math.floor(avgDuration / 60);
-        const avgMinutes = Math.round(avgDuration % 60);
-        
-        document.getElementById('avg-sleep').textContent = `${avgHours}h ${avgMinutes}m`;
-        
-        // Calculate consistency (simplified - percentage of days with sleep logged)
-        const uniqueDates = new Set(sleeps.map(s => s.date));
-        const consistency = (uniqueDates.size / 7) * 100; // Assuming a week
-        document.getElementById('sleep-consistency').textContent = `${Math.min(100, consistency).toFixed(0)}%`;
-        
-        // Find best quality
-        const bestQuality = Math.max(...sleeps.map(s => s.quality));
-        document.getElementById('best-quality').textContent = `${bestQuality}/5`;
-    }
-}
-
-// Grocery List (HomeBase)
-document.getElementById('grocery-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const item = {
-        id: Date.now(),
-        name: document.getElementById('grocery-item').value,
-        category: document.getElementById('grocery-category').value,
-        quantity: parseInt(document.getElementById('grocery-quantity').value),
-        added: new Date().toISOString()
-    };
-    
-    saveGroceryItem(item);
-    this.reset();
-});
-
-function saveGroceryItem(item) {
-    let groceries = JSON.parse(localStorage.getItem('vitalsyncGroceries')) || [];
-    groceries.push(item);
-    localStorage.setItem('vitalsyncGroceries', JSON.stringify(groceries));
-    
-    updateGroceryDisplay();
-}
-
-function updateGroceryDisplay() {
-    const groceries = JSON.parse(localStorage.getItem('vitalsyncGroceries')) || [];
-    const shoppingList = document.getElementById('shopping-list');
-    const inventoryList = document.getElementById('inventory-list');
-    
-    let shoppingHTML = '';
-    let inventoryHTML = '';
-    
-    // For demo, we'll consider all items as shopping list items
-    // In a real app, you'd have a way to move items to inventory
-    groceries.forEach(item => {
-        const itemHTML = `
-            <div class="grocery-item">
-                <div>${item.name} (${item.quantity})</div>
-                <div class="grocery-actions">
-                    <button class="btn-buy" data-id="${item.id}">Buy</button>
-                    <button class="btn-remove" data-id="${item.id}">Remove</button>
-                </div>
-            </div>
-        `;
-        
-        shoppingHTML += itemHTML;
-    });
-    
-    shoppingList.innerHTML = shoppingHTML;
-    inventoryList.innerHTML = inventoryHTML;
-    
-    // Add event listeners
-    document.querySelectorAll('.btn-buy').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = parseInt(this.dataset.id);
-            // In a real app, this would move the item to inventory
-            removeGroceryItem(id);
-        });
-    });
-    
-    document.querySelectorAll('.btn-remove').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = parseInt(this.dataset.id);
-            removeGroceryItem(id);
-        });
-    });
-}
-
-function removeGroceryItem(id) {
-    let groceries = JSON.parse(localStorage.getItem('vitalsyncGroceries')) || [];
-    groceries = groceries.filter(item => item.id !== id);
-    localStorage.setItem('vitalsyncGroceries', JSON.stringify(groceries));
-    
-    updateGroceryDisplay();
-}
-
-// Budget Tracker (HomeBase)
-document.getElementById('update-budget').addEventListener('click', function() {
-    const budget = parseInt(document.getElementById('monthly-budget').value);
-    saveBudget(budget);
-});
-
-function saveBudget(budget) {
-    localStorage.setItem('vitalsyncBudget', budget.toString());
-    updateBudgetDisplay();
-}
-
-function updateBudgetDisplay() {
-    const budget = parseInt(localStorage.getItem('vitalsyncBudget')) || 5000;
-    const groceries = JSON.parse(localStorage.getItem('vitalsyncGroceries')) || [];
-    
-    // Calculate spent (simplified - assume each item costs 100)
-    const spent = groceries.length * 100;
-    const remaining = budget - spent;
-    const percentage = Math.min(100, (spent / budget) * 100);
-    
-    document.getElementById('monthly-budget').value = budget;
-    document.getElementById('budget-spent').textContent = `₹${spent}`;
-    document.getElementById('budget-remaining').textContent = `₹${remaining}`;
-    document.getElementById('budget-progress').style.width = `${percentage}%`;
-}
-
-// To-Do List (TaskForge)
-document.getElementById('todo-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const task = {
-        id: Date.now(),
-        task: document.getElementById('todo-task').value,
-        priority: document.getElementById('todo-priority').value,
-        due: document.getElementById('todo-due').value,
-        completed: false,
-        created: new Date().toISOString()
-    };
-    
-    saveTodo(task);
-    this.reset();
-});
-
-function saveTodo(task) {
-    let todos = JSON.parse(localStorage.getItem('vitalsyncTodos')) || [];
-    todos.push(task);
-    localStorage.setItem('vitalsyncTodos', JSON.stringify(todos));
-    
-    updateTodoDisplay();
-}
-
-function updateTodoDisplay() {
-    const todos = JSON.parse(localStorage.getItem('vitalsyncTodos')) || [];
-    const todoList = document.getElementById('todo-list');
-    const completedList = document.getElementById('completed-list');
-    
-    let todoHTML = '';
-    let completedHTML = '';
-    
-    todos.forEach(task => {
-        const taskHTML = `
-            <div class="todo-item ${task.completed ? 'completed' : ''}">
-                <div>${task.task}</div>
-                <div class="todo-actions">
-                    <span class="todo-priority priority-${task.priority}">${task.priority}</span>
-                    ${!task.completed ? 
-                        `<button class="btn-complete" data-id="${task.id}">Complete</button>` : 
-                        `<button class="btn-delete" data-id="${task.id}">Delete</button>`
-                    }
-                </div>
-            </div>
-        `;
-        
-        if (task.completed) {
-            completedHTML += taskHTML;
-        } else {
-            todoHTML += taskHTML;
-        }
-    });
-    
-    todoList.innerHTML = todoHTML;
-    completedList.innerHTML = completedHTML;
-    
-    // Add event listeners
-    document.querySelectorAll('.btn-complete').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = parseInt(this.dataset.id);
-            completeTodo(id);
-        });
-    });
-    
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const id = parseInt(this.dataset.id);
-            deleteTodo(id);
-        });
-    });
-}
-
-function completeTodo(id) {
-    let todos = JSON.parse(localStorage.getItem('vitalsyncTodos')) || [];
-    const taskIndex = todos.findIndex(t => t.id === id);
-    
-    if (taskIndex !== -1) {
-        todos[taskIndex].completed = true;
-        localStorage.setItem('vitalsyncTodos', JSON.stringify(todos));
-        updateTodoDisplay();
-    }
-}
-
-function deleteTodo(id) {
-    let todos = JSON.parse(localStorage.getItem('vitalsyncTodos')) || [];
-    todos = todos.filter(t => t.id !== id);
-    localStorage.setItem('vitalsyncTodos', JSON.stringify(todos));
-    
-    updateTodoDisplay();
-}
-
-// Timetable (EduPlan)
-document.getElementById('timetable-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const course = {
-        id: Date.now(),
-        name: document.getElementById('course-name').value,
-        day: document.getElementById('course-day').value,
-        time: document.getElementById('course-time').value,
-        duration: parseInt(document.getElementById('course-duration').value),
-        created: new Date().toISOString()
-    };
-    
-    saveCourse(course);
-    this.reset();
-});
-
-function saveCourse(course) {
-    let courses = JSON.parse(localStorage.getItem('vitalsyncCourses')) || [];
-    courses.push(course);
-    localStorage.setItem('vitalsyncCourses', JSON.stringify(courses));
-    
-    updateTimetableDisplay();
-}
-
-function updateTimetableDisplay() {
-    const courses = JSON.parse(localStorage.getItem('vitalsyncCourses')) || [];
-    const timetableView = document.getElementById('timetable-view');
-    
-    // Create timetable grid
-    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    const timeSlots = ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-    
-    let timetableHTML = '';
-    
-    // Header row
-    timetableHTML += '<div class="timetable-cell timetable-header">Time</div>';
-    days.forEach(day => {
-        timetableHTML += `<div class="timetable-cell timetable-header">${day.charAt(0).toUpperCase() + day.slice(1)}</div>`;
-    });
-    
-    // Time slots
-    timeSlots.forEach(time => {
-        timetableHTML += `<div class="timetable-cell timetable-header">${time}</div>`;
-        
-        days.forEach(day => {
-            const cellCourses = courses.filter(course => 
-                course.day === day && 
-                course.time.startsWith(time.split(':')[0])
-            );
-            
-            timetableHTML += `<div class="timetable-cell">`;
-            
-            cellCourses.forEach(course => {
-                timetableHTML += `<div class="course-slot">${course.name}</div>`;
-            });
-            
-            timetableHTML += `</div>`;
-        });
-    });
-    
-    timetableView.innerHTML = timetableHTML;
-}
-
-// Study Tracker (EduPlan)
-document.getElementById('study-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const studySession = {
-        id: Date.now(),
-        subject: document.getElementById('study-subject').value,
-        topic: document.getElementById('study-topic').value,
-        duration: parseInt(document.getElementById('study-duration').value),
-        startTime: new Date().toISOString(),
-        endTime: null // Will be set when session ends
-    };
-    
-    // In a real app, you would start a timer and set endTime when done
-    // For this demo, we'll just save it as completed
-    studySession.endTime = new Date(Date.now() + studySession.duration * 60 * 1000).toISOString();
-    
-    saveStudySession(studySession);
-    this.reset();
-});
-
-function saveStudySession(session) {
-    let studySessions = JSON.parse(localStorage.getItem('vitalsyncStudySessions')) || [];
-    studySessions.push(session);
-    localStorage.setItem('vitalsyncStudySessions', JSON.stringify(studySessions));
-    
-    updateStudyDisplay();
-}
-
-function updateStudyDisplay() {
-    const studySessions = JSON.parse(localStorage.getItem('vitalsyncStudySessions')) || [];
-    const studySessionsList = document.getElementById('study-sessions');
-    
-    // Calculate stats
-    const today = new Date().toDateString();
-    const thisWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    
-    const todaySessions = studySessions.filter(s => 
-        new Date(s.startTime).toDateString() === today
-    );
-    
-    const weekSessions = studySessions.filter(s => 
-        new Date(s.startTime) >= thisWeek
-    );
-    
-    const todayDuration = todaySessions.reduce((sum, s) => sum + s.duration, 0);
-    const weekDuration = weekSessions.reduce((sum, s) => sum + s.duration, 0);
-    const totalDuration = studySessions.reduce((sum, s) => sum + s.duration, 0);
-    
-    const todayHours = Math.floor(todayDuration / 60);
-    const todayMinutes = todayDuration % 60;
-    
-    const weekHours = Math.floor(weekDuration / 60);
-    const weekMinutes = weekDuration % 60;
-    
-    const totalHours = Math.floor(totalDuration / 60);
-    const totalMinutes = totalDuration % 60;
-    
-    document.getElementById('study-today').textContent = `${todayHours}h ${todayMinutes}m`;
-    document.getElementById('study-week').textContent = `${weekHours}h ${weekMinutes}m`;
-    document.getElementById('study-total').textContent = `${totalHours}h ${totalMinutes}m`;
-    
-    // Update study sessions list
-    let sessionsHTML = '';
-    
-    studySessions.slice(-5).reverse().forEach(session => {
-        const date = new Date(session.startTime).toLocaleDateString();
-        const hours = Math.floor(session.duration / 60);
-        const minutes = session.duration % 60;
-        
-        sessionsHTML += `
-            <div class="study-session-item">
-                <div>${session.subject}</div>
-                <div>${hours}h ${minutes}m</div>
-                <div>${date}</div>
-            </div>
-        `;
-    });
-    
-    studySessionsList.innerHTML = sessionsHTML;
-}
-
-// Initialize the app
-document.addEventListener('DOMContentLoaded', function() {
-    // Load all data
-    loadWaterData();
-    updateWorkoutDisplay();
-    updateHabitDisplay();
-    updateMedicationDisplay();
-    updateMealDisplay();
-    loadScreenData();
-    updateSleepDisplay();
-    updateGroceryDisplay();
-    updateBudgetDisplay();
-    updateTodoDisplay();
-    updateTimetableDisplay();
-    updateStudyDisplay();
-    
-    // Set today's date as default in date inputs
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('sleep-date').value = today;
-    document.getElementById('meal-date').value = today;
-    document.getElementById('reminder-date').value = today;
-    
-    // Initialize charts (simplified)
-    initializeCharts();
-});
-
-function initializeCharts() {
-    // This would initialize various charts in the app
-    // For this demo, we'll just create a simple weekly chart
-    const ctx = document.getElementById('weekly-chart').getContext('2d');
-    
-    // Sample data
-    const data = {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        datasets: [
-            {
-                label: 'Water Intake',
-                data: [6, 8, 7, 5, 8, 6, 7],
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                tension: 0.4,
-                fill: true
-            },
-            {
-                label: 'Workout Minutes',
-                data: [30, 45, 0, 60, 30, 0, 45],
-                borderColor: '#4CAF50',
-                backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                tension: 0.4,
-                fill: true
-            }
-        ]
-    };
-    
-    const config = {
-        type: 'line',
-        data: data,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    };
-    
-    new Chart(ctx, config);
-
-}
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('LifeSphere initialized');
@@ -1234,22 +24,12 @@ function initializeApp() {
     // Initialize all trackers
     initializeWaterTracker();
     initializeWorkoutTracker();
-    initializeHabitTracker();
     initializeMedicationTracker();
     initializeMealPlanner();
     initializeScreenTimeTracker();
     initializeSleepTracker();
-    
-    // Initialize HomeBase modules
-    initializeHomeBase();
-    
-    // Initialize LifeLoop modules
     initializeLifeLoop();
-    
-    // Initialize TaskForge modules
     initializeTaskForge();
-    
-    // Initialize EduPlan modules
     initializeEduPlan();
     
     // Load all data
@@ -1257,6 +37,9 @@ function initializeApp() {
     
     // Initialize charts
     initializeCharts();
+    
+    // Start background services
+    startBackgroundServices();
 }
 
 // Notification System
@@ -1270,6 +53,7 @@ function initializeNotifications() {
                         alert('Notifications enabled! You will receive reminders for your goals.');
                         this.textContent = 'Notifications Enabled';
                         this.disabled = true;
+                        localStorage.setItem('lifesphere_notifications', 'enabled');
                     } else {
                         alert('Notifications disabled. You can enable them later in your browser settings.');
                     }
@@ -1278,6 +62,12 @@ function initializeNotifications() {
                 alert('This browser does not support notifications.');
             }
         });
+    }
+    
+    // Check if notifications were previously enabled
+    if (localStorage.getItem('lifesphere_notifications') === 'enabled') {
+        notificationBtn.textContent = 'Notifications Enabled';
+        notificationBtn.disabled = true;
     }
 }
 
@@ -1320,9 +110,6 @@ function updateTabContent(tabId) {
         case 'workout':
             updateWorkoutDisplay();
             break;
-        case 'habits':
-            updateHabitDisplay();
-            break;
         case 'medication':
             updateMedicationDisplay();
             break;
@@ -1334,6 +121,15 @@ function updateTabContent(tabId) {
             break;
         case 'sleep':
             updateSleepDisplay();
+            break;
+        case 'lifeloop':
+            updateLifeLoopDisplay();
+            break;
+        case 'taskforge':
+            updateTaskForgeDisplay();
+            break;
+        case 'eduplan':
+            updateEduPlanDisplay();
             break;
     }
 }
@@ -1436,80 +232,1454 @@ function initializeWaterTracker() {
                 cup.classList.remove('drank');
             }
         });
+        
+        // Update water history
+        updateWaterHistory();
     }
 
     function saveWaterData() {
+        const today = new Date().toDateString();
         const waterData = {
             goal: waterGoal,
             consumed: waterConsumed,
             lastUpdated: new Date().toISOString()
         };
         localStorage.setItem('lifesphere_water', JSON.stringify(waterData));
+        
+        // Save to history
+        let waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
+        waterHistory[today] = {
+            consumed: waterConsumed,
+            goal: waterGoal,
+            percentage: Math.min(100, (waterConsumed / waterGoal) * 100)
+        };
+        localStorage.setItem('lifesphere_water_history', JSON.stringify(waterHistory));
+    }
+
+    function updateWaterHistory() {
+        const waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
+        const historyBody = document.getElementById('water-history-body');
+        
+        let historyHTML = '';
+        const sortedDates = Object.keys(waterHistory).sort((a, b) => new Date(b) - new Date(a));
+        
+        sortedDates.slice(0, 7).forEach(date => {
+            const data = waterHistory[date];
+            const formattedDate = new Date(date).toLocaleDateString();
+            
+            historyHTML += `
+                <tr>
+                    <td>${formattedDate}</td>
+                    <td>${data.consumed}/${data.goal}</td>
+                    <td>${data.percentage.toFixed(0)}%</td>
+                    <td><button class="delete-btn" onclick="deleteWaterHistory('${date}')">Delete</button></td>
+                </tr>
+            `;
+        });
+        
+        if (historyBody) historyBody.innerHTML = historyHTML;
     }
 
     // Initialize display
     updateWaterDisplay();
 }
 
-// Initialize other trackers (simplified for example)
+function deleteWaterHistory(date) {
+    let waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
+    delete waterHistory[date];
+    localStorage.setItem('lifesphere_water_history', JSON.stringify(waterHistory));
+    updateWaterHistory();
+}
+
+// Workout Tracker
 function initializeWorkoutTracker() {
-    console.log('Workout tracker initialized');
-    // Add workout tracking functionality here
+    const workoutForm = document.getElementById('workout-form');
+    if (workoutForm) {
+        workoutForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const workout = {
+                id: Date.now(),
+                type: document.getElementById('workout-type').value,
+                name: document.getElementById('workout-name').value,
+                duration: parseInt(document.getElementById('workout-duration').value),
+                calories: document.getElementById('workout-calories').value ? parseInt(document.getElementById('workout-calories').value) : null,
+                notes: document.getElementById('workout-notes').value,
+                date: new Date().toISOString()
+            };
+            
+            saveWorkout(workout);
+            this.reset();
+        });
+    }
+
+    const periodSelect = document.getElementById('workout-period');
+    if (periodSelect) {
+        periodSelect.addEventListener('change', updateWorkoutDisplay);
+    }
 }
 
-function initializeHabitTracker() {
-    console.log('Habit tracker initialized');
-    // Add habit tracking functionality here
+function saveWorkout(workout) {
+    let workouts = JSON.parse(localStorage.getItem('lifesphere_workouts')) || [];
+    workouts.push(workout);
+    localStorage.setItem('lifesphere_workouts', JSON.stringify(workouts));
+    
+    updateWorkoutDisplay();
+    updateDashboard();
 }
 
+function updateWorkoutDisplay() {
+    const workouts = JSON.parse(localStorage.getItem('lifesphere_workouts')) || [];
+    const workoutList = document.getElementById('workout-list');
+    const period = document.getElementById('workout-period')?.value || 'all';
+    
+    // Filter workouts by period
+    let filteredWorkouts = workouts;
+    const now = new Date();
+    
+    if (period === 'week') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filteredWorkouts = workouts.filter(w => new Date(w.date) >= weekAgo);
+    } else if (period === 'month') {
+        const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        filteredWorkouts = workouts.filter(w => new Date(w.date) >= monthAgo);
+    }
+    
+    // Update stats
+    const totalWorkouts = filteredWorkouts.length;
+    const totalDuration = filteredWorkouts.reduce((sum, w) => sum + w.duration, 0);
+    const totalCalories = filteredWorkouts.reduce((sum, w) => sum + (w.calories || 0), 0);
+    
+    const totalWorkoutsElement = document.getElementById('total-workouts');
+    const totalDurationElement = document.getElementById('total-duration');
+    const totalCaloriesElement = document.getElementById('total-calories');
+    
+    if (totalWorkoutsElement) totalWorkoutsElement.textContent = totalWorkouts;
+    if (totalDurationElement) totalDurationElement.textContent = `${totalDuration} min`;
+    if (totalCaloriesElement) totalCaloriesElement.textContent = totalCalories;
+    
+    // Update workout list
+    let workoutHTML = '';
+    
+    filteredWorkouts.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(workout => {
+        const date = new Date(workout.date).toLocaleDateString();
+        
+        workoutHTML += `
+            <div class="workout-item">
+                <div class="workout-item-header">
+                    <div class="workout-name">${workout.name}</div>
+                    <div class="workout-type">${workout.type}</div>
+                </div>
+                <div class="workout-details">
+                    <span>${workout.duration} min</span>
+                    ${workout.calories ? `<span>${workout.calories} cal</span>` : ''}
+                    <span>${date}</span>
+                </div>
+                ${workout.notes ? `<div class="workout-notes">${workout.notes}</div>` : ''}
+                <button class="delete-btn" onclick="deleteWorkout(${workout.id})">Delete</button>
+            </div>
+        `;
+    });
+    
+    if (workoutList) workoutList.innerHTML = workoutHTML;
+    
+    // Update dashboard
+    const thisWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const weekWorkouts = workouts.filter(w => new Date(w.date) >= thisWeek).length;
+    const workoutsWeekElement = document.getElementById('workouts-week');
+    if (workoutsWeekElement) workoutsWeekElement.textContent = `${weekWorkouts} workouts`;
+}
+
+function deleteWorkout(id) {
+    let workouts = JSON.parse(localStorage.getItem('lifesphere_workouts')) || [];
+    workouts = workouts.filter(w => w.id !== id);
+    localStorage.setItem('lifesphere_workouts', JSON.stringify(workouts));
+    updateWorkoutDisplay();
+    updateDashboard();
+}
+
+// Medication Tracker
 function initializeMedicationTracker() {
-    console.log('Medication tracker initialized');
-    // Add medication tracking functionality here
+    const medicationForm = document.getElementById('medication-form');
+    const addTimeBtn = document.getElementById('add-time');
+    const ringtoneBtn = document.getElementById('ringtone-access');
+
+    if (addTimeBtn) {
+        addTimeBtn.addEventListener('click', function() {
+            const timesContainer = document.getElementById('med-times');
+            const newTimeInput = document.createElement('input');
+            newTimeInput.type = 'time';
+            newTimeInput.className = 'form-control med-time';
+            newTimeInput.required = true;
+            timesContainer.appendChild(newTimeInput);
+        });
+    }
+
+    if (ringtoneBtn) {
+        ringtoneBtn.addEventListener('click', function() {
+            // Create and test audio for ringtone access
+            medicationAlarmAudio = new Audio();
+            medicationAlarmAudio.src = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dyvm0eBzF/z/LQdSkFJHfH8N2QQAoUXrTp66hVFApGn+Dyvm0eBzF/z/LQdSk=";
+            medicationAlarmAudio.play().then(() => {
+                medicationAlarmAudio.pause();
+                alert('Ringtone access granted! Medication alarms will now sound.');
+                localStorage.setItem('lifesphere_ringtone', 'granted');
+            }).catch(error => {
+                alert('Please allow audio permissions for medication alarms to work properly.');
+            });
+        });
+    }
+
+    if (medicationForm) {
+        medicationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const timeInputs = document.querySelectorAll('.med-time');
+            const times = Array.from(timeInputs).map(input => input.value).filter(time => time);
+            
+            const medication = {
+                id: Date.now(),
+                name: document.getElementById('med-name').value,
+                dosage: document.getElementById('med-dosage').value,
+                frequency: document.getElementById('med-frequency').value,
+                times: times,
+                notes: document.getElementById('med-notes').value,
+                created: new Date().toISOString()
+            };
+            
+            saveMedication(medication);
+            this.reset();
+            
+            // Reset to one time input
+            const timesContainer = document.getElementById('med-times');
+            timesContainer.innerHTML = '<input type="time" class="form-control med-time" required>';
+        });
+    }
+
+    // Initialize quality rating
+    document.querySelectorAll('.quality-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.quality-option').forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+            document.getElementById('sleep-quality-value').value = this.dataset.quality;
+        });
+    });
 }
 
+function saveMedication(medication) {
+    let medications = JSON.parse(localStorage.getItem('lifesphere_medications')) || [];
+    medications.push(medication);
+    localStorage.setItem('lifesphere_medications', JSON.stringify(medications));
+    
+    updateMedicationDisplay();
+    updateDashboard();
+}
+
+function updateMedicationDisplay() {
+    const medications = JSON.parse(localStorage.getItem('lifesphere_medications')) || [];
+    const todayMedsList = document.getElementById('today-meds-list');
+    const medsList = document.getElementById('meds-list');
+    
+    let todayMedsHTML = '';
+    let allMedsHTML = '';
+    
+    medications.forEach(med => {
+        const medElement = `
+            <div class="med-item">
+                <div class="med-info">
+                    <h4>${med.name}</h4>
+                    <div class="med-dosage">${med.dosage}</div>
+                    ${med.notes ? `<div class="med-notes">${med.notes}</div>` : ''}
+                </div>
+                <div class="med-times">
+                    ${med.times.map(time => `
+                        <div class="med-time-item">${time}</div>
+                    `).join('')}
+                </div>
+                <button class="delete-btn" onclick="deleteMedication(${med.id})">Delete</button>
+            </div>
+        `;
+        
+        allMedsHTML += medElement;
+        
+        // For today's medications, we'd check if it's scheduled for today
+        // For simplicity, we'll show all medications with daily frequency
+        if (med.frequency === 'once' || med.frequency === 'twice' || med.frequency === 'thrice') {
+            todayMedsHTML += medElement;
+        }
+    });
+    
+    if (todayMedsList) todayMedsList.innerHTML = todayMedsHTML;
+    if (medsList) medsList.innerHTML = allMedsHTML;
+    
+    // Update dashboard
+    const todayMedsCount = medications.filter(m => 
+        m.frequency === 'once' || m.frequency === 'twice' || m.frequency === 'thrice').length;
+    const medsTodayElement = document.getElementById('meds-today');
+    if (medsTodayElement) medsTodayElement.textContent = `0/${todayMedsCount} taken`;
+}
+
+function deleteMedication(id) {
+    let medications = JSON.parse(localStorage.getItem('lifesphere_medications')) || [];
+    medications = medications.filter(m => m.id !== id);
+    localStorage.setItem('lifesphere_medications', JSON.stringify(medications));
+    updateMedicationDisplay();
+    updateDashboard();
+}
+
+// Meal Planner
 function initializeMealPlanner() {
-    console.log('Meal planner initialized');
-    // Add meal planning functionality here
+    const mealForm = document.getElementById('meal-plan-form');
+    const prevWeekBtn = document.getElementById('prev-week');
+    const nextWeekBtn = document.getElementById('next-week');
+
+    if (mealForm) {
+        mealForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const meal = {
+                id: Date.now(),
+                date: document.getElementById('meal-date').value,
+                type: document.getElementById('meal-type').value,
+                name: document.getElementById('meal-name').value,
+                time: document.getElementById('meal-time').value,
+                calories: document.getElementById('meal-calories').value ? parseInt(document.getElementById('meal-calories').value) : null,
+                recipe: document.getElementById('meal-recipe').value,
+                created: new Date().toISOString()
+            };
+            
+            saveMeal(meal);
+            this.reset();
+        });
+    }
+
+    if (prevWeekBtn) {
+        prevWeekBtn.addEventListener('click', function() {
+            currentWeekOffset--;
+            updateMealDisplay();
+        });
+    }
+
+    if (nextWeekBtn) {
+        nextWeekBtn.addEventListener('click', function() {
+            currentWeekOffset++;
+            updateMealDisplay();
+        });
+    }
 }
 
+function saveMeal(meal) {
+    let meals = JSON.parse(localStorage.getItem('lifesphere_meals')) || [];
+    meals.push(meal);
+    localStorage.setItem('lifesphere_meals', JSON.stringify(meals));
+    
+    updateMealDisplay();
+}
+
+function updateMealDisplay() {
+    const meals = JSON.parse(localStorage.getItem('lifesphere_meals')) || [];
+    const weeklyMealPlan = document.getElementById('weekly-meal-plan');
+    const weekDisplay = document.getElementById('week-display');
+    
+    // Calculate week start based on current week offset
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay() + (currentWeekOffset * 7));
+    
+    // Update week display
+    if (weekDisplay) {
+        if (currentWeekOffset === 0) {
+            weekDisplay.textContent = 'Current Week';
+        } else if (currentWeekOffset < 0) {
+            weekDisplay.textContent = `${Math.abs(currentWeekOffset)} week${Math.abs(currentWeekOffset) > 1 ? 's' : ''} ago`;
+        } else {
+            weekDisplay.textContent = `In ${currentWeekOffset} week${currentWeekOffset > 1 ? 's' : ''}`;
+        }
+    }
+    
+    // Generate weekly view
+    let weeklyHTML = '';
+    
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + i);
+        const dateString = date.toISOString().split('T')[0];
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const dateFormatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        const dayMeals = meals.filter(meal => meal.date === dateString);
+        
+        weeklyHTML += `
+            <div class="day-meals">
+                <div class="day-header">${dayName}<br>${dateFormatted}</div>
+                ${dayMeals.map(meal => `
+                    <div class="meal-item">
+                        <strong>${meal.type}:</strong> ${meal.name}<br>
+                        <small>Time: ${meal.time}</small>
+                        ${meal.calories ? `<br><small>${meal.calories} cal</small>` : ''}
+                        ${meal.recipe ? `<div class="meal-notes">${meal.recipe}</div>` : ''}
+                        <button class="delete-btn" onclick="deleteMeal(${meal.id})">Delete</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    if (weeklyMealPlan) weeklyMealPlan.innerHTML = weeklyHTML;
+    
+    // Update meal stats
+    const thisWeekMeals = meals.filter(meal => {
+        const mealDate = new Date(meal.date);
+        const actualWeekStart = new Date(today);
+        actualWeekStart.setDate(today.getDate() - today.getDay());
+        const actualWeekEnd = new Date(actualWeekStart);
+        actualWeekEnd.setDate(actualWeekStart.getDate() + 6);
+        
+        return mealDate >= actualWeekStart && mealDate <= actualWeekEnd;
+    });
+    
+    const totalCalories = thisWeekMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+    const avgCalories = thisWeekMeals.length > 0 ? Math.round(totalCalories / thisWeekMeals.length) : 0;
+    
+    const avgCaloriesElement = document.getElementById('avg-calories');
+    const plannedMealsElement = document.getElementById('planned-meals');
+    
+    if (avgCaloriesElement) avgCaloriesElement.textContent = `${avgCalories} cal`;
+    if (plannedMealsElement) plannedMealsElement.textContent = thisWeekMeals.length;
+}
+
+function deleteMeal(id) {
+    let meals = JSON.parse(localStorage.getItem('lifesphere_meals')) || [];
+    meals = meals.filter(m => m.id !== id);
+    localStorage.setItem('lifesphere_meals', JSON.stringify(meals));
+    updateMealDisplay();
+}
+
+// Screen Time Tracker
 function initializeScreenTimeTracker() {
-    console.log('Screen time tracker initialized');
-    // Add screen time tracking functionality here
+    const startBtn = document.getElementById('start-tracking');
+    const stopBtn = document.getElementById('stop-tracking');
+    const addManualBtn = document.getElementById('add-manual');
+    const goalInput = document.getElementById('screen-goal');
+
+    if (startBtn) {
+        startBtn.addEventListener('click', function() {
+            if (!screenTracking) {
+                screenTracking = true;
+                screenStartTime = new Date();
+                this.disabled = true;
+                document.getElementById('stop-tracking').disabled = false;
+                
+                // Start tracking screen time
+                screenTimeInterval = setInterval(() => {
+                    screenTimeSeconds++;
+                    updateScreenDisplay();
+                }, 1000);
+                
+                localStorage.setItem('lifesphere_screen_tracking', 'true');
+            }
+        });
+    }
+
+    if (stopBtn) {
+        stopBtn.addEventListener('click', function() {
+            if (screenTracking) {
+                screenTracking = false;
+                document.getElementById('start-tracking').disabled = false;
+                this.disabled = true;
+                
+                if (screenTimeInterval) {
+                    clearInterval(screenTimeInterval);
+                }
+                
+                saveScreenData();
+                localStorage.setItem('lifesphere_screen_tracking', 'false');
+            }
+        });
+    }
+
+    if (addManualBtn) {
+        addManualBtn.addEventListener('click', function() {
+            const minutes = prompt('Enter screen time in minutes:');
+            if (minutes && !isNaN(minutes)) {
+                screenTimeSeconds += parseInt(minutes) * 60;
+                updateScreenDisplay();
+                saveScreenData();
+            }
+        });
+    }
+
+    if (goalInput) {
+        goalInput.addEventListener('change', function() {
+            updateScreenDisplay();
+            saveScreenData();
+        });
+    }
+
+    // Check if tracking was active
+    if (localStorage.getItem('lifesphere_screen_tracking') === 'true') {
+        startBtn.click();
+    }
+
+    // Load saved screen time for today
+    loadScreenData();
 }
 
+function updateScreenDisplay() {
+    const hours = Math.floor(screenTimeSeconds / 3600);
+    const minutes = Math.floor((screenTimeSeconds % 3600) / 60);
+    const seconds = screenTimeSeconds % 60;
+    
+    const screenHoursElement = document.getElementById('screen-hours');
+    const screenMinutesElement = document.getElementById('screen-minutes');
+    const screenSecondsElement = document.getElementById('screen-seconds');
+    
+    if (screenHoursElement) screenHoursElement.textContent = hours.toString().padStart(2, '0');
+    if (screenMinutesElement) screenMinutesElement.textContent = minutes.toString().padStart(2, '0');
+    if (screenSecondsElement) screenSecondsElement.textContent = seconds.toString().padStart(2, '0');
+    
+    // Update dashboard
+    const screenTodayElement = document.getElementById('screen-today');
+    if (screenTodayElement) screenTodayElement.textContent = `${hours}h ${minutes}m`;
+    
+    // Update progress
+    const goalHours = parseInt(document.getElementById('screen-goal')?.value || 4);
+    const goalSeconds = goalHours * 3600;
+    const percentage = Math.min(100, (screenTimeSeconds / goalSeconds) * 100);
+    
+    const screenProgressElement = document.getElementById('screen-progress');
+    const screenGoalTextElement = document.getElementById('screen-goal-text');
+    
+    if (screenProgressElement) screenProgressElement.style.width = `${percentage}%`;
+    if (screenGoalTextElement) screenGoalTextElement.textContent = `${percentage.toFixed(0)}% of daily goal`;
+    
+    // Update screen history
+    updateScreenHistory();
+}
+
+function saveScreenData() {
+    const today = new Date().toDateString();
+    const screenData = {
+        seconds: screenTimeSeconds,
+        goal: parseInt(document.getElementById('screen-goal')?.value || 4)
+    };
+    
+    localStorage.setItem('lifesphere_screen', JSON.stringify(screenData));
+    
+    // Save to history
+    let screenHistory = JSON.parse(localStorage.getItem('lifesphere_screen_history')) || {};
+    screenHistory[today] = {
+        seconds: screenTimeSeconds,
+        goal: screenData.goal,
+        percentage: Math.min(100, (screenTimeSeconds / (screenData.goal * 3600)) * 100)
+    };
+    localStorage.setItem('lifesphere_screen_history', JSON.stringify(screenHistory));
+}
+
+function loadScreenData() {
+    const today = new Date().toDateString();
+    const screenData = JSON.parse(localStorage.getItem('lifesphere_screen')) || {};
+    
+    if (screenData.seconds) {
+        screenTimeSeconds = screenData.seconds;
+    }
+    
+    const goalInput = document.getElementById('screen-goal');
+    if (goalInput && screenData.goal) {
+        goalInput.value = screenData.goal;
+    }
+    
+    updateScreenDisplay();
+}
+
+function updateScreenHistory() {
+    const screenHistory = JSON.parse(localStorage.getItem('lifesphere_screen_history')) || {};
+    const historyBody = document.getElementById('screen-history-body');
+    
+    let historyHTML = '';
+    const sortedDates = Object.keys(screenHistory).sort((a, b) => new Date(b) - new Date(a));
+    
+    sortedDates.slice(0, 7).forEach(date => {
+        const data = screenHistory[date];
+        const formattedDate = new Date(date).toLocaleDateString();
+        const hours = Math.floor(data.seconds / 3600);
+        const minutes = Math.floor((data.seconds % 3600) / 60);
+        
+        historyHTML += `
+            <tr>
+                <td>${formattedDate}</td>
+                <td>${hours}h ${minutes}m</td>
+                <td>${data.percentage.toFixed(0)}%</td>
+                <td><button class="delete-btn" onclick="deleteScreenHistory('${date}')">Delete</button></td>
+            </tr>
+        `;
+    });
+    
+    if (historyBody) historyBody.innerHTML = historyHTML;
+}
+
+function deleteScreenHistory(date) {
+    let screenHistory = JSON.parse(localStorage.getItem('lifesphere_screen_history')) || {};
+    delete screenHistory[date];
+    localStorage.setItem('lifesphere_screen_history', JSON.stringify(screenHistory));
+    updateScreenHistory();
+}
+
+// Sleep Tracker
 function initializeSleepTracker() {
-    console.log('Sleep tracker initialized');
-    // Add sleep tracking functionality here
+    const sleepForm = document.getElementById('sleep-form');
+
+    if (sleepForm) {
+        sleepForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const bedtime = document.getElementById('bedtime').value;
+            const waketime = document.getElementById('waketime').value;
+            
+            // Calculate duration
+            const bedDate = new Date(`2000-01-01T${bedtime}`);
+            const wakeDate = new Date(`2000-01-01T${waketime}`);
+            
+            let duration = (wakeDate - bedDate) / (1000 * 60); // in minutes
+            
+            // Handle overnight sleep (if wake time is before bedtime, it's the next day)
+            if (duration < 0) {
+                duration += 24 * 60; // Add 24 hours
+            }
+            
+            const sleep = {
+                id: Date.now(),
+                date: document.getElementById('sleep-date').value,
+                bedtime: bedtime,
+                waketime: waketime,
+                duration: duration,
+                quality: parseInt(document.getElementById('sleep-quality-value').value),
+                notes: document.getElementById('sleep-notes').value
+            };
+            
+            saveSleep(sleep);
+            this.reset();
+            document.querySelectorAll('.quality-option').forEach(o => o.classList.remove('selected'));
+        });
+    }
 }
 
-function initializeHomeBase() {
-    console.log('HomeBase initialized');
-    // Add HomeBase functionality here
+function saveSleep(sleep) {
+    let sleeps = JSON.parse(localStorage.getItem('lifesphere_sleep')) || [];
+    sleeps.push(sleep);
+    localStorage.setItem('lifesphere_sleep', JSON.stringify(sleeps));
+    
+    updateSleepDisplay();
+    updateDashboard();
 }
 
+function updateSleepDisplay() {
+    const sleeps = JSON.parse(localStorage.getItem('lifesphere_sleep')) || [];
+    const sleepHistoryList = document.getElementById('sleep-history-list');
+    
+    // Update dashboard with last night's sleep
+    if (sleeps.length > 0) {
+        const lastSleep = sleeps[sleeps.length - 1];
+        const hours = Math.floor(lastSleep.duration / 60);
+        const minutes = lastSleep.duration % 60;
+        const sleepLastElement = document.getElementById('sleep-last');
+        if (sleepLastElement) sleepLastElement.textContent = `${hours}h ${minutes}m`;
+    }
+    
+    // Update sleep history
+    let historyHTML = '';
+    
+    sleeps.slice(-5).reverse().forEach(sleep => {
+        const hours = Math.floor(sleep.duration / 60);
+        const minutes = sleep.duration % 60;
+        const date = new Date(sleep.date).toLocaleDateString();
+        
+        historyHTML += `
+            <div class="sleep-item">
+                <div>${date}</div>
+                <div>${hours}h ${minutes}m</div>
+                <div>Quality: ${sleep.quality}/5</div>
+                ${sleep.notes ? `<div class="sleep-notes">${sleep.notes}</div>` : ''}
+                <button class="delete-btn" onclick="deleteSleep(${sleep.id})">Delete</button>
+            </div>
+        `;
+    });
+    
+    if (sleepHistoryList) sleepHistoryList.innerHTML = historyHTML;
+    
+    // Update sleep stats
+    if (sleeps.length > 0) {
+        const totalDuration = sleeps.reduce((sum, sleep) => sum + sleep.duration, 0);
+        const avgDuration = totalDuration / sleeps.length;
+        const avgHours = Math.floor(avgDuration / 60);
+        const avgMinutes = Math.round(avgDuration % 60);
+        
+        const avgSleepElement = document.getElementById('avg-sleep');
+        if (avgSleepElement) avgSleepElement.textContent = `${avgHours}h ${avgMinutes}m`;
+        
+        // Calculate consistency (simplified - percentage of days with sleep logged)
+        const uniqueDates = new Set(sleeps.map(s => s.date));
+        const consistency = (uniqueDates.size / 7) * 100; // Assuming a week
+        const sleepConsistencyElement = document.getElementById('sleep-consistency');
+        if (sleepConsistencyElement) sleepConsistencyElement.textContent = `${Math.min(100, consistency).toFixed(0)}%`;
+        
+        // Find best quality
+        const bestQuality = Math.max(...sleeps.map(s => s.quality));
+        const bestQualityElement = document.getElementById('best-quality');
+        if (bestQualityElement) bestQualityElement.textContent = `${bestQuality}/5`;
+    }
+}
+
+function deleteSleep(id) {
+    let sleeps = JSON.parse(localStorage.getItem('lifesphere_sleep')) || [];
+    sleeps = sleeps.filter(s => s.id !== id);
+    localStorage.setItem('lifesphere_sleep', JSON.stringify(sleeps));
+    updateSleepDisplay();
+    updateDashboard();
+}
+
+// LifeLoop
 function initializeLifeLoop() {
-    console.log('LifeLoop initialized');
-    // Add LifeLoop functionality here
+    const reminderForm = document.getElementById('reminder-form');
+    
+    if (reminderForm) {
+        reminderForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const reminder = {
+                id: Date.now(),
+                name: document.getElementById('reminder-name').value,
+                date: document.getElementById('reminder-date').value,
+                type: document.getElementById('reminder-type').value,
+                notice: parseInt(document.getElementById('reminder-notice').value),
+                created: new Date().toISOString()
+            };
+            
+            saveReminder(reminder);
+            this.reset();
+        });
+    }
 }
 
+function saveReminder(reminder) {
+    let reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
+    reminders.push(reminder);
+    localStorage.setItem('lifesphere_reminders', JSON.stringify(reminders));
+    
+    updateLifeLoopDisplay();
+}
+
+function updateLifeLoopDisplay() {
+    const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
+    const upcomingReminders = document.getElementById('upcoming-reminders');
+    const allReminders = document.getElementById('all-reminders');
+    
+    // Sort reminders by date
+    reminders.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    const now = new Date();
+    const upcoming = reminders.filter(r => new Date(r.date) >= now);
+    const past = reminders.filter(r => new Date(r.date) < now);
+    
+    let upcomingHTML = '';
+    let allHTML = '';
+    
+    upcoming.slice(0, 5).forEach(reminder => {
+        const date = new Date(reminder.date).toLocaleDateString();
+        upcomingHTML += `
+            <div class="reminder-item">
+                <div>
+                    <strong>${reminder.name}</strong><br>
+                    <small>${date} - ${reminder.type}</small>
+                </div>
+                <button class="delete-btn" onclick="deleteReminder(${reminder.id})">Delete</button>
+            </div>
+        `;
+    });
+    
+    reminders.forEach(reminder => {
+        const date = new Date(reminder.date).toLocaleDateString();
+        allHTML += `
+            <div class="reminder-item">
+                <div>
+                    <strong>${reminder.name}</strong><br>
+                    <small>${date} - ${reminder.type}</small>
+                </div>
+                <button class="delete-btn" onclick="deleteReminder(${reminder.id})">Delete</button>
+            </div>
+        `;
+    });
+    
+    if (upcomingReminders) upcomingReminders.innerHTML = upcomingHTML || '<p>No upcoming reminders</p>';
+    if (allReminders) allReminders.innerHTML = allHTML || '<p>No reminders</p>';
+}
+
+function deleteReminder(id) {
+    let reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
+    reminders = reminders.filter(r => r.id !== id);
+    localStorage.setItem('lifesphere_reminders', JSON.stringify(reminders));
+    updateLifeLoopDisplay();
+}
+
+// TaskForge
 function initializeTaskForge() {
-    console.log('TaskForge initialized');
-    // Add TaskForge functionality here
+    const todoForm = document.getElementById('todo-form');
+    const subscriptionForm = document.getElementById('subscription-form');
+    
+    if (todoForm) {
+        todoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const task = {
+                id: Date.now(),
+                task: document.getElementById('todo-task').value,
+                priority: document.getElementById('todo-priority').value,
+                due: document.getElementById('todo-due').value,
+                completed: false,
+                created: new Date().toISOString()
+            };
+            
+            saveTodo(task);
+            this.reset();
+        });
+    }
+    
+    if (subscriptionForm) {
+        subscriptionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const subscription = {
+                id: Date.now(),
+                name: document.getElementById('sub-name').value,
+                price: parseFloat(document.getElementById('sub-price').value),
+                renewal: document.getElementById('sub-renewal').value,
+                category: document.getElementById('sub-category').value,
+                created: new Date().toISOString()
+            };
+            
+            saveSubscription(subscription);
+            this.reset();
+        });
+    }
 }
 
+function saveTodo(task) {
+    let todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    todos.push(task);
+    localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
+    
+    updateTaskForgeDisplay();
+    updateDashboard();
+}
+
+function updateTaskForgeDisplay() {
+    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const todoList = document.getElementById('todo-list');
+    const completedList = document.getElementById('completed-list');
+    const subscriptionsBody = document.getElementById('subscriptions-body');
+    
+    let todoHTML = '';
+    let completedHTML = '';
+    
+    todos.forEach(task => {
+        const taskHTML = `
+            <div class="todo-item ${task.completed ? 'completed' : ''}">
+                <div>${task.task}</div>
+                <div class="todo-actions">
+                    <span class="todo-priority priority-${task.priority}">${task.priority}</span>
+                    ${!task.completed ? 
+                        `<button class="btn-complete" onclick="completeTodo(${task.id})">Complete</button>` : 
+                        `<button class="btn-delete" onclick="deleteTodo(${task.id})">Delete</button>`
+                    }
+                </div>
+            </div>
+        `;
+        
+        if (task.completed) {
+            completedHTML += taskHTML;
+        } else {
+            todoHTML += taskHTML;
+        }
+    });
+    
+    if (todoList) todoList.innerHTML = todoHTML || '<p>No tasks</p>';
+    if (completedList) completedList.innerHTML = completedHTML || '<p>No completed tasks</p>';
+    
+    // Update subscriptions
+    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    let subscriptionsHTML = '';
+    
+    subscriptions.forEach(sub => {
+        const renewalDate = new Date(sub.renewal).toLocaleDateString();
+        subscriptionsHTML += `
+            <tr>
+                <td>${sub.name}</td>
+                <td>$${sub.price.toFixed(2)}</td>
+                <td>${renewalDate}</td>
+                <td>${sub.category}</td>
+                <td><button class="delete-btn" onclick="deleteSubscription(${sub.id})">Delete</button></td>
+            </tr>
+        `;
+    });
+    
+    if (subscriptionsBody) subscriptionsBody.innerHTML = subscriptionsHTML || '<tr><td colspan="5">No subscriptions</td></tr>';
+    
+    // Update dashboard
+    const today = new Date().toDateString();
+    const todayTasks = todos.filter(t => !t.completed);
+    const tasksTodayElement = document.getElementById('tasks-today');
+    const tasksProgressElement = document.getElementById('tasks-progress');
+    
+    if (tasksTodayElement) tasksTodayElement.textContent = `0/${todayTasks.length}`;
+    if (tasksProgressElement) tasksProgressElement.style.width = '0%';
+}
+
+function completeTodo(id) {
+    let todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const taskIndex = todos.findIndex(t => t.id === id);
+    
+    if (taskIndex !== -1) {
+        todos[taskIndex].completed = true;
+        localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
+        updateTaskForgeDisplay();
+        updateDashboard();
+    }
+}
+
+function deleteTodo(id) {
+    let todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    todos = todos.filter(t => t.id !== id);
+    localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
+    updateTaskForgeDisplay();
+    updateDashboard();
+}
+
+function saveSubscription(subscription) {
+    let subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    subscriptions.push(subscription);
+    localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
+    
+    updateTaskForgeDisplay();
+}
+
+function deleteSubscription(id) {
+    let subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    subscriptions = subscriptions.filter(s => s.id !== id);
+    localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
+    updateTaskForgeDisplay();
+}
+
+// EduPlan
 function initializeEduPlan() {
-    console.log('EduPlan initialized');
-    // Add EduPlan functionality here
+    const timetableForm = document.getElementById('timetable-form');
+    const studyForm = document.getElementById('study-form');
+    const homeworkForm = document.getElementById('homework-form');
+    const examForm = document.getElementById('exam-form');
+    
+    if (timetableForm) {
+        timetableForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const course = {
+                id: Date.now(),
+                name: document.getElementById('course-name').value,
+                day: document.getElementById('course-day').value,
+                time: document.getElementById('course-time').value,
+                duration: parseInt(document.getElementById('course-duration').value),
+                created: new Date().toISOString()
+            };
+            
+            saveCourse(course);
+            this.reset();
+        });
+    }
+    
+    if (studyForm) {
+        studyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const studySession = {
+                id: Date.now(),
+                subject: document.getElementById('study-subject').value,
+                topic: document.getElementById('study-topic').value,
+                duration: parseInt(document.getElementById('study-duration').value),
+                startTime: new Date().toISOString(),
+                endTime: null
+            };
+            
+            // In a real app, you would start a timer and set endTime when done
+            // For this demo, we'll just save it as completed
+            studySession.endTime = new Date(Date.now() + studySession.duration * 60 * 1000).toISOString();
+            
+            saveStudySession(studySession);
+            this.reset();
+        });
+    }
+    
+    if (homeworkForm) {
+        homeworkForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const homework = {
+                id: Date.now(),
+                subject: document.getElementById('hw-subject').value,
+                task: document.getElementById('hw-task').value,
+                due: document.getElementById('hw-due').value,
+                priority: document.getElementById('hw-priority').value,
+                completed: false,
+                created: new Date().toISOString()
+            };
+            
+            saveHomework(homework);
+            this.reset();
+        });
+    }
+    
+    if (examForm) {
+        examForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const exam = {
+                id: Date.now(),
+                subject: document.getElementById('exam-subject').value,
+                date: document.getElementById('exam-date').value,
+                time: document.getElementById('exam-time').value,
+                location: document.getElementById('exam-location').value,
+                created: new Date().toISOString()
+            };
+            
+            saveExam(exam);
+            this.reset();
+        });
+    }
 }
 
+function saveCourse(course) {
+    let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    courses.push(course);
+    localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
+    
+    updateEduPlanDisplay();
+}
+
+function saveStudySession(session) {
+    let studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+    studySessions.push(session);
+    localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
+    
+    updateEduPlanDisplay();
+}
+
+function saveHomework(homework) {
+    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    homeworks.push(homework);
+    localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
+    
+    updateEduPlanDisplay();
+}
+
+function saveExam(exam) {
+    let exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    exams.push(exam);
+    localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
+    
+    updateEduPlanDisplay();
+}
+
+function updateEduPlanDisplay() {
+    updateTimetableDisplay();
+    updateStudyTrackerDisplay();
+    updateHomeworkDisplay();
+    updateExamsDisplay();
+}
+
+function updateTimetableDisplay() {
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const timetableView = document.getElementById('timetable-view');
+    
+    if (!timetableView) return;
+    
+    // Create timetable grid
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const timeSlots = ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+    
+    let timetableHTML = '';
+    
+    // Header row
+    timetableHTML += '<div class="timetable-cell timetable-header">Time</div>';
+    days.forEach(day => {
+        timetableHTML += `<div class="timetable-cell timetable-header">${day.charAt(0).toUpperCase() + day.slice(1)}</div>`;
+    });
+    
+    // Time slots
+    timeSlots.forEach(time => {
+        timetableHTML += `<div class="timetable-cell timetable-header">${time}</div>`;
+        
+        days.forEach(day => {
+            const cellCourses = courses.filter(course => 
+                course.day === day && 
+                course.time.startsWith(time.split(':')[0])
+            );
+            
+            timetableHTML += `<div class="timetable-cell">`;
+            
+            cellCourses.forEach(course => {
+                timetableHTML += `<div class="course-slot">${course.name}</div>`;
+            });
+            
+            timetableHTML += `</div>`;
+        });
+    });
+    
+    timetableView.innerHTML = timetableHTML;
+}
+
+function updateStudyTrackerDisplay() {
+    const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+    const studySessionsBody = document.getElementById('study-sessions-body');
+    
+    // Calculate stats
+    const today = new Date().toDateString();
+    const thisWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    
+    const todaySessions = studySessions.filter(s => 
+        new Date(s.startTime).toDateString() === today
+    );
+    
+    const weekSessions = studySessions.filter(s => 
+        new Date(s.startTime) >= thisWeek
+    );
+    
+    const todayDuration = todaySessions.reduce((sum, s) => sum + s.duration, 0);
+    const weekDuration = weekSessions.reduce((sum, s) => sum + s.duration, 0);
+    const totalDuration = studySessions.reduce((sum, s) => sum + s.duration, 0);
+    
+    const todayHours = Math.floor(todayDuration / 60);
+    const todayMinutes = todayDuration % 60;
+    
+    const weekHours = Math.floor(weekDuration / 60);
+    const weekMinutes = weekDuration % 60;
+    
+    const totalHours = Math.floor(totalDuration / 60);
+    const totalMinutes = totalDuration % 60;
+    
+    const studyTodayElement = document.getElementById('study-today');
+    const studyWeekElement = document.getElementById('study-week');
+    const studyTotalElement = document.getElementById('study-total');
+    
+    if (studyTodayElement) studyTodayElement.textContent = `${todayHours}h ${todayMinutes}m`;
+    if (studyWeekElement) studyWeekElement.textContent = `${weekHours}h ${weekMinutes}m`;
+    if (studyTotalElement) studyTotalElement.textContent = `${totalHours}h ${totalMinutes}m`;
+    
+    // Update study sessions list
+    let sessionsHTML = '';
+    
+    studySessions.slice(-5).reverse().forEach(session => {
+        const date = new Date(session.startTime).toLocaleDateString();
+        const hours = Math.floor(session.duration / 60);
+        const minutes = session.duration % 60;
+        
+        sessionsHTML += `
+            <tr>
+                <td>${session.subject}</td>
+                <td>${hours}h ${minutes}m</td>
+                <td>${date}</td>
+                <td><button class="delete-btn" onclick="deleteStudySession(${session.id})">Delete</button></td>
+            </tr>
+        `;
+    });
+    
+    if (studySessionsBody) studySessionsBody.innerHTML = sessionsHTML || '<tr><td colspan="4">No study sessions</td></tr>';
+}
+
+function deleteStudySession(id) {
+    let studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+    studySessions = studySessions.filter(s => s.id !== id);
+    localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
+    updateStudyTrackerDisplay();
+}
+
+function updateHomeworkDisplay() {
+    const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    const homeworkList = document.getElementById('homework-list');
+    
+    let homeworkHTML = '';
+    
+    homeworks.filter(h => !h.completed).forEach(homework => {
+        const dueDate = new Date(homework.due).toLocaleDateString();
+        homeworkHTML += `
+            <div class="homework-item">
+                <div>
+                    <strong>${homework.subject}</strong><br>
+                    <div>${homework.task}</div>
+                    <small>Due: ${dueDate} - Priority: ${homework.priority}</small>
+                </div>
+                <div>
+                    <button class="btn-complete" onclick="completeHomework(${homework.id})">Complete</button>
+                    <button class="delete-btn" onclick="deleteHomework(${homework.id})">Delete</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    if (homeworkList) homeworkList.innerHTML = homeworkHTML || '<p>No homework</p>';
+}
+
+function completeHomework(id) {
+    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    const homeworkIndex = homeworks.findIndex(h => h.id === id);
+    
+    if (homeworkIndex !== -1) {
+        homeworks[homeworkIndex].completed = true;
+        localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
+        updateHomeworkDisplay();
+    }
+}
+
+function deleteHomework(id) {
+    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    homeworks = homeworks.filter(h => h.id !== id);
+    localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
+    updateHomeworkDisplay();
+}
+
+function updateExamsDisplay() {
+    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    const examsList = document.getElementById('exams-list');
+    
+    let examsHTML = '';
+    
+    exams.forEach(exam => {
+        const examDate = new Date(exam.date).toLocaleDateString();
+        examsHTML += `
+            <div class="exam-item">
+                <div>
+                    <strong>${exam.subject}</strong><br>
+                    <small>Date: ${examDate} at ${exam.time}</small>
+                    ${exam.location ? `<br><small>Location: ${exam.location}</small>` : ''}
+                </div>
+                <button class="delete-btn" onclick="deleteExam(${exam.id})">Delete</button>
+            </div>
+        `;
+    });
+    
+    if (examsList) examsList.innerHTML = examsHTML || '<p>No exams</p>';
+}
+
+function deleteExam(id) {
+    let exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    exams = exams.filter(e => e.id !== id);
+    localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
+    updateExamsDisplay();
+}
+
+// Dashboard
+function updateDashboard() {
+    // This function updates the dashboard with latest data from all trackers
+    // Most updates are handled within individual tracker update functions
+}
+
+// Background Services
+function startBackgroundServices() {
+    // Check for medication alarms
+    setInterval(checkMedicationAlarms, 60000); // Check every minute
+    
+    // Check for notifications
+    setInterval(checkScheduledNotifications, 60000); // Check every minute
+    
+    // Check for screen time notifications (nightly)
+    setInterval(checkScreenTimeNotifications, 60000); // Check every minute
+}
+
+function checkMedicationAlarms() {
+    const medications = JSON.parse(localStorage.getItem('lifesphere_medications')) || [];
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    
+    medications.forEach(med => {
+        med.times.forEach(time => {
+            if (time === currentTime) {
+                triggerMedicationAlarm(med);
+            }
+        });
+    });
+}
+
+function triggerMedicationAlarm(medication) {
+    if (localStorage.getItem('lifesphere_ringtone') !== 'granted') return;
+    
+    const alarmModal = document.getElementById('medication-alarm');
+    const alarmMessage = document.getElementById('alarm-message');
+    const stopAlarmBtn = document.getElementById('stop-alarm');
+    
+    if (alarmModal && alarmMessage && stopAlarmBtn) {
+        alarmMessage.textContent = `Time to take ${medication.name} - ${medication.dosage}`;
+        alarmModal.style.display = 'flex';
+        
+        // Create and play alarm sound
+        medicationAlarmAudio = new Audio();
+        medicationAlarmAudio.src = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dyvm0eBzF/z/LQdSkFJHfH8N2QQAoUXrTp66hVFApGn+Dyvm0eBzF/z/LQdSk=";
+        medicationAlarmAudio.loop = true;
+        medicationAlarmAudio.play();
+        
+        stopAlarmBtn.onclick = function() {
+            alarmModal.style.display = 'none';
+            medicationAlarmAudio.pause();
+            medicationAlarmAudio.currentTime = 0;
+        };
+    }
+}
+
+function checkScheduledNotifications() {
+    const now = new Date();
+    
+    // Morning notifications (8 AM)
+    if (now.getHours() === 8 && now.getMinutes() === 0) {
+        sendMorningNotifications();
+    }
+    
+    // Meal notifications (check every minute)
+    checkMealNotifications();
+    
+    // Screen time notifications (9 PM)
+    if (now.getHours() === 21 && now.getMinutes() === 0) {
+        sendScreenTimeNotification();
+    }
+}
+
+function sendMorningNotifications() {
+    if (localStorage.getItem('lifesphere_notifications') !== 'enabled') return;
+    
+    const notifications = [
+        { title: '🌅 Good Morning!', message: 'Time to start your day. Check your water intake goals.' },
+        { title: '💧 Water Reminder', message: 'Don\'t forget to track your water intake today!' },
+        { title: '🎓 Study Time', message: 'Plan your study sessions for today.' },
+        { title: '⚒️ Tasks', message: 'Review your tasks for today.' },
+        { title: '😴 Sleep Review', message: 'How did you sleep last night? Log it in the sleep tracker.' }
+    ];
+    
+    notifications.forEach((notification, index) => {
+        setTimeout(() => {
+            showNotification(notification.title, notification.message);
+        }, index * 30000); // 30 seconds apart
+    });
+}
+
+function checkMealNotifications() {
+    const meals = JSON.parse(localStorage.getItem('lifesphere_meals')) || [];
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    
+    meals.forEach(meal => {
+        // Check if meal time is 2 minutes from now
+        const mealTime = new Date(`2000-01-01T${meal.time}`);
+        const notifyTime = new Date(mealTime.getTime() - 2 * 60000); // 2 minutes before
+        const notifyTimeString = notifyTime.getHours().toString().padStart(2, '0') + ':' + notifyTime.getMinutes().toString().padStart(2, '0');
+        
+        if (notifyTimeString === currentTime) {
+            showMealNotification(meal);
+        }
+    });
+}
+
+function showMealNotification(meal) {
+    if (localStorage.getItem('lifesphere_notifications') !== 'enabled') return;
+    
+    const notificationId = `meal-${meal.id}`;
+    
+    if (notificationTimeouts.has(notificationId)) return; // Already showing
+    
+    const title = `🍽️ ${meal.type.charAt(0).toUpperCase() + meal.type.slice(1)} Time`;
+    const message = `Time for ${meal.name} in 2 minutes!`;
+    
+    showNotification(title, message, notificationId);
+}
+
+function sendScreenTimeNotification() {
+    if (localStorage.getItem('lifesphere_notifications') !== 'enabled') return;
+    
+    const screenData = JSON.parse(localStorage.getItem('lifesphere_screen')) || {};
+    const goal = screenData.goal || 4;
+    const todaySeconds = screenData.seconds || 0;
+    const todayHours = Math.floor(todaySeconds / 3600);
+    
+    let message = `You used ${todayHours}h of screen time today. `;
+    if (todayHours > goal) {
+        message += `That's ${todayHours - goal}h over your goal of ${goal}h.`;
+    } else {
+        message += `Great job staying under your ${goal}h goal!`;
+    }
+    
+    // This notification doesn't require acknowledgment
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('📱 Screen Time Summary', {
+            body: message,
+            icon: '/icon.png'
+        });
+    }
+}
+
+function showNotification(title, message, notificationId = null) {
+    const notificationModal = document.getElementById('notification-modal');
+    const notificationTitle = document.getElementById('notification-title');
+    const notificationMessage = document.getElementById('notification-message');
+    const acknowledgeBtn = document.getElementById('acknowledge-notification');
+    const remindLaterBtn = document.getElementById('remind-later');
+    
+    if (notificationModal && notificationTitle && notificationMessage && acknowledgeBtn && remindLaterBtn) {
+        notificationTitle.textContent = title;
+        notificationMessage.textContent = message;
+        notificationModal.style.display = 'flex';
+        
+        // Clear existing timeouts for this notification
+        if (notificationId && notificationTimeouts.has(notificationId)) {
+            clearTimeout(notificationTimeouts.get(notificationId));
+            notificationTimeouts.delete(notificationId);
+        }
+        
+        // Set timeout to resend notification after 45 seconds if no response
+        const resendTimeout = setTimeout(() => {
+            notificationModal.style.display = 'none';
+            // Resend after 15 seconds
+            setTimeout(() => {
+                showNotification(title, message, notificationId);
+            }, 15000);
+        }, 45000);
+        
+        acknowledgeBtn.onclick = function() {
+            notificationModal.style.display = 'none';
+            if (notificationId) {
+                clearTimeout(resendTimeout);
+                notificationTimeouts.delete(notificationId);
+            }
+        };
+        
+        remindLaterBtn.onclick = function() {
+            notificationModal.style.display = 'none';
+            if (notificationId) {
+                clearTimeout(resendTimeout);
+                notificationTimeouts.delete(notificationId);
+                // Resend after 5 minutes
+                setTimeout(() => {
+                    showNotification(title, message, notificationId);
+                }, 300000);
+            }
+        };
+        
+        if (notificationId) {
+            notificationTimeouts.set(notificationId, resendTimeout);
+        }
+    }
+}
+
+// Initialize all data
 function loadAllData() {
     console.log('Loading all data...');
-    // Load all saved data from localStorage
+    // Data loading is handled within individual tracker initialization
 }
 
 function initializeCharts() {
     console.log('Initializing charts...');
-    // Initialize Chart.js charts
     const ctx = document.getElementById('weekly-chart');
     if (ctx) {
         // Create sample chart
@@ -1539,22 +1709,37 @@ function initializeCharts() {
     }
 }
 
-function updateDashboard() {
-    console.log('Updating dashboard...');
-    // Update dashboard with latest data
+// Update functions for tabs that need it
+function updateLifeLoopDisplay() {
+    // Already handled in initializeLifeLoop
 }
 
-// Error handling for missing elements
-function safeQuerySelector(selector) {
-    const element = document.querySelector(selector);
-    if (!element) {
-        console.warn(`Element not found: ${selector}`);
-    }
-    return element;
+function updateTaskForgeDisplay() {
+    // Already handled in initializeTaskForge
 }
 
-// Export functions for global access if needed
+function updateEduPlanDisplay() {
+    // Already handled in initializeEduPlan
+}
+
+// Export functions for global access
 window.LifeSphere = {
     initializeApp,
     updateDashboard
 };
+
+// Make delete functions globally available
+window.deleteWaterHistory = deleteWaterHistory;
+window.deleteWorkout = deleteWorkout;
+window.deleteMedication = deleteMedication;
+window.deleteMeal = deleteMeal;
+window.deleteScreenHistory = deleteScreenHistory;
+window.deleteSleep = deleteSleep;
+window.deleteReminder = deleteReminder;
+window.completeTodo = completeTodo;
+window.deleteTodo = deleteTodo;
+window.deleteSubscription = deleteSubscription;
+window.deleteStudySession = deleteStudySession;
+window.completeHomework = completeHomework;
+window.deleteHomework = deleteHomework;
+window.deleteExam = deleteExam;
