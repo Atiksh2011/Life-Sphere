@@ -1205,6 +1205,7 @@ footer {
         flex-direction: column;
     }
 }
+
 /* Enhanced Sleep Tracker Styles */
 .sleep-history-section {
     margin: 2rem 0;
@@ -1524,4 +1525,73 @@ footer {
     .grades-table th, .grades-table td {
         padding: 0.5rem;
     }
+}
+
+/* Additional styles for enhanced components */
+.category-tag {
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.category-tag.streaming { background: #ff6b6b; color: white; }
+.category-tag.software { background: #4ecdc4; color: white; }
+.category-tag.utility { background: #45b7d1; color: white; }
+.category-tag.gaming { background: #96ceb4; color: white; }
+.category-tag.other { background: #feca57; color: white; }
+
+.status-badge {
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-badge.active { background: #6bcf7f; color: white; }
+.status-badge.renewing-soon { background: #ffd93d; color: #333; }
+.status-badge.expired { background: #ff6b6b; color: white; }
+
+.btn-complete {
+    background: #6bcf7f;
+    color: white;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.btn-complete:hover {
+    background: #5abd73;
+    transform: scale(1.05);
+}
+
+.reminder-type {
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.reminder-type.birthday { background: #ff9ff3; color: white; }
+.reminder-type.anniversary { background: #f368e0; color: white; }
+.reminder-type.holiday { background: #ff9f43; color: white; }
+.reminder-type.other { background: #54a0ff; color: white; }
+
+.past-badge {
+    background: #95a5a6;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.upcoming-badge {
+    background: #2ecc71;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
 }
