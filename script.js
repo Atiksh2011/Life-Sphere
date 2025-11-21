@@ -1831,3 +1831,257 @@ window.completeHomework = completeHomework;
 window.deleteHomework = deleteHomework;
 window.deleteExam = deleteExam;
 
+// Enhanced TaskForge functionality
+function updateTaskForgeDisplay() {
+    updateTodoDisplay();
+    updateSubscriptionsDisplay();
+}
+
+function updateTodoDisplay() {
+    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const todoList = document.getElementById('todo-list');
+    const completedList = document.getElementById('completed-list');
+    const pendingCount = document.getElementById('pending-count');
+    const completedCount = document.getElementById('completed-count');
+    
+    const pendingTodos = todos.filter(t => !t.completed);
+    const completedTodos = todos.filter(t => t.completed);
+    
+    let todoHTML = '';
+    let completedHTML = '';
+    
+    // Pending tasks
+    pendingTodos.forEach(task => {
+        const dueDate = task.due ? new Date(task.due).toLocaleDateString() : 'No due date';
+        todoHTML += `
+            <div class="task-item ${task.priority}">
+                <div class="task-info">
+                    <div class="task-main">
+                        <span class="task-text">${task.task}</span>
+                        <span class="task-priority">${task.priority}</span>
+                    </div>
+                    <div class="task-due">Due: ${dueDate}</div>
+                </div>
+                <div class="task-actions">
+                    <button class="btn-complete" onclick="completeTodo(${task.id})">✓</button>
+                    <button class="delete-btn" onclick="deleteTodo(${task.id})">✕</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    // Completed tasks
+    completedTodos.forEach(task => {
+        const dueDate = task.due ? new Date(task.due).toLocaleDateString() : 'No due date';
+        completedHTML += `
+            <div class="task-item completed">
+                <div class="task-info">
+                    <div class="task-main">
+                        <span class="task-text" style="text-decoration: line-through; opacity: 0.7;">${task.task}</span>
+                        <span class="task-priority">${task.priority}</span>
+                    </div>
+                    <div class="task-due">Due: ${dueDate}</div>
+                </div>
+                <div class="task-actions">
+                    <button class="delete-btn" onclick="deleteTodo(${task.id})">✕</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    if (todoList) todoList.innerHTML = todoHTML || '<div class="empty-state"><p>No pending tasks</p></div>';
+    if (completedList) completedList.innerHTML = completedHTML || '<div class="empty-state"><p>No completed tasks</p></div>';
+    if (pendingCount) pendingCount.textContent = `${pendingTodos.length} pending`;
+    if (completedCount) completedCount.textContent = `${completedTodos.length} completed`;
+    
+    // Update dashboard
+    const tasksTodayElement = document.getElementById('tasks-today');
+    const tasksProgressElement = document.getElementById('tasks-progress');
+    
+    if (tasksTodayElement) tasksTodayElement.textContent = `0/${pendingTodos.length}`;
+    if (tasksProgressElement) tasksProgressElement.style.width = '0%';
+}
+
+function updateSubscriptionsDisplay() {
+    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    const subscriptionsBody = document.getElementById('subscriptions-body');
+    const totalSubs = document.getElementById('total-subs');
+    const monthlyCost = document.getElementById('monthly-cost');
+    
+    const totalMonthly = subscriptions.reduce((sum, sub) => sum + sub.price, 0);
+    
+    let subscriptionsHTML = '';
+    
+    subscriptions.forEach(sub => {
+        const renewalDate = new Date(sub.renewal);
+        const now = new Date();
+        const daysUntil = Math.ceil((renewalDate - now) / (1000 * 60 * 60 * 24));
+        const status = daysUntil <= 7 ? 'renewing-soon' : daysUntil <= 0 ? 'expired' : 'active';
+        const statusText = daysUntil <= 7 ? 'Renewing Soon' : daysUntil <= 0 ? 'Expired' : 'Active';
+        
+        subscriptionsHTML += `
+            <tr>
+                <td>${sub.name}</td>
+                <td><span class="category-tag ${sub.category}">${sub.category}</span></td>
+                <td>$${sub.price.toFixed(2)}</td>
+                <td>${renewalDate.toLocaleDateString()}</td>
+                <td><span class="status-badge ${status}">${statusText}</span></td>
+                <td>
+                    <button class="delete-btn" onclick="deleteSubscription(${sub.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (subscriptionsBody) subscriptionsBody.innerHTML = subscriptionsHTML || '<tr><td colspan="6">No subscriptions</td></tr>';
+    if (totalSubs) totalSubs.textContent = `${subscriptions.length} subscriptions`;
+    if (monthlyCost) monthlyCost.textContent = `$${totalMonthly.toFixed(2)}/month`;
+}
+
+// Enhanced EduPlan functionality
+function updateEduPlanDisplay() {
+    updateTimetableDisplay();
+    updateStudyTrackerDisplay();
+    updateHomeworkDisplay();
+    updateExamsDisplay();
+    updateGradesDisplay();
+}
+
+function updateGradesDisplay() {
+    const grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    const gradesBody = document.getElementById('grades-body');
+    const currentGpa = document.getElementById('current-gpa');
+    const totalCourses = document.getElementById('total-courses');
+    
+    const uniqueSubjects = new Set(grades.map(g => g.subject));
+    
+    let gradesHTML = '';
+    
+    grades.forEach(grade => {
+        const percentage = ((grade.score / grade.max) * 100).toFixed(1);
+        const date = new Date(grade.date).toLocaleDateString();
+        
+        gradesHTML += `
+            <tr>
+                <td>${grade.subject}</td>
+                <td>${grade.type}</td>
+                <td>${grade.score}/${grade.max}</td>
+                <td>${percentage}%</td>
+                <td>${grade.weight}%</td>
+                <td>${date}</td>
+                <td>
+                    <button class="delete-btn" onclick="deleteGrade(${grade.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (gradesBody) gradesBody.innerHTML = gradesHTML || '<tr><td colspan="7">No grades recorded</td></tr>';
+    if (currentGpa) currentGpa.textContent = `GPA: ${calculateGPA(grades).toFixed(2)}`;
+    if (totalCourses) totalCourses.textContent = `${uniqueSubjects.size} courses`;
+}
+
+function calculateGPA(grades) {
+    if (grades.length === 0) return 0;
+    
+    const totalPercentage = grades.reduce((sum, grade) => {
+        return sum + ((grade.score / grade.max) * 100);
+    }, 0);
+    
+    const averagePercentage = totalPercentage / grades.length;
+    
+    // Simple GPA calculation (adjust as needed)
+    if (averagePercentage >= 90) return 4.0;
+    if (averagePercentage >= 80) return 3.0;
+    if (averagePercentage >= 70) return 2.0;
+    if (averagePercentage >= 60) return 1.0;
+    return 0.0;
+}
+
+// Initialize grade form
+function initializeGradeForm() {
+    const gradeForm = document.getElementById('grade-form');
+    if (gradeForm) {
+        gradeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const grade = {
+                id: Date.now(),
+                subject: document.getElementById('grade-subject').value,
+                type: document.getElementById('grade-type').value,
+                score: parseFloat(document.getElementById('grade-score').value),
+                max: parseFloat(document.getElementById('grade-max').value),
+                weight: parseFloat(document.getElementById('grade-weight').value),
+                date: document.getElementById('grade-date').value,
+                created: new Date().toISOString()
+            };
+            
+            saveGrade(grade);
+            this.reset();
+        });
+    }
+}
+
+function saveGrade(grade) {
+    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    grades.push(grade);
+    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
+    updateGradesDisplay();
+}
+
+function deleteGrade(id) {
+    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    grades = grades.filter(g => g.id !== id);
+    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
+    updateGradesDisplay();
+}
+
+// Initialize subtab navigation
+function initializeSubtabNavigation() {
+    // TaskForge subtabs
+    const taskforgeNav = document.querySelectorAll('.taskforge-nav a');
+    const taskforgeSections = document.querySelectorAll('.taskforge-section');
+    
+    taskforgeNav.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetSection = tab.getAttribute('href')?.substring(1) || tab.dataset.section;
+            
+            taskforgeNav.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            taskforgeSections.forEach(section => {
+                section.classList.remove('active');
+                if (section.id === targetSection) {
+                    section.classList.add('active');
+                }
+            });
+        });
+    });
+    
+    // EduPlan subtabs
+    const eduplanNav = document.querySelectorAll('.eduplan-nav a');
+    const eduplanSections = document.querySelectorAll('.eduplan-section');
+    
+    eduplanNav.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetSection = tab.getAttribute('href')?.substring(1) || tab.dataset.section;
+            
+            eduplanNav.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            eduplanSections.forEach(section => {
+                section.classList.remove('active');
+                if (section.id === targetSection) {
+                    section.classList.add('active');
+                }
+            });
+        });
+    });
+}
+
+// Update initializeApp function to include new initializations
+// Add this line in initializeApp function:
+initializeSubtabNavigation();
+initializeGradeForm();
