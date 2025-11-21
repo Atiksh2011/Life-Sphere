@@ -21,6 +21,9 @@ function initializeApp() {
     // Initialize tab navigation
     initializeTabNavigation();
     
+    // Initialize subtab navigation
+    initializeSubtabNavigation();
+    
     // Initialize all trackers
     initializeWaterTracker();
     initializeWorkoutTracker();
@@ -31,6 +34,7 @@ function initializeApp() {
     initializeLifeLoop();
     initializeTaskForge();
     initializeEduPlan();
+    initializeGradeForm();
     
     // Load all data
     loadAllData();
@@ -132,6 +136,51 @@ function updateTabContent(tabId) {
             updateEduPlanDisplay();
             break;
     }
+}
+
+// Initialize subtab navigation
+function initializeSubtabNavigation() {
+    // TaskForge subtabs
+    const taskforgeNav = document.querySelectorAll('.taskforge-nav a');
+    const taskforgeSections = document.querySelectorAll('.taskforge-section');
+    
+    taskforgeNav.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetSection = tab.dataset.section;
+            
+            taskforgeNav.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            taskforgeSections.forEach(section => {
+                section.classList.remove('active');
+                if (section.id === targetSection) {
+                    section.classList.add('active');
+                }
+            });
+        });
+    });
+    
+    // EduPlan subtabs
+    const eduplanNav = document.querySelectorAll('.eduplan-nav a');
+    const eduplanSections = document.querySelectorAll('.eduplan-section');
+    
+    eduplanNav.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetSection = tab.dataset.section;
+            
+            eduplanNav.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            eduplanSections.forEach(section => {
+                section.classList.remove('active');
+                if (section.id === targetSection) {
+                    section.classList.add('active');
+                }
+            });
+        });
+    });
 }
 
 // Water Tracker
@@ -661,12 +710,12 @@ function initializeScreenTimeTracker() {
     const stopBtn = document.getElementById('stop-tracking');
     const addManualBtn = document.getElementById('add-manual');
     const goalInput = document.getElementById('screen-goal');
+    const resetBtn = document.getElementById('reset-screen');
 
     if (startBtn) {
         startBtn.addEventListener('click', function() {
             if (!screenTracking) {
                 screenTracking = true;
-                screenStartTime = new Date();
                 this.disabled = true;
                 document.getElementById('stop-tracking').disabled = false;
                 
@@ -711,6 +760,14 @@ function initializeScreenTimeTracker() {
 
     if (goalInput) {
         goalInput.addEventListener('change', function() {
+            updateScreenDisplay();
+            saveScreenData();
+        });
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            screenTimeSeconds = 0;
             updateScreenDisplay();
             saveScreenData();
         });
@@ -896,10 +953,14 @@ function updateSleepDisplay() {
         
         historyHTML += `
             <div class="sleep-item">
-                <div>${date}</div>
-                <div>${hours}h ${minutes}m</div>
-                <div>Quality: ${sleep.quality}/5</div>
-                ${sleep.notes ? `<div class="sleep-notes">${sleep.notes}</div>` : ''}
+                <div class="sleep-item-info">
+                    <div class="sleep-item-header">
+                        <div class="sleep-date">${date}</div>
+                        <div class="sleep-duration">${hours}h ${minutes}m</div>
+                    </div>
+                    <div class="sleep-quality">Quality: ${sleep.quality}/5</div>
+                    ${sleep.notes ? `<div class="sleep-notes">${sleep.notes}</div>` : ''}
+                </div>
                 <button class="delete-btn" onclick="deleteSleep(${sleep.id})">Delete</button>
             </div>
         `;
@@ -969,205 +1030,6 @@ function saveReminder(reminder) {
     updateLifeLoopDisplay();
 }
 
-function updateLifeLoopDisplay() {
-    const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
-    const upcomingReminders = document.getElementById('upcoming-reminders');
-    const allReminders = document.getElementById('all-reminders');
-    
-    // Sort reminders by date
-    reminders.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    const now = new Date();
-    const upcoming = reminders.filter(r => new Date(r.date) >= now);
-    const past = reminders.filter(r => new Date(r.date) < now);
-    
-    let upcomingHTML = '';
-    let allHTML = '';
-    
-    upcoming.slice(0, 5).forEach(reminder => {
-        const date = new Date(reminder.date).toLocaleDateString();
-        upcomingHTML += `
-            <div class="reminder-item">
-                <div>
-                    <strong>${reminder.name}</strong><br>
-                    <small>${date} - ${reminder.type}</small>
-                </div>
-                <button class="delete-btn" onclick="deleteReminder(${reminder.id})">Delete</button>
-            </div>
-        `;
-    });
-    
-    reminders.forEach(reminder => {
-        const date = new Date(reminder.date).toLocaleDateString();
-        allHTML += `
-            <div class="reminder-item">
-                <div>
-                    <strong>${reminder.name}</strong><br>
-                    <small>${date} - ${reminder.type}</small>
-                </div>
-                <button class="delete-btn" onclick="deleteReminder(${reminder.id})">Delete</button>
-            </div>
-        `;
-    });
-    
-    if (upcomingReminders) upcomingReminders.innerHTML = upcomingHTML || '<p>No upcoming reminders</p>';
-    if (allReminders) allReminders.innerHTML = allHTML || '<p>No reminders</p>';
-}
-
-function deleteReminder(id) {
-    let reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
-    reminders = reminders.filter(r => r.id !== id);
-    localStorage.setItem('lifesphere_reminders', JSON.stringify(reminders));
-    updateLifeLoopDisplay();
-}
-
-// TaskForge
-function initializeTaskForge() {
-    const todoForm = document.getElementById('todo-form');
-    const subscriptionForm = document.getElementById('subscription-form');
-    
-    if (todoForm) {
-        todoForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const task = {
-                id: Date.now(),
-                task: document.getElementById('todo-task').value,
-                priority: document.getElementById('todo-priority').value,
-                due: document.getElementById('todo-due').value,
-                completed: false,
-                created: new Date().toISOString()
-            };
-            
-            saveTodo(task);
-            this.reset();
-        });
-    }
-    
-    if (subscriptionForm) {
-        subscriptionForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const subscription = {
-                id: Date.now(),
-                name: document.getElementById('sub-name').value,
-                price: parseFloat(document.getElementById('sub-price').value),
-                renewal: document.getElementById('sub-renewal').value,
-                category: document.getElementById('sub-category').value,
-                created: new Date().toISOString()
-            };
-            
-            saveSubscription(subscription);
-            this.reset();
-        });
-    }
-}
-
-function saveTodo(task) {
-    let todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
-    todos.push(task);
-    localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
-    
-    updateTaskForgeDisplay();
-    updateDashboard();
-}
-
-function updateTaskForgeDisplay() {
-    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
-    const todoList = document.getElementById('todo-list');
-    const completedList = document.getElementById('completed-list');
-    const subscriptionsBody = document.getElementById('subscriptions-body');
-    
-    let todoHTML = '';
-    let completedHTML = '';
-    
-    todos.forEach(task => {
-        const taskHTML = `
-            <div class="todo-item ${task.completed ? 'completed' : ''}">
-                <div>${task.task}</div>
-                <div class="todo-actions">
-                    <span class="todo-priority priority-${task.priority}">${task.priority}</span>
-                    ${!task.completed ? 
-                        `<button class="btn-complete" onclick="completeTodo(${task.id})">Complete</button>` : 
-                        `<button class="btn-delete" onclick="deleteTodo(${task.id})">Delete</button>`
-                    }
-                </div>
-            </div>
-        `;
-        
-        if (task.completed) {
-            completedHTML += taskHTML;
-        } else {
-            todoHTML += taskHTML;
-        }
-    });
-    
-    if (todoList) todoList.innerHTML = todoHTML || '<p>No tasks</p>';
-    if (completedList) completedList.innerHTML = completedHTML || '<p>No completed tasks</p>';
-    
-    // Update subscriptions
-    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
-    let subscriptionsHTML = '';
-    
-    subscriptions.forEach(sub => {
-        const renewalDate = new Date(sub.renewal).toLocaleDateString();
-        subscriptionsHTML += `
-            <tr>
-                <td>${sub.name}</td>
-                <td>$${sub.price.toFixed(2)}</td>
-                <td>${renewalDate}</td>
-                <td>${sub.category}</td>
-                <td><button class="delete-btn" onclick="deleteSubscription(${sub.id})">Delete</button></td>
-            </tr>
-        `;
-    });
-    
-    if (subscriptionsBody) subscriptionsBody.innerHTML = subscriptionsHTML || '<tr><td colspan="5">No subscriptions</td></tr>';
-    
-    // Update dashboard
-    const today = new Date().toDateString();
-    const todayTasks = todos.filter(t => !t.completed);
-    const tasksTodayElement = document.getElementById('tasks-today');
-    const tasksProgressElement = document.getElementById('tasks-progress');
-    
-    if (tasksTodayElement) tasksTodayElement.textContent = `0/${todayTasks.length}`;
-    if (tasksProgressElement) tasksProgressElement.style.width = '0%';
-}
-
-function completeTodo(id) {
-    let todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
-    const taskIndex = todos.findIndex(t => t.id === id);
-    
-    if (taskIndex !== -1) {
-        todos[taskIndex].completed = true;
-        localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
-        updateTaskForgeDisplay();
-        updateDashboard();
-    }
-}
-
-function deleteTodo(id) {
-    let todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
-    todos = todos.filter(t => t.id !== id);
-    localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
-    updateTaskForgeDisplay();
-    updateDashboard();
-}
-
-function saveSubscription(subscription) {
-    let subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
-    subscriptions.push(subscription);
-    localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
-    
-    updateTaskForgeDisplay();
-}
-
-function deleteSubscription(id) {
-    let subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
-    subscriptions = subscriptions.filter(s => s.id !== id);
-    localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
-    updateTaskForgeDisplay();
-}
 function updateLifeLoopDisplay() {
     const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
     const upcomingReminders = document.getElementById('upcoming-reminders');
@@ -1256,6 +1118,206 @@ function updateLifeLoopDisplay() {
     }
 }
 
+function deleteReminder(id) {
+    let reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
+    reminders = reminders.filter(r => r.id !== id);
+    localStorage.setItem('lifesphere_reminders', JSON.stringify(reminders));
+    updateLifeLoopDisplay();
+}
+
+// TaskForge
+function initializeTaskForge() {
+    const todoForm = document.getElementById('todo-form');
+    const subscriptionForm = document.getElementById('subscription-form');
+    
+    if (todoForm) {
+        todoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const task = {
+                id: Date.now(),
+                task: document.getElementById('todo-task').value,
+                priority: document.getElementById('todo-priority').value,
+                due: document.getElementById('todo-due').value,
+                completed: false,
+                created: new Date().toISOString()
+            };
+            
+            saveTodo(task);
+            this.reset();
+        });
+    }
+    
+    if (subscriptionForm) {
+        subscriptionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const subscription = {
+                id: Date.now(),
+                name: document.getElementById('sub-name').value,
+                price: parseFloat(document.getElementById('sub-price').value),
+                renewal: document.getElementById('sub-renewal').value,
+                category: document.getElementById('sub-category').value,
+                created: new Date().toISOString()
+            };
+            
+            saveSubscription(subscription);
+            this.reset();
+        });
+    }
+}
+
+function saveTodo(task) {
+    let todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    todos.push(task);
+    localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
+    
+    updateTaskForgeDisplay();
+    updateDashboard();
+}
+
+function updateTaskForgeDisplay() {
+    updateTodoDisplay();
+    updateSubscriptionsDisplay();
+}
+
+function updateTodoDisplay() {
+    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const todoList = document.getElementById('todo-list');
+    const completedList = document.getElementById('completed-list');
+    const pendingCount = document.getElementById('pending-count');
+    const completedCount = document.getElementById('completed-count');
+    
+    const pendingTodos = todos.filter(t => !t.completed);
+    const completedTodos = todos.filter(t => t.completed);
+    
+    let todoHTML = '';
+    let completedHTML = '';
+    
+    // Pending tasks
+    pendingTodos.forEach(task => {
+        const dueDate = task.due ? new Date(task.due).toLocaleDateString() : 'No due date';
+        todoHTML += `
+            <div class="task-item ${task.priority}">
+                <div class="task-info">
+                    <div class="task-main">
+                        <span class="task-text">${task.task}</span>
+                        <span class="todo-priority priority-${task.priority}">${task.priority}</span>
+                    </div>
+                    <div class="task-due">Due: ${dueDate}</div>
+                </div>
+                <div class="task-actions">
+                    <button class="btn-complete" onclick="completeTodo(${task.id})">✓</button>
+                    <button class="delete-btn" onclick="deleteTodo(${task.id})">✕</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    // Completed tasks
+    completedTodos.forEach(task => {
+        const dueDate = task.due ? new Date(task.due).toLocaleDateString() : 'No due date';
+        completedHTML += `
+            <div class="task-item completed">
+                <div class="task-info">
+                    <div class="task-main">
+                        <span class="task-text" style="text-decoration: line-through; opacity: 0.7;">${task.task}</span>
+                        <span class="todo-priority priority-${task.priority}">${task.priority}</span>
+                    </div>
+                    <div class="task-due">Due: ${dueDate}</div>
+                </div>
+                <div class="task-actions">
+                    <button class="delete-btn" onclick="deleteTodo(${task.id})">✕</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    if (todoList) todoList.innerHTML = todoHTML || '<div class="empty-state"><p>No pending tasks</p></div>';
+    if (completedList) completedList.innerHTML = completedHTML || '<div class="empty-state"><p>No completed tasks</p></div>';
+    if (pendingCount) pendingCount.textContent = `${pendingTodos.length} pending`;
+    if (completedCount) completedCount.textContent = `${completedTodos.length} completed`;
+    
+    // Update dashboard
+    const todayTasks = todos.filter(t => !t.completed);
+    const tasksTodayElement = document.getElementById('tasks-today');
+    const tasksProgressElement = document.getElementById('tasks-progress');
+    
+    if (tasksTodayElement) tasksTodayElement.textContent = `0/${todayTasks.length}`;
+    if (tasksProgressElement) tasksProgressElement.style.width = '0%';
+}
+
+function completeTodo(id) {
+    let todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const taskIndex = todos.findIndex(t => t.id === id);
+    
+    if (taskIndex !== -1) {
+        todos[taskIndex].completed = true;
+        localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
+        updateTaskForgeDisplay();
+        updateDashboard();
+    }
+}
+
+function deleteTodo(id) {
+    let todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    todos = todos.filter(t => t.id !== id);
+    localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
+    updateTaskForgeDisplay();
+    updateDashboard();
+}
+
+function saveSubscription(subscription) {
+    let subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    subscriptions.push(subscription);
+    localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
+    
+    updateTaskForgeDisplay();
+}
+
+function updateSubscriptionsDisplay() {
+    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    const subscriptionsBody = document.getElementById('subscriptions-body');
+    const totalSubs = document.getElementById('total-subs');
+    const monthlyCost = document.getElementById('monthly-cost');
+    
+    const totalMonthly = subscriptions.reduce((sum, sub) => sum + sub.price, 0);
+    
+    let subscriptionsHTML = '';
+    
+    subscriptions.forEach(sub => {
+        const renewalDate = new Date(sub.renewal);
+        const now = new Date();
+        const daysUntil = Math.ceil((renewalDate - now) / (1000 * 60 * 60 * 24));
+        const status = daysUntil <= 7 ? 'renewing-soon' : daysUntil <= 0 ? 'expired' : 'active';
+        const statusText = daysUntil <= 7 ? 'Renewing Soon' : daysUntil <= 0 ? 'Expired' : 'Active';
+        
+        subscriptionsHTML += `
+            <tr>
+                <td>${sub.name}</td>
+                <td><span class="category-tag ${sub.category}">${sub.category}</span></td>
+                <td>$${sub.price.toFixed(2)}</td>
+                <td>${renewalDate.toLocaleDateString()}</td>
+                <td><span class="status-badge ${status}">${statusText}</span></td>
+                <td>
+                    <button class="delete-btn" onclick="deleteSubscription(${sub.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (subscriptionsBody) subscriptionsBody.innerHTML = subscriptionsHTML || '<tr><td colspan="6">No subscriptions</td></tr>';
+    if (totalSubs) totalSubs.textContent = `${subscriptions.length} subscriptions`;
+    if (monthlyCost) monthlyCost.textContent = `$${totalMonthly.toFixed(2)}/month`;
+}
+
+function deleteSubscription(id) {
+    let subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    subscriptions = subscriptions.filter(s => s.id !== id);
+    localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
+    updateTaskForgeDisplay();
+}
+
 // EduPlan
 function initializeEduPlan() {
     const timetableForm = document.getElementById('timetable-form');
@@ -1270,9 +1332,11 @@ function initializeEduPlan() {
             const course = {
                 id: Date.now(),
                 name: document.getElementById('course-name').value,
+                code: document.getElementById('course-code').value,
                 day: document.getElementById('course-day').value,
                 time: document.getElementById('course-time').value,
                 duration: parseInt(document.getElementById('course-duration').value),
+                location: document.getElementById('course-location').value,
                 created: new Date().toISOString()
             };
             
@@ -1290,13 +1354,10 @@ function initializeEduPlan() {
                 subject: document.getElementById('study-subject').value,
                 topic: document.getElementById('study-topic').value,
                 duration: parseInt(document.getElementById('study-duration').value),
+                goal: document.getElementById('study-goal').value,
                 startTime: new Date().toISOString(),
-                endTime: null
+                endTime: new Date(Date.now() + parseInt(document.getElementById('study-duration').value) * 60 * 1000).toISOString()
             };
-            
-            // In a real app, you would start a timer and set endTime when done
-            // For this demo, we'll just save it as completed
-            studySession.endTime = new Date(Date.now() + studySession.duration * 60 * 1000).toISOString();
             
             saveStudySession(studySession);
             this.reset();
@@ -1313,6 +1374,7 @@ function initializeEduPlan() {
                 task: document.getElementById('hw-task').value,
                 due: document.getElementById('hw-due').value,
                 priority: document.getElementById('hw-priority').value,
+                estimate: parseInt(document.getElementById('hw-estimate').value),
                 completed: false,
                 created: new Date().toISOString()
             };
@@ -1329,9 +1391,11 @@ function initializeEduPlan() {
             const exam = {
                 id: Date.now(),
                 subject: document.getElementById('exam-subject').value,
+                type: document.getElementById('exam-type').value,
                 date: document.getElementById('exam-date').value,
                 time: document.getElementById('exam-time').value,
                 location: document.getElementById('exam-location').value,
+                duration: parseInt(document.getElementById('exam-duration').value),
                 created: new Date().toISOString()
             };
             
@@ -1378,6 +1442,7 @@ function updateEduPlanDisplay() {
     updateStudyTrackerDisplay();
     updateHomeworkDisplay();
     updateExamsDisplay();
+    updateGradesDisplay();
 }
 
 function updateTimetableDisplay() {
@@ -1387,31 +1452,38 @@ function updateTimetableDisplay() {
     if (!timetableView) return;
     
     // Create timetable grid
-    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const timeSlots = ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
     
     let timetableHTML = '';
     
     // Header row
-    timetableHTML += '<div class="timetable-cell timetable-header">Time</div>';
+    timetableHTML += '<div class="timetable-slot timetable-header">Time</div>';
     days.forEach(day => {
-        timetableHTML += `<div class="timetable-cell timetable-header">${day.charAt(0).toUpperCase() + day.slice(1)}</div>`;
+        timetableHTML += `<div class="timetable-slot timetable-header">${day}</div>`;
     });
     
     // Time slots
     timeSlots.forEach(time => {
-        timetableHTML += `<div class="timetable-cell timetable-header">${time}</div>`;
+        timetableHTML += `<div class="timetable-slot timetable-header">${time}</div>`;
         
         days.forEach(day => {
+            const dayLower = day.toLowerCase();
             const cellCourses = courses.filter(course => 
-                course.day === day && 
+                course.day === dayLower && 
                 course.time.startsWith(time.split(':')[0])
             );
             
-            timetableHTML += `<div class="timetable-cell">`;
+            timetableHTML += `<div class="timetable-slot">`;
             
             cellCourses.forEach(course => {
-                timetableHTML += `<div class="course-slot">${course.name}</div>`;
+                timetableHTML += `
+                    <div class="course-block">
+                        <strong>${course.name}</strong>
+                        ${course.code ? `<br><small>${course.code}</small>` : ''}
+                        ${course.location ? `<br><small>${course.location}</small>` : ''}
+                    </div>
+                `;
             });
             
             timetableHTML += `</div>`;
@@ -1424,6 +1496,11 @@ function updateTimetableDisplay() {
 function updateStudyTrackerDisplay() {
     const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
     const studySessionsBody = document.getElementById('study-sessions-body');
+    const studyTodayQuick = document.getElementById('study-today-quick');
+    const studyWeekQuick = document.getElementById('study-week-quick');
+    const studyToday = document.getElementById('study-today');
+    const studyWeek = document.getElementById('study-week');
+    const studyTotal = document.getElementById('study-total');
     
     // Calculate stats
     const today = new Date().toDateString();
@@ -1450,13 +1527,11 @@ function updateStudyTrackerDisplay() {
     const totalHours = Math.floor(totalDuration / 60);
     const totalMinutes = totalDuration % 60;
     
-    const studyTodayElement = document.getElementById('study-today');
-    const studyWeekElement = document.getElementById('study-week');
-    const studyTotalElement = document.getElementById('study-total');
-    
-    if (studyTodayElement) studyTodayElement.textContent = `${todayHours}h ${todayMinutes}m`;
-    if (studyWeekElement) studyWeekElement.textContent = `${weekHours}h ${weekMinutes}m`;
-    if (studyTotalElement) studyTotalElement.textContent = `${totalHours}h ${totalMinutes}m`;
+    if (studyTodayQuick) studyTodayQuick.textContent = `Today: ${todayHours}h ${todayMinutes}m`;
+    if (studyWeekQuick) studyWeekQuick.textContent = `Week: ${weekHours}h ${weekMinutes}m`;
+    if (studyToday) studyToday.textContent = `${todayHours}h ${todayMinutes}m`;
+    if (studyWeek) studyWeek.textContent = `${weekHours}h ${weekMinutes}m`;
+    if (studyTotal) studyTotal.textContent = `${totalHours}h ${totalMinutes}m`;
     
     // Update study sessions list
     let sessionsHTML = '';
@@ -1469,6 +1544,7 @@ function updateStudyTrackerDisplay() {
         sessionsHTML += `
             <tr>
                 <td>${session.subject}</td>
+                <td>${session.topic || '-'}</td>
                 <td>${hours}h ${minutes}m</td>
                 <td>${date}</td>
                 <td><button class="delete-btn" onclick="deleteStudySession(${session.id})">Delete</button></td>
@@ -1476,7 +1552,7 @@ function updateStudyTrackerDisplay() {
         `;
     });
     
-    if (studySessionsBody) studySessionsBody.innerHTML = sessionsHTML || '<tr><td colspan="4">No study sessions</td></tr>';
+    if (studySessionsBody) studySessionsBody.innerHTML = sessionsHTML || '<tr><td colspan="5">No study sessions</td></tr>';
 }
 
 function deleteStudySession(id) {
@@ -1489,17 +1565,27 @@ function deleteStudySession(id) {
 function updateHomeworkDisplay() {
     const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
     const homeworkList = document.getElementById('homework-list');
+    const pendingHomework = document.getElementById('pending-homework');
+    const dueSoon = document.getElementById('due-soon');
+    
+    const pending = homeworks.filter(h => !h.completed);
+    const now = new Date();
+    const soonDue = pending.filter(h => {
+        const dueDate = new Date(h.due);
+        const daysUntil = (dueDate - now) / (1000 * 60 * 60 * 24);
+        return daysUntil <= 3;
+    });
     
     let homeworkHTML = '';
     
-    homeworks.filter(h => !h.completed).forEach(homework => {
+    pending.forEach(homework => {
         const dueDate = new Date(homework.due).toLocaleDateString();
         homeworkHTML += `
             <div class="homework-item">
                 <div>
                     <strong>${homework.subject}</strong><br>
                     <div>${homework.task}</div>
-                    <small>Due: ${dueDate} - Priority: ${homework.priority}</small>
+                    <small>Due: ${dueDate} - Priority: ${homework.priority} - Est: ${homework.estimate}min</small>
                 </div>
                 <div>
                     <button class="btn-complete" onclick="completeHomework(${homework.id})">Complete</button>
@@ -1510,6 +1596,8 @@ function updateHomeworkDisplay() {
     });
     
     if (homeworkList) homeworkList.innerHTML = homeworkHTML || '<p>No homework</p>';
+    if (pendingHomework) pendingHomework.textContent = `${pending.length} pending`;
+    if (dueSoon) dueSoon.textContent = `${soonDue.length} due soon`;
 }
 
 function completeHomework(id) {
@@ -1533,10 +1621,19 @@ function deleteHomework(id) {
 function updateExamsDisplay() {
     const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
     const examsList = document.getElementById('exams-list');
+    const upcomingExams = document.getElementById('upcoming-exams');
+    const examsThisMonth = document.getElementById('exams-this-month');
+    
+    const now = new Date();
+    const upcoming = exams.filter(e => new Date(e.date) >= now);
+    const thisMonth = exams.filter(e => {
+        const examDate = new Date(e.date);
+        return examDate.getMonth() === now.getMonth() && examDate.getFullYear() === now.getFullYear();
+    });
     
     let examsHTML = '';
     
-    exams.forEach(exam => {
+    upcoming.forEach(exam => {
         const examDate = new Date(exam.date).toLocaleDateString();
         examsHTML += `
             <div class="exam-item">
@@ -1544,6 +1641,7 @@ function updateExamsDisplay() {
                     <strong>${exam.subject}</strong><br>
                     <small>Date: ${examDate} at ${exam.time}</small>
                     ${exam.location ? `<br><small>Location: ${exam.location}</small>` : ''}
+                    ${exam.type ? `<br><small>Type: ${exam.type}</small>` : ''}
                 </div>
                 <button class="delete-btn" onclick="deleteExam(${exam.id})">Delete</button>
             </div>
@@ -1551,6 +1649,8 @@ function updateExamsDisplay() {
     });
     
     if (examsList) examsList.innerHTML = examsHTML || '<p>No exams</p>';
+    if (upcomingExams) upcomingExams.textContent = `${upcoming.length} upcoming`;
+    if (examsThisMonth) examsThisMonth.textContent = `${thisMonth.length} this month`;
 }
 
 function deleteExam(id) {
@@ -1560,10 +1660,116 @@ function deleteExam(id) {
     updateExamsDisplay();
 }
 
+// Grade Tracker
+function initializeGradeForm() {
+    const gradeForm = document.getElementById('grade-form');
+    if (gradeForm) {
+        gradeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const grade = {
+                id: Date.now(),
+                subject: document.getElementById('grade-subject').value,
+                type: document.getElementById('grade-type').value,
+                score: parseFloat(document.getElementById('grade-score').value),
+                max: parseFloat(document.getElementById('grade-max').value),
+                weight: parseFloat(document.getElementById('grade-weight').value),
+                date: document.getElementById('grade-date').value,
+                created: new Date().toISOString()
+            };
+            
+            saveGrade(grade);
+            this.reset();
+        });
+    }
+}
+
+function saveGrade(grade) {
+    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    grades.push(grade);
+    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
+    updateGradesDisplay();
+}
+
+function updateGradesDisplay() {
+    const grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    const gradesBody = document.getElementById('grades-body');
+    const currentGpa = document.getElementById('current-gpa');
+    const totalCourses = document.getElementById('total-courses');
+    
+    const uniqueSubjects = new Set(grades.map(g => g.subject));
+    
+    let gradesHTML = '';
+    
+    grades.forEach(grade => {
+        const percentage = ((grade.score / grade.max) * 100).toFixed(1);
+        const date = new Date(grade.date).toLocaleDateString();
+        
+        gradesHTML += `
+            <tr>
+                <td>${grade.subject}</td>
+                <td>${grade.type}</td>
+                <td>${grade.score}/${grade.max}</td>
+                <td>${percentage}%</td>
+                <td>${grade.weight}%</td>
+                <td>${date}</td>
+                <td>
+                    <button class="delete-btn" onclick="deleteGrade(${grade.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (gradesBody) gradesBody.innerHTML = gradesHTML || '<tr><td colspan="7">No grades recorded</td></tr>';
+    if (currentGpa) currentGpa.textContent = `GPA: ${calculateGPA(grades).toFixed(2)}`;
+    if (totalCourses) totalCourses.textContent = `${uniqueSubjects.size} courses`;
+}
+
+function calculateGPA(grades) {
+    if (grades.length === 0) return 0;
+    
+    const totalPercentage = grades.reduce((sum, grade) => {
+        return sum + ((grade.score / grade.max) * 100);
+    }, 0);
+    
+    const averagePercentage = totalPercentage / grades.length;
+    
+    // Simple GPA calculation
+    if (averagePercentage >= 90) return 4.0;
+    if (averagePercentage >= 80) return 3.0;
+    if (averagePercentage >= 70) return 2.0;
+    if (averagePercentage >= 60) return 1.0;
+    return 0.0;
+}
+
+function deleteGrade(id) {
+    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    grades = grades.filter(g => g.id !== id);
+    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
+    updateGradesDisplay();
+}
+
 // Dashboard
 function updateDashboard() {
-    // This function updates the dashboard with latest data from all trackers
-    // Most updates are handled within individual tracker update functions
+    // Update today's tasks list
+    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const todayTasksList = document.getElementById('today-tasks-list');
+    
+    if (todayTasksList) {
+        const pendingTasks = todos.filter(t => !t.completed).slice(0, 5);
+        let tasksHTML = '';
+        
+        pendingTasks.forEach(task => {
+            tasksHTML += `
+                <div class="task-item ${task.priority}" style="margin-bottom: 0.5rem; padding: 0.5rem;">
+                    <div>${task.task}</div>
+                    <span class="todo-priority priority-${task.priority}">${task.priority}</span>
+                </div>
+            `;
+        });
+        
+        todayTasksList.innerHTML = tasksHTML || '<p>No tasks for today</p>';
+    }
 }
 
 // Background Services
@@ -1573,9 +1779,6 @@ function startBackgroundServices() {
     
     // Check for notifications
     setInterval(checkScheduledNotifications, 60000); // Check every minute
-    
-    // Check for screen time notifications (nightly)
-    setInterval(checkScreenTimeNotifications, 60000); // Check every minute
 }
 
 function checkMedicationAlarms() {
@@ -1796,19 +1999,6 @@ function initializeCharts() {
     }
 }
 
-// Update functions for tabs that need it
-function updateLifeLoopDisplay() {
-    // Already handled in initializeLifeLoop
-}
-
-function updateTaskForgeDisplay() {
-    // Already handled in initializeTaskForge
-}
-
-function updateEduPlanDisplay() {
-    // Already handled in initializeEduPlan
-}
-
 // Export functions for global access
 window.LifeSphere = {
     initializeApp,
@@ -1830,258 +2020,4 @@ window.deleteStudySession = deleteStudySession;
 window.completeHomework = completeHomework;
 window.deleteHomework = deleteHomework;
 window.deleteExam = deleteExam;
-
-// Enhanced TaskForge functionality
-function updateTaskForgeDisplay() {
-    updateTodoDisplay();
-    updateSubscriptionsDisplay();
-}
-
-function updateTodoDisplay() {
-    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
-    const todoList = document.getElementById('todo-list');
-    const completedList = document.getElementById('completed-list');
-    const pendingCount = document.getElementById('pending-count');
-    const completedCount = document.getElementById('completed-count');
-    
-    const pendingTodos = todos.filter(t => !t.completed);
-    const completedTodos = todos.filter(t => t.completed);
-    
-    let todoHTML = '';
-    let completedHTML = '';
-    
-    // Pending tasks
-    pendingTodos.forEach(task => {
-        const dueDate = task.due ? new Date(task.due).toLocaleDateString() : 'No due date';
-        todoHTML += `
-            <div class="task-item ${task.priority}">
-                <div class="task-info">
-                    <div class="task-main">
-                        <span class="task-text">${task.task}</span>
-                        <span class="task-priority">${task.priority}</span>
-                    </div>
-                    <div class="task-due">Due: ${dueDate}</div>
-                </div>
-                <div class="task-actions">
-                    <button class="btn-complete" onclick="completeTodo(${task.id})">✓</button>
-                    <button class="delete-btn" onclick="deleteTodo(${task.id})">✕</button>
-                </div>
-            </div>
-        `;
-    });
-    
-    // Completed tasks
-    completedTodos.forEach(task => {
-        const dueDate = task.due ? new Date(task.due).toLocaleDateString() : 'No due date';
-        completedHTML += `
-            <div class="task-item completed">
-                <div class="task-info">
-                    <div class="task-main">
-                        <span class="task-text" style="text-decoration: line-through; opacity: 0.7;">${task.task}</span>
-                        <span class="task-priority">${task.priority}</span>
-                    </div>
-                    <div class="task-due">Due: ${dueDate}</div>
-                </div>
-                <div class="task-actions">
-                    <button class="delete-btn" onclick="deleteTodo(${task.id})">✕</button>
-                </div>
-            </div>
-        `;
-    });
-    
-    if (todoList) todoList.innerHTML = todoHTML || '<div class="empty-state"><p>No pending tasks</p></div>';
-    if (completedList) completedList.innerHTML = completedHTML || '<div class="empty-state"><p>No completed tasks</p></div>';
-    if (pendingCount) pendingCount.textContent = `${pendingTodos.length} pending`;
-    if (completedCount) completedCount.textContent = `${completedTodos.length} completed`;
-    
-    // Update dashboard
-    const tasksTodayElement = document.getElementById('tasks-today');
-    const tasksProgressElement = document.getElementById('tasks-progress');
-    
-    if (tasksTodayElement) tasksTodayElement.textContent = `0/${pendingTodos.length}`;
-    if (tasksProgressElement) tasksProgressElement.style.width = '0%';
-}
-
-function updateSubscriptionsDisplay() {
-    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
-    const subscriptionsBody = document.getElementById('subscriptions-body');
-    const totalSubs = document.getElementById('total-subs');
-    const monthlyCost = document.getElementById('monthly-cost');
-    
-    const totalMonthly = subscriptions.reduce((sum, sub) => sum + sub.price, 0);
-    
-    let subscriptionsHTML = '';
-    
-    subscriptions.forEach(sub => {
-        const renewalDate = new Date(sub.renewal);
-        const now = new Date();
-        const daysUntil = Math.ceil((renewalDate - now) / (1000 * 60 * 60 * 24));
-        const status = daysUntil <= 7 ? 'renewing-soon' : daysUntil <= 0 ? 'expired' : 'active';
-        const statusText = daysUntil <= 7 ? 'Renewing Soon' : daysUntil <= 0 ? 'Expired' : 'Active';
-        
-        subscriptionsHTML += `
-            <tr>
-                <td>${sub.name}</td>
-                <td><span class="category-tag ${sub.category}">${sub.category}</span></td>
-                <td>$${sub.price.toFixed(2)}</td>
-                <td>${renewalDate.toLocaleDateString()}</td>
-                <td><span class="status-badge ${status}">${statusText}</span></td>
-                <td>
-                    <button class="delete-btn" onclick="deleteSubscription(${sub.id})">Delete</button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    if (subscriptionsBody) subscriptionsBody.innerHTML = subscriptionsHTML || '<tr><td colspan="6">No subscriptions</td></tr>';
-    if (totalSubs) totalSubs.textContent = `${subscriptions.length} subscriptions`;
-    if (monthlyCost) monthlyCost.textContent = `$${totalMonthly.toFixed(2)}/month`;
-}
-
-// Enhanced EduPlan functionality
-function updateEduPlanDisplay() {
-    updateTimetableDisplay();
-    updateStudyTrackerDisplay();
-    updateHomeworkDisplay();
-    updateExamsDisplay();
-    updateGradesDisplay();
-}
-
-function updateGradesDisplay() {
-    const grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
-    const gradesBody = document.getElementById('grades-body');
-    const currentGpa = document.getElementById('current-gpa');
-    const totalCourses = document.getElementById('total-courses');
-    
-    const uniqueSubjects = new Set(grades.map(g => g.subject));
-    
-    let gradesHTML = '';
-    
-    grades.forEach(grade => {
-        const percentage = ((grade.score / grade.max) * 100).toFixed(1);
-        const date = new Date(grade.date).toLocaleDateString();
-        
-        gradesHTML += `
-            <tr>
-                <td>${grade.subject}</td>
-                <td>${grade.type}</td>
-                <td>${grade.score}/${grade.max}</td>
-                <td>${percentage}%</td>
-                <td>${grade.weight}%</td>
-                <td>${date}</td>
-                <td>
-                    <button class="delete-btn" onclick="deleteGrade(${grade.id})">Delete</button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    if (gradesBody) gradesBody.innerHTML = gradesHTML || '<tr><td colspan="7">No grades recorded</td></tr>';
-    if (currentGpa) currentGpa.textContent = `GPA: ${calculateGPA(grades).toFixed(2)}`;
-    if (totalCourses) totalCourses.textContent = `${uniqueSubjects.size} courses`;
-}
-
-function calculateGPA(grades) {
-    if (grades.length === 0) return 0;
-    
-    const totalPercentage = grades.reduce((sum, grade) => {
-        return sum + ((grade.score / grade.max) * 100);
-    }, 0);
-    
-    const averagePercentage = totalPercentage / grades.length;
-    
-    // Simple GPA calculation (adjust as needed)
-    if (averagePercentage >= 90) return 4.0;
-    if (averagePercentage >= 80) return 3.0;
-    if (averagePercentage >= 70) return 2.0;
-    if (averagePercentage >= 60) return 1.0;
-    return 0.0;
-}
-
-// Initialize grade form
-function initializeGradeForm() {
-    const gradeForm = document.getElementById('grade-form');
-    if (gradeForm) {
-        gradeForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const grade = {
-                id: Date.now(),
-                subject: document.getElementById('grade-subject').value,
-                type: document.getElementById('grade-type').value,
-                score: parseFloat(document.getElementById('grade-score').value),
-                max: parseFloat(document.getElementById('grade-max').value),
-                weight: parseFloat(document.getElementById('grade-weight').value),
-                date: document.getElementById('grade-date').value,
-                created: new Date().toISOString()
-            };
-            
-            saveGrade(grade);
-            this.reset();
-        });
-    }
-}
-
-function saveGrade(grade) {
-    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
-    grades.push(grade);
-    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
-    updateGradesDisplay();
-}
-
-function deleteGrade(id) {
-    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
-    grades = grades.filter(g => g.id !== id);
-    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
-    updateGradesDisplay();
-}
-
-// Initialize subtab navigation
-function initializeSubtabNavigation() {
-    // TaskForge subtabs
-    const taskforgeNav = document.querySelectorAll('.taskforge-nav a');
-    const taskforgeSections = document.querySelectorAll('.taskforge-section');
-    
-    taskforgeNav.forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetSection = tab.getAttribute('href')?.substring(1) || tab.dataset.section;
-            
-            taskforgeNav.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            
-            taskforgeSections.forEach(section => {
-                section.classList.remove('active');
-                if (section.id === targetSection) {
-                    section.classList.add('active');
-                }
-            });
-        });
-    });
-    
-    // EduPlan subtabs
-    const eduplanNav = document.querySelectorAll('.eduplan-nav a');
-    const eduplanSections = document.querySelectorAll('.eduplan-section');
-    
-    eduplanNav.forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetSection = tab.getAttribute('href')?.substring(1) || tab.dataset.section;
-            
-            eduplanNav.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            
-            eduplanSections.forEach(section => {
-                section.classList.remove('active');
-                if (section.id === targetSection) {
-                    section.classList.add('active');
-                }
-            });
-        });
-    });
-}
-
-// Update initializeApp function to include new initializations
-// Add this line in initializeApp function:
-initializeSubtabNavigation();
-initializeGradeForm();
+window.deleteGrade = deleteGrade;
