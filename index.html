@@ -576,98 +576,135 @@
                 <div id="taskforge" class="tab-content">
                     <h2 class="section-title">TaskForge - Productivity Suite</h2>
                     <div class="taskforge-container">
-                        <div class="todo-section active">
-                            <h3>To-Do List</h3>
-                            <div class="todo-container">
-                                <div class="todo-form">
-                                    <h4>Add New Task</h4>
-                                    <form id="todo-form">
-                                        <div class="form-group">
-                                            <label for="todo-task">Task</label>
-                                            <input type="text" id="todo-task" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="todo-priority">Priority</label>
-                                            <select id="todo-priority" class="form-control">
-                                                <option value="low">Low</option>
-                                                <option value="medium">Medium</option>
-                                                <option value="high">High</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="todo-due">Due Date (optional)</label>
-                                            <input type="date" id="todo-due" class="form-control">
-                                        </div>
-                                        <button type="submit" class="btn-primary">Add Task</button>
-                                    </form>
+                        <div class="taskforge-sidebar">
+                            <ul class="taskforge-nav">
+                                <li><a href="#" class="active" data-section="todo">📝 To-Do List</a></li>
+                                <li><a href="#" data-section="subscriptions">💰 Subscriptions</a></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="taskforge-content">
+                            <!-- To-Do List Section -->
+                            <div id="todo" class="taskforge-section active">
+                                <div class="section-header">
+                                    <h3>To-Do List</h3>
+                                    <div class="task-stats">
+                                        <span id="pending-count">0 pending</span>
+                                        <span id="completed-count">0 completed</span>
+                                    </div>
                                 </div>
                                 
-                                <div class="todo-lists">
-                                    <div class="todo-list">
-                                        <h4>To-Do</h4>
-                                        <div id="todo-list">
-                                            <!-- To-do items will be here -->
-                                        </div>
+                                <div class="todo-container">
+                                    <div class="todo-form-section">
+                                        <h4>Add New Task</h4>
+                                        <form id="todo-form" class="todo-form">
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="todo-task">Task Description</label>
+                                                    <input type="text" id="todo-task" class="form-control" placeholder="What needs to be done?" required>
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="todo-priority">Priority</label>
+                                                    <select id="todo-priority" class="form-control">
+                                                        <option value="low">Low Priority</option>
+                                                        <option value="medium">Medium Priority</option>
+                                                        <option value="high">High Priority</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="todo-due">Due Date</label>
+                                                    <input type="date" id="todo-due" class="form-control">
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn-primary">Add Task</button>
+                                        </form>
                                     </div>
                                     
-                                    <div class="todo-list">
-                                        <h4>Completed</h4>
-                                        <div id="completed-list">
-                                            <!-- Completed items will be here -->
+                                    <div class="todo-lists-section">
+                                        <div class="todo-columns">
+                                            <div class="todo-column">
+                                                <h4>Pending Tasks</h4>
+                                                <div id="todo-list" class="task-list">
+                                                    <!-- Pending tasks will be here -->
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="todo-column">
+                                                <h4>Completed Tasks</h4>
+                                                <div id="completed-list" class="task-list completed">
+                                                    <!-- Completed tasks will be here -->
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="subscriptions-section">
-                            <h3>Subscription Reminder</h3>
-                            <div class="subscriptions-container">
-                                <div class="subscription-form">
-                                    <h4>Add Subscription</h4>
-                                    <form id="subscription-form">
-                                        <div class="form-group">
-                                            <label for="sub-name">Subscription Name</label>
-                                            <input type="text" id="sub-name" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="sub-price">Monthly Price</label>
-                                            <input type="number" id="sub-price" class="form-control" min="0" step="0.01" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="sub-renewal">Renewal Date</label>
-                                            <input type="date" id="sub-renewal" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="sub-category">Category</label>
-                                            <select id="sub-category" class="form-control">
-                                                <option value="streaming">Streaming</option>
-                                                <option value="software">Software</option>
-                                                <option value="utility">Utility</option>
-                                                <option value="other">Other</option>
-                                            </select>
-                                        </div>
-                                        <button type="submit" class="btn-primary">Add Subscription</button>
-                                    </form>
+                            
+                            <!-- Subscriptions Section -->
+                            <div id="subscriptions" class="taskforge-section">
+                                <div class="section-header">
+                                    <h3>Subscription Manager</h3>
+                                    <div class="subscription-stats">
+                                        <span id="total-subs">0 subscriptions</span>
+                                        <span id="monthly-cost">$0/month</span>
+                                    </div>
                                 </div>
                                 
-                                <div class="subscriptions-list">
-                                    <h4>Your Subscriptions</h4>
-                                    <div class="history-container">
-                                        <table class="history-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Name</th>
-                                                    <th>Price</th>
-                                                    <th>Renewal</th>
-                                                    <th>Category</th>
-                                                    <th>Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="subscriptions-body">
-                                                <!-- Subscriptions will be populated here -->
-                                            </tbody>
-                                        </table>
+                                <div class="subscriptions-container">
+                                    <div class="subscription-form-section">
+                                        <h4>Add New Subscription</h4>
+                                        <form id="subscription-form" class="subscription-form">
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="sub-name">Service Name</label>
+                                                    <input type="text" id="sub-name" class="form-control" placeholder="Netflix, Spotify, etc." required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="sub-price">Monthly Price ($)</label>
+                                                    <input type="number" id="sub-price" class="form-control" min="0" step="0.01" placeholder="0.00" required>
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="sub-category">Category</label>
+                                                    <select id="sub-category" class="form-control">
+                                                        <option value="streaming">Streaming</option>
+                                                        <option value="software">Software</option>
+                                                        <option value="utility">Utility</option>
+                                                        <option value="gaming">Gaming</option>
+                                                        <option value="other">Other</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="sub-renewal">Renewal Date</label>
+                                                    <input type="date" id="sub-renewal" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn-primary">Add Subscription</button>
+                                        </form>
+                                    </div>
+                                    
+                                    <div class="subscriptions-list-section">
+                                        <h4>Your Subscriptions</h4>
+                                        <div class="subscriptions-table-container">
+                                            <table class="subscriptions-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Service</th>
+                                                        <th>Category</th>
+                                                        <th>Price</th>
+                                                        <th>Renewal</th>
+                                                        <th>Status</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="subscriptions-body">
+                                                    <!-- Subscriptions will be populated here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -679,102 +716,342 @@
                 <div id="eduplan" class="tab-content">
                     <h2 class="section-title">EduPlan - Academic Organizer</h2>
                     <div class="eduplan-container">
-                        <div class="timetable-section active">
-                            <h3>Timetable Generator</h3>
-                            <div class="timetable-container">
-                                <div class="timetable-setup">
-                                    <h4>Create Your Schedule</h4>
-                                    <form id="timetable-form">
-                                        <div class="form-group">
-                                            <label for="course-name">Course/Subject</label>
-                                            <input type="text" id="course-name" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="course-day">Day</label>
-                                            <select id="course-day" class="form-control">
-                                                <option value="monday">Monday</option>
-                                                <option value="tuesday">Tuesday</option>
-                                                <option value="wednesday">Wednesday</option>
-                                                <option value="thursday">Thursday</option>
-                                                <option value="friday">Friday</option>
-                                                <option value="saturday">Saturday</option>
-                                                <option value="sunday">Sunday</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="course-time">Time</label>
-                                            <input type="time" id="course-time" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="course-duration">Duration (minutes)</label>
-                                            <input type="number" id="course-duration" class="form-control" min="15" value="60">
-                                        </div>
-                                        <button type="submit" class="btn-primary">Add to Timetable</button>
-                                    </form>
+                        <div class="eduplan-sidebar">
+                            <ul class="eduplan-nav">
+                                <li><a href="#" class="active" data-section="timetable">📅 Timetable</a></li>
+                                <li><a href="#" data-section="study">📚 Study Tracker</a></li>
+                                <li><a href="#" data-section="homework">📝 Homework</a></li>
+                                <li><a href="#" data-section="exams">📊 Exams</a></li>
+                                <li><a href="#" data-section="grades">🎯 Grades</a></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="eduplan-content">
+                            <!-- Timetable Section -->
+                            <div id="timetable" class="eduplan-section active">
+                                <div class="section-header">
+                                    <h3>Class Timetable</h3>
+                                    <button id="export-timetable" class="btn-secondary">Export Schedule</button>
                                 </div>
                                 
-                                <div class="timetable-display">
-                                    <h4>Your Weekly Timetable</h4>
-                                    <div class="timetable" id="timetable-view">
-                                        <!-- Timetable will be displayed here -->
+                                <div class="timetable-container">
+                                    <div class="timetable-setup">
+                                        <h4>Add Class</h4>
+                                        <form id="timetable-form" class="timetable-form">
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="course-name">Course Name</label>
+                                                    <input type="text" id="course-name" class="form-control" placeholder="e.g., Mathematics, Physics" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="course-code">Course Code</label>
+                                                    <input type="text" id="course-code" class="form-control" placeholder="e.g., MATH101">
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="course-day">Day</label>
+                                                    <select id="course-day" class="form-control">
+                                                        <option value="monday">Monday</option>
+                                                        <option value="tuesday">Tuesday</option>
+                                                        <option value="wednesday">Wednesday</option>
+                                                        <option value="thursday">Thursday</option>
+                                                        <option value="friday">Friday</option>
+                                                        <option value="saturday">Saturday</option>
+                                                        <option value="sunday">Sunday</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="course-time">Start Time</label>
+                                                    <input type="time" id="course-time" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="course-duration">Duration (min)</label>
+                                                    <input type="number" id="course-duration" class="form-control" min="15" value="60">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="course-location">Location</label>
+                                                <input type="text" id="course-location" class="form-control" placeholder="Room number or building">
+                                            </div>
+                                            <button type="submit" class="btn-primary">Add to Timetable</button>
+                                        </form>
+                                    </div>
+                                    
+                                    <div class="timetable-display">
+                                        <h4>Weekly Schedule</h4>
+                                        <div class="timetable-view" id="timetable-view">
+                                            <!-- Timetable will be displayed here -->
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="study-section">
-                            <h3>Study Tracker</h3>
-                            <div class="study-container">
-                                <div class="study-session">
-                                    <h4>Start Study Session</h4>
-                                    <form id="study-form">
-                                        <div class="form-group">
-                                            <label for="study-subject">Subject</label>
-                                            <input type="text" id="study-subject" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="study-topic">Topic (optional)</label>
-                                            <input type="text" id="study-topic" class="form-control">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="study-duration">Planned Duration (minutes)</label>
-                                            <input type="number" id="study-duration" class="form-control" min="15" value="60">
-                                        </div>
-                                        <button type="submit" class="btn-primary">Start Session</button>
-                                    </form>
+                            
+                            <!-- Study Tracker Section -->
+                            <div id="study" class="eduplan-section">
+                                <div class="section-header">
+                                    <h3>Study Tracker</h3>
+                                    <div class="study-stats-quick">
+                                        <span id="study-today-quick">Today: 0h 0m</span>
+                                        <span id="study-week-quick">Week: 0h 0m</span>
+                                    </div>
                                 </div>
                                 
-                                <div class="study-stats">
-                                    <h4>Study Statistics</h4>
-                                    <div class="study-overview">
-                                        <div class="study-stat">
-                                            <h5>Today</h5>
-                                            <div id="study-today">0h 0m</div>
-                                        </div>
-                                        <div class="study-stat">
-                                            <h5>This Week</h5>
-                                            <div id="study-week">0h 0m</div>
-                                        </div>
-                                        <div class="study-stat">
-                                            <h5>Total</h5>
-                                            <div id="study-total">0h 0m</div>
-                                        </div>
+                                <div class="study-container">
+                                    <div class="study-session-section">
+                                        <h4>Start Study Session</h4>
+                                        <form id="study-form" class="study-form">
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="study-subject">Subject</label>
+                                                    <input type="text" id="study-subject" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="study-topic">Topic</label>
+                                                    <input type="text" id="study-topic" class="form-control" placeholder="Specific topic (optional)">
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="study-duration">Duration (minutes)</label>
+                                                    <input type="number" id="study-duration" class="form-control" min="15" value="60">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="study-goal">Study Goal</label>
+                                                    <input type="text" id="study-goal" class="form-control" placeholder="What you want to achieve">
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn-primary">Start Session</button>
+                                        </form>
                                     </div>
                                     
-                                    <div class="study-history">
-                                        <h5>Recent Study Sessions</h5>
-                                        <div class="history-container">
-                                            <table class="history-table">
+                                    <div class="study-progress-section">
+                                        <div class="study-stats-detailed">
+                                            <div class="study-stat-card">
+                                                <h5>Today</h5>
+                                                <div id="study-today">0h 0m</div>
+                                            </div>
+                                            <div class="study-stat-card">
+                                                <h5>This Week</h5>
+                                                <div id="study-week">0h 0m</div>
+                                            </div>
+                                            <div class="study-stat-card">
+                                                <h5>Total</h5>
+                                                <div id="study-total">0h 0m</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="study-history-section">
+                                            <h5>Recent Sessions</h5>
+                                            <div class="study-sessions-table-container">
+                                                <table class="study-sessions-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Subject</th>
+                                                            <th>Topic</th>
+                                                            <th>Duration</th>
+                                                            <th>Date</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="study-sessions-body">
+                                                        <!-- Study sessions will be here -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Homework Section -->
+                            <div id="homework" class="eduplan-section">
+                                <div class="section-header">
+                                    <h3>Homework Tracker</h3>
+                                    <div class="homework-stats">
+                                        <span id="pending-homework">0 pending</span>
+                                        <span id="due-soon">0 due soon</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="homework-container">
+                                    <div class="homework-form-section">
+                                        <h4>Add Homework</h4>
+                                        <form id="homework-form" class="homework-form">
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="hw-subject">Subject</label>
+                                                    <input type="text" id="hw-subject" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="hw-priority">Priority</label>
+                                                    <select id="hw-priority" class="form-control">
+                                                        <option value="low">Low</option>
+                                                        <option value="medium">Medium</option>
+                                                        <option value="high">High</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="hw-task">Assignment Description</label>
+                                                <textarea id="hw-task" class="form-control" rows="3" placeholder="Describe the homework assignment..." required></textarea>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="hw-due">Due Date</label>
+                                                    <input type="date" id="hw-due" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="hw-estimate">Time Estimate (min)</label>
+                                                    <input type="number" id="hw-estimate" class="form-control" min="15" value="60">
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn-primary">Add Homework</button>
+                                        </form>
+                                    </div>
+                                    
+                                    <div class="homework-list-section">
+                                        <h4>Pending Assignments</h4>
+                                        <div id="homework-list" class="homework-list">
+                                            <!-- Homework items will be here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Exams Section -->
+                            <div id="exams" class="eduplan-section">
+                                <div class="section-header">
+                                    <h3>Exam Schedule</h3>
+                                    <div class="exam-stats">
+                                        <span id="upcoming-exams">0 upcoming</span>
+                                        <span id="exams-this-month">0 this month</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="exams-container">
+                                    <div class="exam-form-section">
+                                        <h4>Add Exam</h4>
+                                        <form id="exam-form" class="exam-form">
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="exam-subject">Subject</label>
+                                                    <input type="text" id="exam-subject" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="exam-type">Exam Type</label>
+                                                    <select id="exam-type" class="form-control">
+                                                        <option value="midterm">Midterm</option>
+                                                        <option value="final">Final</option>
+                                                        <option value="quiz">Quiz</option>
+                                                        <option value="test">Test</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="exam-date">Exam Date</label>
+                                                    <input type="date" id="exam-date" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="exam-time">Exam Time</label>
+                                                    <input type="time" id="exam-time" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="exam-location">Location</label>
+                                                    <input type="text" id="exam-location" class="form-control" placeholder="Room number or building">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="exam-duration">Duration (min)</label>
+                                                    <input type="number" id="exam-duration" class="form-control" min="15" value="120">
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn-primary">Add Exam</button>
+                                        </form>
+                                    </div>
+                                    
+                                    <div class="exams-list-section">
+                                        <h4>Upcoming Exams</h4>
+                                        <div id="exams-list" class="exams-list">
+                                            <!-- Exams will be here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Grades Section -->
+                            <div id="grades" class="eduplan-section">
+                                <div class="section-header">
+                                    <h3>Grade Tracker</h3>
+                                    <div class="grade-stats">
+                                        <span id="current-gpa">GPA: -</span>
+                                        <span id="total-courses">0 courses</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="grades-container">
+                                    <div class="grade-form-section">
+                                        <h4>Add Grade</h4>
+                                        <form id="grade-form" class="grade-form">
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="grade-subject">Subject</label>
+                                                    <input type="text" id="grade-subject" class="form-control" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="grade-type">Assessment Type</label>
+                                                    <select id="grade-type" class="form-control">
+                                                        <option value="assignment">Assignment</option>
+                                                        <option value="quiz">Quiz</option>
+                                                        <option value="midterm">Midterm</option>
+                                                        <option value="final">Final</option>
+                                                        <option value="project">Project</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="grade-score">Score</label>
+                                                    <input type="number" id="grade-score" class="form-control" min="0" max="100" step="0.1" placeholder="0-100" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="grade-max">Maximum Score</label>
+                                                    <input type="number" id="grade-max" class="form-control" min="1" value="100">
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label for="grade-weight">Weight (%)</label>
+                                                    <input type="number" id="grade-weight" class="form-control" min="0" max="100" value="100">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="grade-date">Date</label>
+                                                    <input type="date" id="grade-date" class="form-control" required>
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn-primary">Add Grade</button>
+                                        </form>
+                                    </div>
+                                    
+                                    <div class="grades-list-section">
+                                        <h4>Grade History</h4>
+                                        <div class="grades-table-container">
+                                            <table class="grades-table">
                                                 <thead>
                                                     <tr>
                                                         <th>Subject</th>
-                                                        <th>Duration</th>
+                                                        <th>Type</th>
+                                                        <th>Score</th>
+                                                        <th>Percentage</th>
+                                                        <th>Weight</th>
                                                         <th>Date</th>
-                                                        <th>Action</th>
+                                                        <th>Actions</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody id="study-sessions-body">
-                                                    <!-- Study sessions will be here -->
+                                                <tbody id="grades-body">
+                                                    <!-- Grades will be populated here -->
                                                 </tbody>
                                             </table>
                                         </div>
@@ -782,85 +1059,8 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="homework-section">
-                            <h3>Homework Tracker</h3>
-                            <div class="homework-container">
-                                <div class="homework-form">
-                                    <h4>Add Homework</h4>
-                                    <form id="homework-form">
-                                        <div class="form-group">
-                                            <label for="hw-subject">Subject</label>
-                                            <input type="text" id="hw-subject" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="hw-task">Task Description</label>
-                                            <textarea id="hw-task" class="form-control" rows="3" required></textarea>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="hw-due">Due Date</label>
-                                            <input type="date" id="hw-due" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="hw-priority">Priority</label>
-                                            <select id="hw-priority" class="form-control">
-                                                <option value="low">Low</option>
-                                                <option value="medium">Medium</option>
-                                                <option value="high">High</option>
-                                            </select>
-                                        </div>
-                                        <button type="submit" class="btn-primary">Add Homework</button>
-                                    </form>
-                                </div>
-                                
-                                <div class="homework-list">
-                                    <h4>Pending Homework</h4>
-                                    <div id="homework-list">
-                                        <!-- Homework items will be here -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="exams-section">
-                            <h3>Exam Tracker</h3>
-                            <div class="exams-container">
-                                <div class="exam-form">
-                                    <h4>Add Exam</h4>
-                                    <form id="exam-form">
-                                        <div class="form-group">
-                                            <label for="exam-subject">Subject</label>
-                                            <input type="text" id="exam-subject" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="exam-date">Exam Date</label>
-                                            <input type="date" id="exam-date" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="exam-time">Exam Time</label>
-                                            <input type="time" id="exam-time" class="form-control" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="exam-location">Location (optional)</label>
-                                            <input type="text" id="exam-location" class="form-control">
-                                        </div>
-                                        <button type="submit" class="btn-primary">Add Exam</button>
-                                    </form>
-                                </div>
-                                
-                                <div class="exams-list">
-                                    <h4>Upcoming Exams</h4>
-                                    <div id="exams-list">
-                                        <!-- Exams will be here -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Medication Alarm Modal -->
     <div id="medication-alarm" class="modal" style="display: none;">
@@ -895,4 +1095,5 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
