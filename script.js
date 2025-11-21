@@ -1214,4 +1214,347 @@ function initializeCharts() {
     };
     
     new Chart(ctx, config);
+
 }
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('LifeSphere initialized');
+    
+    // Initialize all components
+    initializeApp();
+});
+
+function initializeApp() {
+    // Initialize notification system
+    initializeNotifications();
+    
+    // Initialize tab navigation
+    initializeTabNavigation();
+    
+    // Initialize all trackers
+    initializeWaterTracker();
+    initializeWorkoutTracker();
+    initializeHabitTracker();
+    initializeMedicationTracker();
+    initializeMealPlanner();
+    initializeScreenTimeTracker();
+    initializeSleepTracker();
+    
+    // Initialize HomeBase modules
+    initializeHomeBase();
+    
+    // Initialize LifeLoop modules
+    initializeLifeLoop();
+    
+    // Initialize TaskForge modules
+    initializeTaskForge();
+    
+    // Initialize EduPlan modules
+    initializeEduPlan();
+    
+    // Load all data
+    loadAllData();
+    
+    // Initialize charts
+    initializeCharts();
+}
+
+// Notification System
+function initializeNotifications() {
+    const notificationBtn = document.getElementById('notification-btn');
+    if (notificationBtn) {
+        notificationBtn.addEventListener('click', function() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        alert('Notifications enabled! You will receive reminders for your goals.');
+                        this.textContent = 'Notifications Enabled';
+                        this.disabled = true;
+                    } else {
+                        alert('Notifications disabled. You can enable them later in your browser settings.');
+                    }
+                }.bind(this));
+            } else {
+                alert('This browser does not support notifications.');
+            }
+        });
+    }
+}
+
+// Tab Navigation
+function initializeTabNavigation() {
+    const navTabs = document.querySelectorAll('.nav-tabs a');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    navTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetTab = tab.dataset.tab;
+            
+            // Update active tab
+            navTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Show target tab content
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === targetTab) {
+                    content.classList.add('active');
+                }
+            });
+            
+            // Update any tab-specific content
+            updateTabContent(targetTab);
+        });
+    });
+}
+
+function updateTabContent(tabId) {
+    switch(tabId) {
+        case 'dashboard':
+            updateDashboard();
+            break;
+        case 'water':
+            updateWaterDisplay();
+            break;
+        case 'workout':
+            updateWorkoutDisplay();
+            break;
+        case 'habits':
+            updateHabitDisplay();
+            break;
+        case 'medication':
+            updateMedicationDisplay();
+            break;
+        case 'meals':
+            updateMealDisplay();
+            break;
+        case 'screen':
+            updateScreenDisplay();
+            break;
+        case 'sleep':
+            updateSleepDisplay();
+            break;
+    }
+}
+
+// Water Tracker
+function initializeWaterTracker() {
+    let waterGoal = 8;
+    let waterConsumed = 0;
+
+    // Load saved data
+    const savedData = localStorage.getItem('lifesphere_water');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        waterGoal = data.goal || 8;
+        waterConsumed = data.consumed || 0;
+    }
+
+    // Event listeners
+    const increaseBtn = document.getElementById('increase-goal');
+    const decreaseBtn = document.getElementById('decrease-goal');
+    const addGlassBtn = document.getElementById('add-glass');
+    const resetBtn = document.getElementById('reset-water');
+    const addWaterBtn = document.getElementById('add-water');
+
+    if (increaseBtn) increaseBtn.addEventListener('click', () => {
+        waterGoal++;
+        updateWaterGoal();
+    });
+
+    if (decreaseBtn) decreaseBtn.addEventListener('click', () => {
+        if (waterGoal > 1) {
+            waterGoal--;
+            updateWaterGoal();
+        }
+    });
+
+    if (addGlassBtn) addGlassBtn.addEventListener('click', () => {
+        waterConsumed++;
+        updateWaterDisplay();
+        saveWaterData();
+    });
+
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+        waterConsumed = 0;
+        updateWaterDisplay();
+        saveWaterData();
+    });
+
+    if (addWaterBtn) addWaterBtn.addEventListener('click', () => {
+        waterConsumed++;
+        updateWaterDisplay();
+        saveWaterData();
+    });
+
+    // Water cups in dashboard
+    document.querySelectorAll('.cup').forEach(cup => {
+        cup.addEventListener('click', function() {
+            const cupNumber = parseInt(this.dataset.cup);
+            waterConsumed = cupNumber;
+            updateWaterDisplay();
+            saveWaterData();
+        });
+    });
+
+    function updateWaterGoal() {
+        const goalElement = document.getElementById('water-goal');
+        const targetElement = document.getElementById('water-target');
+        
+        if (goalElement) goalElement.textContent = waterGoal;
+        if (targetElement) targetElement.textContent = waterGoal;
+        
+        updateWaterDisplay();
+        saveWaterData();
+    }
+
+    function updateWaterDisplay() {
+        const percentage = Math.min(100, (waterConsumed / waterGoal) * 100);
+        
+        // Update dashboard
+        const waterTodayElement = document.getElementById('water-today');
+        const waterProgressElement = document.getElementById('water-progress');
+        
+        if (waterTodayElement) waterTodayElement.textContent = `${waterConsumed}/${waterGoal} glasses`;
+        if (waterProgressElement) waterProgressElement.style.width = `${percentage}%`;
+        
+        // Update water tracker tab
+        const waterConsumedElement = document.getElementById('water-consumed');
+        const waterPercentageElement = document.getElementById('water-percentage');
+        const waterFillElement = document.getElementById('water-fill');
+        
+        if (waterConsumedElement) waterConsumedElement.textContent = waterConsumed;
+        if (waterPercentageElement) waterPercentageElement.textContent = `${percentage.toFixed(0)}%`;
+        if (waterFillElement) waterFillElement.style.height = `${percentage}%`;
+        
+        // Update cups in dashboard
+        document.querySelectorAll('.cup').forEach((cup, index) => {
+            if (index < waterConsumed) {
+                cup.classList.add('drank');
+            } else {
+                cup.classList.remove('drank');
+            }
+        });
+    }
+
+    function saveWaterData() {
+        const waterData = {
+            goal: waterGoal,
+            consumed: waterConsumed,
+            lastUpdated: new Date().toISOString()
+        };
+        localStorage.setItem('lifesphere_water', JSON.stringify(waterData));
+    }
+
+    // Initialize display
+    updateWaterDisplay();
+}
+
+// Initialize other trackers (simplified for example)
+function initializeWorkoutTracker() {
+    console.log('Workout tracker initialized');
+    // Add workout tracking functionality here
+}
+
+function initializeHabitTracker() {
+    console.log('Habit tracker initialized');
+    // Add habit tracking functionality here
+}
+
+function initializeMedicationTracker() {
+    console.log('Medication tracker initialized');
+    // Add medication tracking functionality here
+}
+
+function initializeMealPlanner() {
+    console.log('Meal planner initialized');
+    // Add meal planning functionality here
+}
+
+function initializeScreenTimeTracker() {
+    console.log('Screen time tracker initialized');
+    // Add screen time tracking functionality here
+}
+
+function initializeSleepTracker() {
+    console.log('Sleep tracker initialized');
+    // Add sleep tracking functionality here
+}
+
+function initializeHomeBase() {
+    console.log('HomeBase initialized');
+    // Add HomeBase functionality here
+}
+
+function initializeLifeLoop() {
+    console.log('LifeLoop initialized');
+    // Add LifeLoop functionality here
+}
+
+function initializeTaskForge() {
+    console.log('TaskForge initialized');
+    // Add TaskForge functionality here
+}
+
+function initializeEduPlan() {
+    console.log('EduPlan initialized');
+    // Add EduPlan functionality here
+}
+
+function loadAllData() {
+    console.log('Loading all data...');
+    // Load all saved data from localStorage
+}
+
+function initializeCharts() {
+    console.log('Initializing charts...');
+    // Initialize Chart.js charts
+    const ctx = document.getElementById('weekly-chart');
+    if (ctx) {
+        // Create sample chart
+        new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Water Intake (glasses)',
+                    data: [6, 8, 7, 5, 8, 6, 7],
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+}
+
+function updateDashboard() {
+    console.log('Updating dashboard...');
+    // Update dashboard with latest data
+}
+
+// Error handling for missing elements
+function safeQuerySelector(selector) {
+    const element = document.querySelector(selector);
+    if (!element) {
+        console.warn(`Element not found: ${selector}`);
+    }
+    return element;
+}
+
+// Export functions for global access if needed
+window.LifeSphere = {
+    initializeApp,
+    updateDashboard
+};
