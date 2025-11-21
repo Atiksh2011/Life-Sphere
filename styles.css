@@ -1,0 +1,1181 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header Styles */
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+}
+
+.logo i {
+    margin-right: 10px;
+    font-size: 2rem;
+}
+
+.btn-notification {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-notification:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Main Content Styles */
+.main-content {
+    display: flex;
+    margin: 2rem 0;
+    gap: 2rem;
+}
+
+.sidebar {
+    flex: 0 0 250px;
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    height: fit-content;
+}
+
+.sidebar h3 {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+}
+
+.sidebar h3 i {
+    margin-right: 8px;
+}
+
+.nav-tabs {
+    list-style: none;
+}
+
+.nav-tabs li {
+    margin-bottom: 0.5rem;
+}
+
+.nav-tabs a {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    text-decoration: none;
+    color: #555;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs a i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.nav-tabs a:hover {
+    background: #f0f2f5;
+    color: #667eea;
+}
+
+.nav-tabs a.active {
+    background: #667eea;
+    color: white;
+}
+
+.content-area {
+    flex: 1;
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.section-title {
+    margin-bottom: 1.5rem;
+    color: #444;
+    font-weight: 600;
+}
+
+/* Stats Container */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    border-left: 4px solid #667eea;
+}
+
+.stat-card h3 {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.stat-card .value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.progress {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    transition: border 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+/* Button Styles */
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: #f0f2f5;
+    color: #555;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: #e4e6e9;
+}
+
+/* Today Overview */
+.today-overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.overview-item {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.overview-item h4 {
+    margin-bottom: 1rem;
+    color: #444;
+}
+
+.water-cups {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.cup {
+    background: #f0f2f5;
+    border-radius: 8px;
+    padding: 0.8rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cup:hover {
+    background: #e4e6e9;
+}
+
+.cup.drank {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+/* Chart Container */
+.chart-container {
+    height: 300px;
+    margin-bottom: 2rem;
+}
+
+/* Water Tracker Styles */
+.water-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.water-goal {
+    grid-column: 1 / -1;
+    text-align: center;
+}
+
+.goal-setter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-goal {
+    background: #f0f2f5;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-goal:hover {
+    background: #e4e6e9;
+}
+
+.water-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.water-bottle {
+    width: 120px;
+    height: 200px;
+    background: #f0f2f5;
+    border-radius: 10px 10px 50px 50px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.water-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, #667eea, #764ba2);
+    transition: height 0.5s ease;
+}
+
+.water-stats {
+    text-align: center;
+}
+
+.water-consumed {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.water-percentage {
+    font-size: 1.2rem;
+    color: #667eea;
+}
+
+.water-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.water-history {
+    grid-column: 1 / -1;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+    padding: 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.history-table th {
+    font-weight: 600;
+    color: #555;
+}
+
+/* Workout Logger Styles */
+.workout-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.workout-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.workout-stat {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.workout-stat h4 {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 0.5rem;
+}
+
+.workout-stat div {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.workout-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.workout-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.workout-item-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.workout-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.workout-type {
+    background: #667eea;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.workout-details {
+    display: flex;
+    gap: 1rem;
+    color: #777;
+    font-size: 0.9rem;
+}
+
+/* Habit Tracker Styles */
+.habits-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+.habits-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.habit-stat {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.habit-stat h4 {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 0.5rem;
+}
+
+.habit-stat div {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.habits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.habit-item {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    border: 1px solid #eee;
+    transition: all 0.3s ease;
+}
+
+.habit-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.habit-name {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.habit-category {
+    font-size: 0.8rem;
+    color: #777;
+    margin-bottom: 1rem;
+}
+
+.habit-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.habit-check {
+    width: 30px;
+    height: 30px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.habit-check.checked {
+    background: #4CAF50;
+    border-color: #4CAF50;
+    color: white;
+}
+
+.habit-calendar {
+    margin-top: 2rem;
+}
+
+/* Medication Styles */
+.medication-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.med-time {
+    margin-bottom: 0.5rem;
+}
+
+.today-meds {
+    margin-bottom: 2rem;
+}
+
+.med-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.med-info h4 {
+    margin-bottom: 0.3rem;
+}
+
+.med-dosage {
+    color: #777;
+    font-size: 0.9rem;
+}
+
+.med-times {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.med-time-item {
+    background: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.med-time-item.taken {
+    background: #4CAF50;
+    color: white;
+}
+
+/* Meal Planner Styles */
+.meals-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+.week-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.weekly-meal-plan {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.day-meals {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 200px;
+}
+
+.day-header {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.meal-item {
+    background: white;
+    border-radius: 6px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.meal-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.meal-stat {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.meal-stat h4 {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 0.5rem;
+}
+
+.meal-stat div {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Screen Time Styles */
+.screen-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.screen-time-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.screen-time-display div:first-child,
+.screen-time-display div:nth-child(3) {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.screen-label {
+    font-size: 1rem;
+    color: #777;
+}
+
+.screen-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.screen-goal {
+    text-align: center;
+}
+
+.goal-setter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+/* Sleep Tracker Styles */
+.sleep-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.quality-rating {
+    display: flex;
+    justify-content: space-between;
+    margin: 1rem 0;
+}
+
+.quality-option {
+    font-size: 2rem;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.quality-option:hover {
+    transform: scale(1.2);
+}
+
+.quality-option.selected {
+    transform: scale(1.2);
+    filter: brightness(1.2);
+}
+
+.sleep-overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.sleep-stat {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.sleep-stat h4 {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 0.5rem;
+}
+
+.sleep-stat div {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.sleep-history-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 1.5rem;
+}
+
+.sleep-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* HomeBase, LifeLoop, TaskForge, EduPlan Styles */
+.homebase-container,
+.lifeloop-container,
+.taskforge-container,
+.eduplan-container {
+    display: flex;
+    gap: 2rem;
+}
+
+.homebase-sidebar,
+.lifeloop-sidebar,
+.taskforge-sidebar,
+.eduplan-sidebar {
+    flex: 0 0 200px;
+}
+
+.homebase-nav,
+.lifeloop-nav,
+.taskforge-nav,
+.eduplan-nav {
+    list-style: none;
+}
+
+.homebase-nav li,
+.lifeloop-nav li,
+.taskforge-nav li,
+.eduplan-nav li {
+    margin-bottom: 0.5rem;
+}
+
+.homebase-nav a,
+.lifeloop-nav a,
+.taskforge-nav a,
+.eduplan-nav a {
+    display: block;
+    padding: 0.8rem 1rem;
+    text-decoration: none;
+    color: #555;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.homebase-nav a:hover,
+.lifeloop-nav a:hover,
+.taskforge-nav a:hover,
+.eduplan-nav a:hover {
+    background: #f0f2f5;
+    color: #667eea;
+}
+
+.homebase-nav a.active,
+.lifeloop-nav a.active,
+.taskforge-nav a.active,
+.eduplan-nav a.active {
+    background: #667eea;
+    color: white;
+}
+
+.homebase-content,
+.lifeloop-content,
+.taskforge-content,
+.eduplan-content {
+    flex: 1;
+}
+
+.homebase-section,
+.lifeloop-section,
+.taskforge-section,
+.eduplan-section {
+    display: none;
+}
+
+.homebase-section.active,
+.lifeloop-section.active,
+.taskforge-section.active,
+.eduplan-section.active {
+    display: block;
+}
+
+/* Grocery Styles */
+.grocery-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.grocery-lists {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.grocery-list {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 300px;
+}
+
+.grocery-list h4 {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.grocery-item {
+    background: white;
+    border-radius: 6px;
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Budget Styles */
+.budget-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.budget-setup {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.budget-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.budget-input span {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.budget-progress {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.budget-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.budget-stat {
+    text-align: center;
+}
+
+.budget-stat span:first-child {
+    display: block;
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 0.3rem;
+}
+
+.budget-stat span:last-child {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* To-Do Styles */
+.todo-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.todo-lists {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.todo-list {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 300px;
+}
+
+.todo-list h4 {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.todo-item {
+    background: white;
+    border-radius: 6px;
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.todo-item.completed {
+    opacity: 0.7;
+    text-decoration: line-through;
+}
+
+.todo-priority {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+}
+
+.priority-high {
+    background: #ff6b6b;
+    color: white;
+}
+
+.priority-medium {
+    background: #ffd93d;
+    color: #333;
+}
+
+.priority-low {
+    background: #6bcf7f;
+    color: white;
+}
+
+/* Timetable Styles */
+.timetable-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+.timetable {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 1px;
+    background: #eee;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.timetable-cell {
+    background: white;
+    padding: 0.5rem;
+    min-height: 60px;
+}
+
+.timetable-header {
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+}
+
+.course-slot {
+    background: #f0f7ff;
+    border-radius: 4px;
+    padding: 0.3rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+}
+
+/* Study Tracker Styles */
+.study-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.study-overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.study-stat {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.study-stat h5 {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 0.5rem;
+}
+
+.study-stat div {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.study-sessions {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.study-session-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Footer */
+footer {
+    background: #333;
+    color: white;
+    text-align: center;
+    padding: 1.5rem 0;
+    margin-top: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        flex: none;
+    }
+    
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .today-overview {
+        grid-template-columns: 1fr;
+    }
+    
+    .water-container,
+    .workout-container,
+    .habits-container,
+    .medication-container,
+    .meals-container,
+    .screen-container,
+    .sleep-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .homebase-container,
+    .lifeloop-container,
+    .taskforge-container,
+    .eduplan-container {
+        flex-direction: column;
+    }
+    
+    .homebase-sidebar,
+    .lifeloop-sidebar,
+    .taskforge-sidebar,
+    .eduplan-sidebar {
+        flex: none;
+    }
+    
+    .grocery-container,
+    .budget-container,
+    .todo-container,
+    .timetable-container,
+    .study-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .grocery-lists,
+    .todo-lists {
+        grid-template-columns: 1fr;
+    }
+    
+    .weekly-meal-plan {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
