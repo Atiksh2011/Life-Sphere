@@ -1205,3 +1205,323 @@ footer {
         flex-direction: column;
     }
 }
+/* Enhanced Sleep Tracker Styles */
+.sleep-history-section {
+    margin: 2rem 0;
+}
+
+.sleep-history-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.sleep-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.sleep-item-info {
+    flex: 1;
+}
+
+.sleep-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.sleep-date {
+    font-weight: 600;
+    color: #333;
+}
+
+.sleep-duration {
+    background: #667eea;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.sleep-quality {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.sleep-notes {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+    font-style: italic;
+    background: white;
+    padding: 0.8rem;
+    border-radius: 6px;
+    border-left: 3px solid #667eea;
+}
+
+/* TaskForge Subtabs */
+.taskforge-container, .eduplan-container {
+    display: flex;
+    gap: 2rem;
+}
+
+.taskforge-sidebar, .eduplan-sidebar {
+    flex: 0 0 200px;
+}
+
+.taskforge-nav, .eduplan-nav {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.taskforge-nav a, .eduplan-nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem;
+    text-decoration: none;
+    color: #555;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.taskforge-nav a:hover, .eduplan-nav a:hover {
+    background: #f0f2f5;
+    color: #667eea;
+}
+
+.taskforge-nav a.active, .eduplan-nav a.active {
+    background: #667eea;
+    color: white;
+}
+
+.taskforge-content, .eduplan-content {
+    flex: 1;
+}
+
+.taskforge-section, .eduplan-section {
+    display: none;
+}
+
+.taskforge-section.active, .eduplan-section.active {
+    display: block;
+}
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f2f5;
+}
+
+.task-stats, .subscription-stats, .study-stats-quick, 
+.homework-stats, .exam-stats, .grade-stats {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Form Layouts */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.todo-form, .subscription-form, .timetable-form, .study-form,
+.homework-form, .exam-form, .grade-form {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+/* Task Lists */
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.task-item {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid #ddd;
+}
+
+.task-item.high { border-left-color: #ff6b6b; }
+.task-item.medium { border-left-color: #ffd93d; }
+.task-item.low { border-left-color: #6bcf7f; }
+
+.task-info {
+    flex: 1;
+}
+
+.task-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.task-due {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.task-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Tables */
+.subscriptions-table, .study-sessions-table, .grades-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.subscriptions-table th, .study-sessions-table th, .grades-table th {
+    background: #f8f9fa;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #555;
+}
+
+.subscriptions-table td, .study-sessions-table td, .grades-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.subscriptions-table tr:last-child td, 
+.study-sessions-table tr:last-child td,
+.grades-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Timetable */
+.timetable-view {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 1px;
+    background: #eee;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.timetable-slot {
+    background: white;
+    padding: 0.5rem;
+    min-height: 80px;
+}
+
+.timetable-header {
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.course-block {
+    background: #f0f7ff;
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-bottom: 0.2rem;
+    font-size: 0.8rem;
+    border-left: 3px solid #667eea;
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #666;
+}
+
+.empty-state p {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.empty-state small {
+    color: #999;
+}
+
+/* Responsive Design for Subtabs */
+@media (max-width: 768px) {
+    .taskforge-container, .eduplan-container {
+        flex-direction: column;
+    }
+    
+    .taskforge-sidebar, .eduplan-sidebar {
+        flex: none;
+    }
+    
+    .taskforge-nav, .eduplan-nav {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+    }
+    
+    .taskforge-nav a, .eduplan-nav a {
+        white-space: nowrap;
+        padding: 0.8rem 1rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .todo-columns {
+        grid-template-columns: 1fr;
+    }
+    
+    .timetable-view {
+        grid-template-columns: 60px repeat(7, 1fr);
+        font-size: 0.7rem;
+    }
+    
+    .subscriptions-table, .study-sessions-table, .grades-table {
+        font-size: 0.8rem;
+    }
+    
+    .subscriptions-table th, .subscriptions-table td,
+    .study-sessions-table th, .study-sessions-table td,
+    .grades-table th, .grades-table td {
+        padding: 0.5rem;
+    }
+}
