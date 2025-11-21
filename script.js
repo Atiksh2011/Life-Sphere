@@ -1168,6 +1168,93 @@ function deleteSubscription(id) {
     localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
     updateTaskForgeDisplay();
 }
+function updateLifeLoopDisplay() {
+    const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
+    const upcomingReminders = document.getElementById('upcoming-reminders');
+    const allReminders = document.getElementById('all-reminders');
+    
+    // Sort reminders by date
+    reminders.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    const now = new Date();
+    const upcoming = reminders.filter(r => new Date(r.date) >= now);
+    const past = reminders.filter(r => new Date(r.date) < now);
+    
+    let upcomingHTML = '';
+    let allHTML = '';
+    
+    // Upcoming reminders (next 7 days)
+    upcoming.slice(0, 10).forEach(reminder => {
+        const date = new Date(reminder.date);
+        const daysUntil = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+        const formattedDate = date.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        
+        upcomingHTML += `
+            <div class="reminder-item">
+                <div class="reminder-info">
+                    <div class="reminder-header">
+                        <strong>${reminder.name}</strong>
+                        <span class="reminder-type ${reminder.type}">${reminder.type}</span>
+                    </div>
+                    <div class="reminder-details">
+                        <span class="reminder-date">${formattedDate}</span>
+                        <span class="reminder-days">${daysUntil} day${daysUntil !== 1 ? 's' : ''} away</span>
+                    </div>
+                </div>
+                <button class="delete-btn" onclick="deleteReminder(${reminder.id})">Delete</button>
+            </div>
+        `;
+    });
+    
+    // All reminders
+    reminders.forEach(reminder => {
+        const date = new Date(reminder.date);
+        const formattedDate = date.toLocaleDateString('en-US', { 
+            year: 'numeric',
+            month: 'short', 
+            day: 'numeric' 
+        });
+        const isPast = date < now;
+        
+        allHTML += `
+            <div class="reminder-item ${isPast ? 'past' : ''}">
+                <div class="reminder-info">
+                    <div class="reminder-header">
+                        <strong>${reminder.name}</strong>
+                        <span class="reminder-type ${reminder.type}">${reminder.type}</span>
+                    </div>
+                    <div class="reminder-details">
+                        <span class="reminder-date">${formattedDate}</span>
+                        ${isPast ? '<span class="past-badge">Past</span>' : '<span class="upcoming-badge">Upcoming</span>'}
+                    </div>
+                </div>
+                <button class="delete-btn" onclick="deleteReminder(${reminder.id})">Delete</button>
+            </div>
+        `;
+    });
+    
+    if (upcomingReminders) {
+        upcomingReminders.innerHTML = upcomingHTML || `
+            <div class="empty-state">
+                <p>No upcoming reminders</p>
+                <small>Add reminders to see them here</small>
+            </div>
+        `;
+    }
+    
+    if (allReminders) {
+        allReminders.innerHTML = allHTML || `
+            <div class="empty-state">
+                <p>No reminders yet</p>
+                <small>Add your first reminder using the form</small>
+            </div>
+        `;
+    }
+}
 
 // EduPlan
 function initializeEduPlan() {
@@ -1743,3 +1830,4 @@ window.deleteStudySession = deleteStudySession;
 window.completeHomework = completeHomework;
 window.deleteHomework = deleteHomework;
 window.deleteExam = deleteExam;
+
