@@ -430,6 +430,7 @@
                                     <tbody id="screen-history-body">
                                         <!-- Screen time history will be populated here -->
                                     </tbody>
+                                    <button id="reset-screen" class="btn-secondary">Reset Today</button>
                                 </table>
                             </div>
                         </div>
@@ -483,32 +484,36 @@
                             <h3>Sleep Statistics</h3>
                             <div class="sleep-overview">
                                 <div class="sleep-stat">
-                                    <h4>Average Sleep Duration</h4>
+                                    <h4>Average Sleep</h4>
                                     <div id="avg-sleep">0h 0m</div>
+                                    <small>Per night</small>
                                 </div>
                                 <div class="sleep-stat">
-                                    <h4>Sleep Consistency</h4>
+                                    <h4>Consistency</h4>
                                     <div id="sleep-consistency">0%</div>
+                                    <small>Weekly average</small>
                                 </div>
                                 <div class="sleep-stat">
-                                    <h4>Best Sleep Quality</h4>
+                                    <h4>Best Quality</h4>
                                     <div id="best-quality">-</div>
+                                    <small>Recent period</small>
                                 </div>
                             </div>
-                            
-                            <div class="sleep-history">
-                                <h4>Recent Sleep Logs</h4>
-                                <div id="sleep-history-list">
-                                    <!-- Sleep history will be populated here -->
+    
+                            <div class="sleep-history-section">
+                                <h4>Sleep History</h4>
+                                <div class="sleep-history-list" id="sleep-history-list">
+                                   <!-- Sleep history will be populated here -->
                                 </div>
                             </div>
-                            
-                            <div class="chart-container">
-                                <canvas id="sleep-chart"></canvas>
+    
+                            <div class="sleep-chart-section">
+                                <h4>Sleep Patterns</h4>
+                                <div class="chart-container">
+                                    <canvas id="sleep-chart"></canvas>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
                 <!-- LifeLoop Tab -->
                 <div id="lifeloop" class="tab-content">
@@ -890,3 +895,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+
