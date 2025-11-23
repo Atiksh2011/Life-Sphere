@@ -365,6 +365,14 @@ header {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
+/* Sleep Schedule Styles */
+.sleep-schedule {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
 /* Water Tracker Styles */
 .water-container {
     display: grid;
@@ -1007,6 +1015,61 @@ header {
     border-radius: 8px;
     padding: 1rem;
     margin-bottom: 1rem;
+}
+
+/* Enhanced EduPlan Table Styles */
+.eduplan-table-container {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.eduplan-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.eduplan-table th {
+    background: #667eea;
+    color: white;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.eduplan-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.eduplan-table tr:last-child td {
+    border-bottom: none;
+}
+
+.eduplan-table tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.course-block {
+    background: #f0f7ff;
+    border-radius: 6px;
+    padding: 0.8rem;
+    margin: 0.2rem 0;
+    border-left: 4px solid #667eea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.course-info {
+    flex: 1;
+}
+
+.course-actions {
+    display: flex;
+    gap: 0.5rem;
 }
 
 /* Modal Styles */
