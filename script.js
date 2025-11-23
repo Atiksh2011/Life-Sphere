@@ -36,6 +36,9 @@ function initializeApp() {
     initializeEduPlan();
     initializeGradeForm();
     
+    // Initialize sleep schedule
+    initializeSleepSchedule();
+    
     // Load all data
     loadAllData();
     
@@ -181,6 +184,32 @@ function initializeSubtabNavigation() {
             });
         });
     });
+}
+
+// Sleep Schedule
+function initializeSleepSchedule() {
+    const saveBtn = document.getElementById('save-sleep-schedule');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveSleepSchedule);
+    }
+    
+    // Load saved schedule
+    const schedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
+    if (schedule.wakeUpTime) {
+        document.getElementById('wake-up-time').value = schedule.wakeUpTime;
+    }
+    if (schedule.bedtime) {
+        document.getElementById('bedtime').value = schedule.bedtime;
+    }
+}
+
+function saveSleepSchedule() {
+    const schedule = {
+        wakeUpTime: document.getElementById('wake-up-time').value,
+        bedtime: document.getElementById('bedtime').value
+    };
+    localStorage.setItem('lifesphere_sleep_schedule', JSON.stringify(schedule));
+    alert('Sleep schedule saved! Notifications will be sent at these times.');
 }
 
 // Water Tracker
@@ -1451,46 +1480,53 @@ function updateTimetableDisplay() {
     
     if (!timetableView) return;
     
-    // Create timetable grid
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const timeSlots = ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-    
     let timetableHTML = '';
     
-    // Header row
-    timetableHTML += '<div class="timetable-slot timetable-header">Time</div>';
-    days.forEach(day => {
-        timetableHTML += `<div class="timetable-slot timetable-header">${day}</div>`;
-    });
-    
-    // Time slots
-    timeSlots.forEach(time => {
-        timetableHTML += `<div class="timetable-slot timetable-header">${time}</div>`;
+    if (courses.length === 0) {
+        timetableHTML = '<div class="empty-state"><p>No courses added yet</p></div>';
+    } else {
+        timetableHTML = `
+            <div class="eduplan-table-container">
+                <table class="eduplan-table">
+                    <thead>
+                        <tr>
+                            <th>Course Name</th>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Duration</th>
+                            <th>Location</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
         
-        days.forEach(day => {
-            const dayLower = day.toLowerCase();
-            const cellCourses = courses.filter(course => 
-                course.day === dayLower && 
-                course.time.startsWith(time.split(':')[0])
-            );
-            
-            timetableHTML += `<div class="timetable-slot">`;
-            
-            cellCourses.forEach(course => {
-                timetableHTML += `
-                    <div class="course-block">
-                        <strong>${course.name}</strong>
-                        ${course.code ? `<br><small>${course.code}</small>` : ''}
-                        ${course.location ? `<br><small>${course.location}</small>` : ''}
-                    </div>
-                `;
-            });
-            
-            timetableHTML += `</div>`;
+        courses.forEach(course => {
+            timetableHTML += `
+                <tr>
+                    <td><strong>${course.name}</strong>${course.code ? `<br><small>${course.code}</small>` : ''}</td>
+                    <td>${course.day.charAt(0).toUpperCase() + course.day.slice(1)}</td>
+                    <td>${course.time}</td>
+                    <td>${course.duration} min</td>
+                    <td>${course.location || '-'}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteCourse(${course.id})">Delete</button>
+                    </td>
+                </tr>
+            `;
         });
-    });
+        
+        timetableHTML += '</tbody></table></div>';
+    }
     
     timetableView.innerHTML = timetableHTML;
+}
+
+function deleteCourse(id) {
+    let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    courses = courses.filter(c => c.id !== id);
+    localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
+    updateTimetableDisplay();
 }
 
 function updateStudyTrackerDisplay() {
@@ -1822,18 +1858,47 @@ function triggerMedicationAlarm(medication) {
 
 function checkScheduledNotifications() {
     const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    
+    // Check sleep schedule notifications
+    checkSleepScheduleNotifications(currentTime);
     
     // Morning notifications (8 AM)
     if (now.getHours() === 8 && now.getMinutes() === 0) {
         sendMorningNotifications();
     }
     
+    // Evening notifications (9 PM)
+    if (now.getHours() === 21 && now.getMinutes() === 0) {
+        sendEveningNotifications();
+    }
+    
     // Meal notifications (check every minute)
     checkMealNotifications();
     
-    // Screen time notifications (9 PM)
-    if (now.getHours() === 21 && now.getMinutes() === 0) {
-        sendScreenTimeNotification();
+    // Screen time notifications
+    checkScreenTimeNotifications(currentTime);
+}
+
+function checkSleepScheduleNotifications(currentTime) {
+    const schedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
+    
+    if (schedule.wakeUpTime && schedule.wakeUpTime === currentTime) {
+        showNotification('🌅 Good Morning!', 'Time to wake up and start your day!');
+        // Auto start screen time tracking
+        const startBtn = document.getElementById('start-tracking');
+        if (startBtn && !startBtn.disabled) {
+            startBtn.click();
+        }
+    }
+    
+    if (schedule.bedtime && schedule.bedtime === currentTime) {
+        showNotification('🌙 Good Night!', 'Time to wind down and prepare for sleep.');
+        // Auto stop screen time tracking
+        const stopBtn = document.getElementById('stop-tracking');
+        if (stopBtn && !stopBtn.disabled) {
+            stopBtn.click();
+        }
     }
 }
 
@@ -1845,7 +1910,8 @@ function sendMorningNotifications() {
         { title: '💧 Water Reminder', message: 'Don\'t forget to track your water intake today!' },
         { title: '🎓 Study Time', message: 'Plan your study sessions for today.' },
         { title: '⚒️ Tasks', message: 'Review your tasks for today.' },
-        { title: '😴 Sleep Review', message: 'How did you sleep last night? Log it in the sleep tracker.' }
+        { title: '💪 Workout', message: 'Plan your workout for today.' },
+        { title: '🍽️ Meal Planner', message: 'Check your meal plan for today.' }
     ];
     
     notifications.forEach((notification, index) => {
@@ -1853,6 +1919,42 @@ function sendMorningNotifications() {
             showNotification(notification.title, notification.message);
         }, index * 30000); // 30 seconds apart
     });
+}
+
+function sendEveningNotifications() {
+    if (localStorage.getItem('lifesphere_notifications') !== 'enabled') return;
+    
+    const notifications = [
+        { title: '🌙 Evening Review', message: 'How was your day? Log your activities.' },
+        { title: '😴 Sleep Tracker', message: 'Don\'t forget to log your sleep!' },
+        { title: '📱 Screen Time', message: 'Stop screen time tracking for the night.' },
+        { title: '🎓 Study Review', message: 'Review what you studied today.' },
+        { title: '⚒️ Tasks', message: 'Check off completed tasks.' }
+    ];
+    
+    notifications.forEach((notification, index) => {
+        setTimeout(() => {
+            showNotification(notification.title, notification.message);
+        }, index * 30000); // 30 seconds apart
+    });
+}
+
+function checkScreenTimeNotifications(currentTime) {
+    // Reminder to start tracking in the morning (9 AM)
+    if (currentTime === '09:00') {
+        const startBtn = document.getElementById('start-tracking');
+        if (startBtn && !startBtn.disabled) {
+            showNotification('📱 Screen Time', 'Remember to start tracking your screen time for the day!');
+        }
+    }
+    
+    // Reminder to stop tracking in the evening (8 PM)
+    if (currentTime === '20:00') {
+        const stopBtn = document.getElementById('stop-tracking');
+        if (stopBtn && !stopBtn.disabled) {
+            showNotification('📱 Screen Time', 'Remember to stop tracking your screen time for the night!');
+        }
+    }
 }
 
 function checkMealNotifications() {
@@ -1883,30 +1985,6 @@ function showMealNotification(meal) {
     const message = `Time for ${meal.name} in 2 minutes!`;
     
     showNotification(title, message, notificationId);
-}
-
-function sendScreenTimeNotification() {
-    if (localStorage.getItem('lifesphere_notifications') !== 'enabled') return;
-    
-    const screenData = JSON.parse(localStorage.getItem('lifesphere_screen')) || {};
-    const goal = screenData.goal || 4;
-    const todaySeconds = screenData.seconds || 0;
-    const todayHours = Math.floor(todaySeconds / 3600);
-    
-    let message = `You used ${todayHours}h of screen time today. `;
-    if (todayHours > goal) {
-        message += `That's ${todayHours - goal}h over your goal of ${goal}h.`;
-    } else {
-        message += `Great job staying under your ${goal}h goal!`;
-    }
-    
-    // This notification doesn't require acknowledgment
-    if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('📱 Screen Time Summary', {
-            body: message,
-            icon: '/icon.png'
-        });
-    }
 }
 
 function showNotification(title, message, notificationId = null) {
@@ -1972,14 +2050,17 @@ function initializeCharts() {
     console.log('Initializing charts...');
     const ctx = document.getElementById('weekly-chart');
     if (ctx) {
-        // Create sample chart
+        // Get real water data for the week
+        const waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
+        const waterData = getWeeklyWaterData(waterHistory);
+        
         new Chart(ctx.getContext('2d'), {
             type: 'line',
             data: {
                 labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                 datasets: [{
                     label: 'Water Intake (glasses)',
-                    data: [6, 8, 7, 5, 8, 6, 7],
+                    data: waterData,
                     borderColor: '#667eea',
                     backgroundColor: 'rgba(102, 126, 234, 0.1)',
                     tension: 0.4,
@@ -1991,12 +2072,34 @@ function initializeCharts() {
                 maintainAspectRatio: false,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        max: 10
                     }
                 }
             }
         });
     }
+}
+
+function getWeeklyWaterData(waterHistory) {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = new Date();
+    const weekData = [0, 0, 0, 0, 0, 0, 0];
+    
+    // Get data for the past 7 days
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateString = date.toDateString();
+        const dayIndex = date.getDay();
+        
+        if (waterHistory[dateString]) {
+            weekData[dayIndex] = waterHistory[dateString].consumed || 0;
+        }
+    }
+    
+    // Reorder to start from Monday
+    return [...weekData.slice(1), weekData[0]];
 }
 
 // Export functions for global access
@@ -2021,3 +2124,4 @@ window.completeHomework = completeHomework;
 window.deleteHomework = deleteHomework;
 window.deleteExam = deleteExam;
 window.deleteGrade = deleteGrade;
+window.deleteCourse = deleteCourse;
