@@ -662,15 +662,24 @@ header {
     margin-bottom: 1.5rem;
 }
 
-.weekly-meal-plan {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 1rem;
+.weekly-meal-plan-popup-container {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 1rem;
+    background: #f8f9fa;
     margin-bottom: 1.5rem;
 }
 
+.weekly-meal-plan-popup {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1rem;
+}
+
 .day-meals {
-    background: #f8f9fa;
+    background: white;
     border-radius: 8px;
     padding: 1rem;
     min-height: 200px;
@@ -1108,6 +1117,52 @@ header {
     margin-top: 1.5rem;
 }
 
+/* Popup Styles */
+.popup-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.popup-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.close-popup {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #777;
+}
+
+.close-popup:hover {
+    color: #333;
+}
+
 /* Footer */
 footer {
     background: #333;
@@ -1188,7 +1243,7 @@ footer {
         grid-template-columns: repeat(4, 1fr);
     }
     
-    .weekly-meal-plan {
+    .weekly-meal-plan-popup {
         grid-template-columns: repeat(2, 1fr);
     }
     
@@ -1243,7 +1298,7 @@ footer {
         padding: 1rem;
     }
     
-    .weekly-meal-plan {
+    .weekly-meal-plan-popup {
         grid-template-columns: 1fr;
     }
     
