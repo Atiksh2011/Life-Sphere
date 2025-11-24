@@ -41,6 +41,23 @@
                 <!-- Dashboard Tab -->
                 <div id="dashboard" class="tab-content active">
                     <h2 class="section-title">Life Management Dashboard</h2>
+                    
+                    <!-- Sleep Schedule at the top -->
+                    <div class="sleep-schedule">
+                        <h3 class="section-title">Sleep Schedule</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="wake-up-time">Wake Up Time</label>
+                                <input type="time" id="wake-up-time" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="bedtime">Bedtime</label>
+                                <input type="time" id="bedtime" class="form-control">
+                            </div>
+                        </div>
+                        <button id="save-sleep-schedule" class="btn-primary">Save Schedule</button>
+                    </div>
+                    
                     <div class="stats-container">
                         <div class="stat-card">
                             <h3>Water Intake</h3>
@@ -104,20 +121,6 @@
                         <canvas id="weekly-chart"></canvas>
                     </div>
                 </div>
-                <h3 class="section-title">Sleep Schedule</h3>
-                <div class="sleep-schedule">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="wake-up-time">Wake Up Time</label>
-                            <input type="time" id="wake-up-time" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label for="bedtime">Bedtime</label>
-                            <input type="time" id="bedtime" class="form-control">
-                        </div>
-                    </div>
-                    <button id="save-sleep-schedule" class="btn-primary">Save Schedule</button>
-                </div>                
 
                 <!-- Water Tracker Tab -->
                 <div id="water" class="tab-content">
@@ -366,8 +369,10 @@
                                 <button id="next-week" class="btn-secondary">Next Week</button>
                             </div>
                             
-                            <div class="weekly-meal-plan" id="weekly-meal-plan">
-                                <!-- Weekly meal plan will be populated here -->
+                            <div class="weekly-meal-plan-popup-container">
+                                <div class="weekly-meal-plan-popup" id="weekly-meal-plan">
+                                    <!-- Weekly meal plan will be populated here -->
+                                </div>
                             </div>
                             
                             <div class="meal-stats">
@@ -746,7 +751,7 @@
                             <div id="timetable" class="eduplan-section active">
                                 <div class="section-header">
                                     <h3>Class Timetable</h3>
-                                    <button id="export-timetable" class="btn-secondary">Export Schedule</button>
+                                    <!-- Removed Export Schedule Button -->
                                 </div>
                                 
                                 <div class="timetable-container">
@@ -838,6 +843,7 @@
                                             </div>
                                             <button type="submit" class="btn-primary">Start Session</button>
                                         </form>
+                                        <button id="show-study-history" class="btn-secondary" style="margin-top: 1rem;">Show Study History</button>
                                     </div>
                                     
                                     <div class="study-progress-section">
@@ -856,23 +862,31 @@
                                             </div>
                                         </div>
                                         
-                                        <div class="study-history-section">
-                                            <h5>Recent Sessions</h5>
-                                            <div class="study-sessions-table-container">
-                                                <table class="study-sessions-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Subject</th>
-                                                            <th>Topic</th>
-                                                            <th>Duration</th>
-                                                            <th>Date</th>
-                                                            <th>Actions</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="study-sessions-body">
-                                                        <!-- Study sessions will be here -->
-                                                    </tbody>
-                                                </table>
+                                        <!-- Study History Popup -->
+                                        <div id="study-history-popup" class="popup-container" style="display: none;">
+                                            <div class="popup-content">
+                                                <div class="popup-header">
+                                                    <h4>Study History</h4>
+                                                    <button id="close-study-history" class="close-popup">✕</button>
+                                                </div>
+                                                <div class="study-history-section">
+                                                    <div class="study-sessions-table-container">
+                                                        <table class="study-sessions-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Subject</th>
+                                                                    <th>Topic</th>
+                                                                    <th>Duration</th>
+                                                                    <th>Date</th>
+                                                                    <th>Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="study-sessions-body">
+                                                                <!-- Study sessions will be here -->
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1002,7 +1016,7 @@
                                     <h3>Grade Tracker</h3>
                                     <div class="grade-stats">
                                         <span id="current-gpa">GPA: -</span>
-                                        <span id="total-courses">0 courses</span>
+                                        <!-- Removed total courses count -->
                                     </div>
                                 </div>
                                 
@@ -1113,4 +1127,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
