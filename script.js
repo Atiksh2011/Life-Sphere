@@ -1393,6 +1393,24 @@ function initializeEduPlan() {
         });
     }
     
+    // Study history popup functionality
+    const showStudyHistoryBtn = document.getElementById('show-study-history');
+    const closeStudyHistoryBtn = document.getElementById('close-study-history');
+    const studyHistoryPopup = document.getElementById('study-history-popup');
+    
+    if (showStudyHistoryBtn) {
+        showStudyHistoryBtn.addEventListener('click', function() {
+            studyHistoryPopup.style.display = 'flex';
+            updateStudyTrackerDisplay();
+        });
+    }
+    
+    if (closeStudyHistoryBtn) {
+        closeStudyHistoryBtn.addEventListener('click', function() {
+            studyHistoryPopup.style.display = 'none';
+        });
+    }
+    
     if (homeworkForm) {
         homeworkForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1569,7 +1587,7 @@ function updateStudyTrackerDisplay() {
     if (studyWeek) studyWeek.textContent = `${weekHours}h ${weekMinutes}m`;
     if (studyTotal) studyTotal.textContent = `${totalHours}h ${totalMinutes}m`;
     
-    // Update study sessions list
+    // Update study sessions list in popup
     let sessionsHTML = '';
     
     studySessions.slice(-5).reverse().forEach(session => {
@@ -1731,7 +1749,7 @@ function updateGradesDisplay() {
     const grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
     const gradesBody = document.getElementById('grades-body');
     const currentGpa = document.getElementById('current-gpa');
-    const totalCourses = document.getElementById('total-courses');
+    // Removed total courses element
     
     const uniqueSubjects = new Set(grades.map(g => g.subject));
     
@@ -1758,7 +1776,7 @@ function updateGradesDisplay() {
     
     if (gradesBody) gradesBody.innerHTML = gradesHTML || '<tr><td colspan="7">No grades recorded</td></tr>';
     if (currentGpa) currentGpa.textContent = `GPA: ${calculateGPA(grades).toFixed(2)}`;
-    if (totalCourses) totalCourses.textContent = `${uniqueSubjects.size} courses`;
+    // Removed total courses update
 }
 
 function calculateGPA(grades) {
