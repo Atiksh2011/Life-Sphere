@@ -1354,6 +1354,27 @@ function initializeEduPlan() {
     const homeworkForm = document.getElementById('homework-form');
     const examForm = document.getElementById('exam-form');
     
+    // Timetable view toggle functionality
+    const viewTimetableBtn = document.getElementById('view-timetable-btn');
+    const backToAddClassBtn = document.getElementById('back-to-add-class');
+    const addClassSection = document.getElementById('add-class-section');
+    const timetableDisplaySection = document.getElementById('timetable-display-section');
+    
+    if (viewTimetableBtn) {
+        viewTimetableBtn.addEventListener('click', function() {
+            addClassSection.style.display = 'none';
+            timetableDisplaySection.style.display = 'block';
+            updateTimetableDisplay();
+        });
+    }
+    
+    if (backToAddClassBtn) {
+        backToAddClassBtn.addEventListener('click', function() {
+            timetableDisplaySection.style.display = 'none';
+            addClassSection.style.display = 'block';
+        });
+    }
+    
     if (timetableForm) {
         timetableForm.addEventListener('submit', function(e) {
             e.preventDefault();
