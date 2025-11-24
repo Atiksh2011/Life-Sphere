@@ -1172,6 +1172,26 @@ footer {
     margin-top: 2rem;
 }
 
+/* GPA Display Styles */
+.gpa-display {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    border: 1px solid #e9ecef;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Timetable Header Styles */
+.timetable-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f2f5;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {
@@ -1269,6 +1289,12 @@ footer {
     .history-table th,
     .history-table td {
         padding: 0.5rem;
+    }
+    
+    .timetable-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
     }
 }
 
