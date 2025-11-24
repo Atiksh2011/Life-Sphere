@@ -2164,3 +2164,263 @@ window.deleteHomework = deleteHomework;
 window.deleteExam = deleteExam;
 window.deleteGrade = deleteGrade;
 window.deleteCourse = deleteCourse;
+// Add these functions to your existing JavaScript file
+
+// Timetable functionality
+function initializeTimetable() {
+    const timetableForm = document.getElementById('timetable-form');
+    const viewTimetableBtn = document.getElementById('view-timetable-btn');
+    const backToAddClassBtn = document.getElementById('back-to-add-class');
+    const addClassSection = document.getElementById('add-class-section');
+    const timetableDisplaySection = document.getElementById('timetable-display-section');
+
+    if (viewTimetableBtn) {
+        viewTimetableBtn.addEventListener('click', function() {
+            addClassSection.style.display = 'none';
+            timetableDisplaySection.style.display = 'block';
+            updateTimetableDisplay();
+        });
+    }
+
+    if (backToAddClassBtn) {
+        backToAddClassBtn.addEventListener('click', function() {
+            timetableDisplaySection.style.display = 'none';
+            addClassSection.style.display = 'block';
+        });
+    }
+
+    if (timetableForm) {
+        timetableForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const course = {
+                id: Date.now(),
+                name: document.getElementById('course-name').value,
+                code: document.getElementById('course-code').value,
+                day: document.getElementById('course-day').value,
+                time: document.getElementById('course-time').value,
+                duration: parseInt(document.getElementById('course-duration').value),
+                location: document.getElementById('course-location').value,
+                created: new Date().toISOString()
+            };
+            
+            saveCourse(course);
+            this.reset();
+        });
+    }
+}
+
+function updateTimetableDisplay() {
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const timetableView = document.getElementById('timetable-view');
+    
+    if (!timetableView) return;
+    
+    let timetableHTML = '';
+    
+    if (courses.length === 0) {
+        timetableHTML = '<div class="empty-state"><p>No courses added yet. Add some courses to see your timetable.</p></div>';
+    } else {
+        // Generate time slots (8 AM to 8 PM)
+        const timeSlots = generateTimeSlots();
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        timetableHTML = '<div class="timetable-grid">';
+        
+        // Header row
+        timetableHTML += '<div class="timetable-header-cell time-header">Time</div>';
+        dayNames.forEach(day => {
+            timetableHTML += `<div class="timetable-header-cell">${day}</div>`;
+        });
+        
+        // Time slots and courses
+        timeSlots.forEach(timeSlot => {
+            timetableHTML += `<div class="timetable-time-cell">${timeSlot}</div>`;
+            
+            days.forEach(day => {
+                const cellCourses = courses.filter(course => 
+                    course.day === day && isCourseInTimeSlot(course, timeSlot)
+                );
+                
+                timetableHTML += `<div class="timetable-cell">`;
+                
+                if (cellCourses.length > 0) {
+                    cellCourses.forEach(course => {
+                        const endTime = calculateEndTime(course.time, course.duration);
+                        timetableHTML += `
+                            <div class="course-block" data-course-id="${course.id}">
+                                <div class="course-block-content">
+                                    <div class="course-name">${course.name}</div>
+                                    <div class="course-details">${course.time} - ${endTime}</div>
+                                    ${course.location ? `<div class="course-location">${course.location}</div>` : ''}
+                                </div>
+                                <div class="course-actions">
+                                    <button class="delete-course-btn" onclick="deleteCourse(${course.id})">✕</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    timetableHTML += '<div class="timetable-empty"></div>';
+                }
+                
+                timetableHTML += `</div>`;
+            });
+        });
+        
+        timetableHTML += '</div>';
+    }
+    
+    timetableView.innerHTML = timetableHTML;
+}
+
+function generateTimeSlots() {
+    const timeSlots = [];
+    for (let hour = 8; hour <= 20; hour++) {
+        timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+    }
+    return timeSlots;
+}
+
+function isCourseInTimeSlot(course, timeSlot) {
+    const courseStartTime = course.time;
+    const courseEndTime = calculateEndTime(course.time, course.duration);
+    
+    // Convert times to minutes for easier comparison
+    const slotMinutes = timeToMinutes(timeSlot);
+    const courseStartMinutes = timeToMinutes(courseStartTime);
+    const courseEndMinutes = timeToMinutes(courseEndTime);
+    
+    // Check if the time slot falls within the course duration
+    return slotMinutes >= courseStartMinutes && slotMinutes < courseEndMinutes;
+}
+
+function calculateEndTime(startTime, duration) {
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = startMinutes + duration;
+    
+    const endHour = Math.floor(endMinutes / 60);
+    const endMinute = endMinutes % 60;
+    
+    return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+}
+
+function timeToMinutes(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+function saveCourse(course) {
+    let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    courses.push(course);
+    localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
+    
+    updateEduPlanDisplay();
+}
+
+function deleteCourse(id) {
+    let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    courses = courses.filter(c => c.id !== id);
+    localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
+    updateTimetableDisplay();
+}
+
+// Update the initializeEduPlan function to include timetable initialization
+function initializeEduPlan() {
+    initializeTimetable();
+    
+    // Rest of your existing EduPlan initialization code...
+    const studyForm = document.getElementById('study-form');
+    const homeworkForm = document.getElementById('homework-form');
+    const examForm = document.getElementById('exam-form');
+    
+    // Study history popup functionality
+    const showStudyHistoryBtn = document.getElementById('show-study-history');
+    const closeStudyHistoryBtn = document.getElementById('close-study-history');
+    const studyHistoryPopup = document.getElementById('study-history-popup');
+    
+    if (showStudyHistoryBtn) {
+        showStudyHistoryBtn.addEventListener('click', function() {
+            studyHistoryPopup.style.display = 'flex';
+            updateStudyTrackerDisplay();
+        });
+    }
+    
+    if (closeStudyHistoryBtn) {
+        closeStudyHistoryBtn.addEventListener('click', function() {
+            studyHistoryPopup.style.display = 'none';
+        });
+    }
+    
+    if (studyForm) {
+        studyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const studySession = {
+                id: Date.now(),
+                subject: document.getElementById('study-subject').value,
+                topic: document.getElementById('study-topic').value,
+                duration: parseInt(document.getElementById('study-duration').value),
+                goal: document.getElementById('study-goal').value,
+                startTime: new Date().toISOString(),
+                endTime: new Date(Date.now() + parseInt(document.getElementById('study-duration').value) * 60 * 1000).toISOString()
+            };
+            
+            saveStudySession(studySession);
+            this.reset();
+        });
+    }
+    
+    if (homeworkForm) {
+        homeworkForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const homework = {
+                id: Date.now(),
+                subject: document.getElementById('hw-subject').value,
+                task: document.getElementById('hw-task').value,
+                due: document.getElementById('hw-due').value,
+                priority: document.getElementById('hw-priority').value,
+                estimate: parseInt(document.getElementById('hw-estimate').value),
+                completed: false,
+                created: new Date().toISOString()
+            };
+            
+            saveHomework(homework);
+            this.reset();
+        });
+    }
+    
+    if (examForm) {
+        examForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const exam = {
+                id: Date.now(),
+                subject: document.getElementById('exam-subject').value,
+                type: document.getElementById('exam-type').value,
+                date: document.getElementById('exam-date').value,
+                time: document.getElementById('exam-time').value,
+                location: document.getElementById('exam-location').value,
+                duration: parseInt(document.getElementById('exam-duration').value),
+                created: new Date().toISOString()
+            };
+            
+            saveExam(exam);
+            this.reset();
+        });
+    }
+}
+
+// Update the updateEduPlanDisplay function
+function updateEduPlanDisplay() {
+    updateTimetableDisplay();
+    updateStudyTrackerDisplay();
+    updateHomeworkDisplay();
+    updateExamsDisplay();
+    updateGradesDisplay();
+}
+
+// Make sure to add deleteCourse to the global window object
+window.deleteCourse = deleteCourse;
