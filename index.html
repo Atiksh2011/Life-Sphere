@@ -755,7 +755,8 @@
                                 </div>
                                 
                                 <div class="timetable-container">
-                                    <div class="timetable-setup">
+                                    <!-- Add Class Section (initially visible) -->
+                                    <div id="add-class-section" class="timetable-setup">
                                         <h4>Add Class</h4>
                                         <form id="timetable-form" class="timetable-form">
                                             <div class="form-row">
@@ -796,10 +797,15 @@
                                             </div>
                                             <button type="submit" class="btn-primary">Add to Timetable</button>
                                         </form>
+                                        <button id="view-timetable-btn" class="btn-secondary" style="margin-top: 1rem;">View Timetable</button>
                                     </div>
                                     
-                                    <div class="timetable-display">
-                                        <h4>Weekly Schedule</h4>
+                                    <!-- Timetable Display Section (initially hidden) -->
+                                    <div id="timetable-display-section" class="timetable-display" style="display: none;">
+                                        <div class="timetable-header">
+                                            <h4>Weekly Schedule</h4>
+                                            <button id="back-to-add-class" class="btn-secondary">Back to Add Class</button>
+                                        </div>
                                         <div class="timetable-view" id="timetable-view">
                                             <!-- Timetable will be displayed here -->
                                         </div>
@@ -1015,7 +1021,9 @@
                                 <div class="section-header">
                                     <h3>Grade Tracker</h3>
                                     <div class="grade-stats">
-                                        <span id="current-gpa">GPA: -</span>
+                                        <div class="gpa-display">
+                                            <span id="current-gpa">GPA: -</span>
+                                        </div>
                                         <!-- Removed total courses count -->
                                     </div>
                                 </div>
