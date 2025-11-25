@@ -2738,3 +2738,187 @@ document.addEventListener('DOMContentLoaded', function() {
     // Force update screen display on load for mobile
     setTimeout(updateScreenDisplay, 100);
 });
+// Fix notification heading to show "LifeSphere says" instead of "Atiksh2011.github.io says"
+function showNotification(title, message, notificationId = null) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification success`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4CAF50;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        animation: slideInRight 0.3s ease;
+        max-width: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    `;
+    
+    notification.innerHTML = `
+        <div class="notification-content">
+            <strong>LifeSphere says</strong><br>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close">✕</button>
+    `;
+    
+    const closeBtn = notification.querySelector('.notification-close');
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-left: 1rem;
+        padding: 0;
+    `;
+    
+    closeBtn.addEventListener('click', () => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    });
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+    }, 5000);
+    
+    // Show browser notification if available - FIXED HEADING HERE
+    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('LifeSphere says', {
+            body: message,
+            icon: '/favicon.ico',
+            tag: notificationId || 'general-notification'
+        });
+    }
+}
+
+// Also fix the medication alarm notification heading
+function triggerMedicationAlarm(medication) {
+    if (localStorage.getItem('lifesphere_ringtone') !== 'granted') return;
+    
+    // Create a calm and peaceful alarm sound
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.5);
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime + 1);
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 1.5);
+    
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
+    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 1.1);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 2);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 2);
+    
+    const alarmModal = document.getElementById('medication-alarm');
+    const alarmMessage = document.getElementById('alarm-message');
+    const stopAlarmBtn = document.getElementById('stop-alarm');
+    
+    if (alarmModal && alarmMessage && stopAlarmBtn) {
+        alarmMessage.textContent = `Time to take ${medication.name} - ${medication.dosage}`;
+        alarmModal.style.display = 'flex';
+        
+        stopAlarmBtn.onclick = function() {
+            alarmModal.style.display = 'none';
+        };
+    }
+    
+    // Show browser notification if available - FIXED HEADING HERE
+    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('LifeSphere says', {
+            body: `Time to take ${medication.name} - ${medication.dosage}`,
+            icon: '/favicon.ico',
+            tag: 'medication-alarm'
+        });
+    }
+}
+
+// Fix the notification modal heading as well
+function showNotification(title, message, notificationId = null) {
+    // Show in-app notification
+    const notificationModal = document.getElementById('notification-modal');
+    const notificationTitle = document.getElementById('notification-title');
+    const notificationMessage = document.getElementById('notification-message');
+    const acknowledgeBtn = document.getElementById('acknowledge-notification');
+    const remindLaterBtn = document.getElementById('remind-later');
+    
+    if (notificationModal && notificationTitle && notificationMessage && acknowledgeBtn && remindLaterBtn) {
+        // FIXED: Set the title to "LifeSphere says" instead of the dynamic title
+        notificationTitle.textContent = 'LifeSphere says';
+        notificationMessage.textContent = message;
+        notificationModal.style.display = 'flex';
+        
+        if (notificationId && notificationTimeouts.has(notificationId)) {
+            clearTimeout(notificationTimeouts.get(notificationId));
+            notificationTimeouts.delete(notificationId);
+        }
+        
+        const resendTimeout = setTimeout(() => {
+            notificationModal.style.display = 'none';
+            setTimeout(() => {
+                showNotification(title, message, notificationId);
+            }, 15000);
+        }, 45000);
+        
+        acknowledgeBtn.onclick = function() {
+            notificationModal.style.display = 'none';
+            if (notificationId) {
+                clearTimeout(resendTimeout);
+                notificationTimeouts.delete(notificationId);
+            }
+        };
+        
+        remindLaterBtn.onclick = function() {
+            notificationModal.style.display = 'none';
+            if (notificationId) {
+                clearTimeout(resendTimeout);
+                notificationTimeouts.delete(notificationId);
+                setTimeout(() => {
+                    showNotification(title, message, notificationId);
+                }, 300000);
+            }
+        };
+        
+        if (notificationId) {
+            notificationTimeouts.set(notificationId, resendTimeout);
+        }
+    }
+    
+    // Show browser notification if available - FIXED HEADING HERE
+    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('LifeSphere says', {
+            body: message,
+            icon: '/favicon.ico',
+            tag: notificationId || 'general-notification'
+        });
+    }
+}
