@@ -2429,3 +2429,312 @@ window.deleteHomework = deleteHomework;
 window.deleteExam = deleteExam;
 window.deleteGrade = deleteGrade;
 window.deleteCourse = deleteCourse;
+// Fix water tracker delete functionality
+function deleteWaterHistory(date) {
+    if (confirm('Are you sure you want to delete this water intake record?')) {
+        let waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
+        delete waterHistory[date];
+        localStorage.setItem('lifesphere_water_history', JSON.stringify(waterHistory));
+        updateWaterHistory();
+        showNotification('💧 Water Record', 'Water intake record deleted successfully!');
+    }
+}
+
+// Fix screen time display for mobile
+function updateScreenDisplay() {
+    const hours = Math.floor(screenTimeSeconds / 3600);
+    const minutes = Math.floor((screenTimeSeconds % 3600) / 60);
+    const seconds = screenTimeSeconds % 60;
+    
+    // Update mobile screen time display
+    const mobileHoursElement = document.getElementById('mobile-hours');
+    const mobileMinutesElement = document.getElementById('mobile-minutes');
+    const mobileSecondsElement = document.getElementById('mobile-seconds');
+    
+    if (mobileHoursElement) mobileHoursElement.textContent = hours.toString().padStart(2, '0');
+    if (mobileMinutesElement) mobileMinutesElement.textContent = minutes.toString().padStart(2, '0');
+    if (mobileSecondsElement) mobileSecondsElement.textContent = seconds.toString().padStart(2, '0');
+    
+    // Update regular screen time display
+    const screenTodayElement = document.getElementById('screen-today');
+    if (screenTodayElement) screenTodayElement.textContent = `${hours}h ${minutes}m`;
+    
+    const goalHours = parseInt(document.getElementById('screen-goal')?.value || 4);
+    const goalSeconds = goalHours * 3600;
+    const percentage = Math.min(100, (screenTimeSeconds / goalSeconds) * 100);
+    
+    const screenProgressElement = document.getElementById('screen-progress');
+    const screenGoalTextElement = document.getElementById('screen-goal-text');
+    
+    if (screenProgressElement) screenProgressElement.style.width = `${percentage}%`;
+    if (screenGoalTextElement) screenGoalTextElement.textContent = `${percentage.toFixed(0)}% of daily goal`;
+    
+    updateScreenHistory();
+}
+
+// Add delete functionality to subscriptions
+function updateSubscriptionsDisplay() {
+    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    const subscriptionsBody = document.getElementById('subscriptions-body');
+    const totalSubs = document.getElementById('total-subs');
+    const monthlyCost = document.getElementById('monthly-cost');
+    
+    const totalMonthly = subscriptions.reduce((sum, sub) => sum + sub.price, 0);
+    
+    let subscriptionsHTML = '';
+    
+    subscriptions.forEach(sub => {
+        const renewalDate = new Date(sub.renewal);
+        const now = new Date();
+        const daysUntil = Math.ceil((renewalDate - now) / (1000 * 60 * 60 * 24));
+        const status = daysUntil <= 7 ? 'renewing-soon' : daysUntil <= 0 ? 'expired' : 'active';
+        const statusText = daysUntil <= 7 ? 'Renewing Soon' : daysUntil <= 0 ? 'Expired' : 'Active';
+        
+        subscriptionsHTML += `
+            <tr>
+                <td>${sub.name}</td>
+                <td><span class="category-tag ${sub.category}">${sub.category}</span></td>
+                <td>${getCurrencySymbol()}${sub.price.toFixed(2)}</td>
+                <td>${renewalDate.toLocaleDateString()}</td>
+                <td><span class="status-badge ${status}">${statusText}</span></td>
+                <td>
+                    <button class="delete-btn" onclick="deleteSubscription(${sub.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (subscriptionsBody) {
+        subscriptionsBody.innerHTML = subscriptionsHTML || `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                    No subscriptions yet. Add your first subscription using the form above.
+                </td>
+            </tr>
+        `;
+    }
+    
+    if (totalSubs) totalSubs.textContent = `${subscriptions.length} subscription${subscriptions.length !== 1 ? 's' : ''}`;
+    if (monthlyCost) monthlyCost.textContent = `${getCurrencySymbol()}${totalMonthly.toFixed(2)}/month`;
+}
+
+// Enhanced delete subscription function
+function deleteSubscription(id) {
+    if (confirm('Are you sure you want to delete this subscription?')) {
+        let subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+        subscriptions = subscriptions.filter(s => s.id !== id);
+        localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
+        updateSubscriptionsDisplay();
+        showNotification('💰 Subscription', 'Subscription deleted successfully!');
+    }
+}
+
+// Fix water history display
+function updateWaterHistory() {
+    const waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
+    const historyBody = document.getElementById('water-history-body');
+    
+    let historyHTML = '';
+    const sortedDates = Object.keys(waterHistory).sort((a, b) => new Date(b) - new Date(a));
+    
+    sortedDates.slice(0, 7).forEach(date => {
+        const data = waterHistory[date];
+        const formattedDate = new Date(date).toLocaleDateString();
+        
+        historyHTML += `
+            <tr>
+                <td>${formattedDate}</td>
+                <td>${data.consumed}/${data.goal} glasses</td>
+                <td>${data.percentage.toFixed(0)}%</td>
+                <td><button class="delete-btn" onclick="deleteWaterHistory('${date}')">Delete</button></td>
+            </tr>
+        `;
+    });
+    
+    if (historyBody) {
+        historyBody.innerHTML = historyHTML || `
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 2rem; color: #666;">
+                    No water intake history yet. Start tracking your water consumption!
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Initialize screen time display properly
+function initializeScreenTimeTracker() {
+    const startBtn = document.getElementById('start-tracking');
+    const stopBtn = document.getElementById('stop-tracking');
+    const addManualBtn = document.getElementById('add-manual');
+    const goalInput = document.getElementById('screen-goal');
+    const resetBtn = document.getElementById('reset-screen');
+
+    if (startBtn) {
+        startBtn.addEventListener('click', function() {
+            if (!screenTracking) {
+                screenTracking = true;
+                this.disabled = true;
+                document.getElementById('stop-tracking').disabled = false;
+                
+                screenTimeInterval = setInterval(() => {
+                    screenTimeSeconds++;
+                    updateScreenDisplay();
+                }, 1000);
+                
+                localStorage.setItem('lifesphere_screen_tracking', 'true');
+                showNotification('📱 Screen Time', 'Screen time tracking started!');
+            }
+        });
+    }
+
+    if (stopBtn) {
+        stopBtn.addEventListener('click', function() {
+            if (screenTracking) {
+                screenTracking = false;
+                document.getElementById('start-tracking').disabled = false;
+                this.disabled = true;
+                
+                if (screenTimeInterval) {
+                    clearInterval(screenTimeInterval);
+                }
+                
+                saveScreenData();
+                localStorage.setItem('lifesphere_screen_tracking', 'false');
+                showNotification('📱 Screen Time', 'Screen time tracking stopped!');
+            }
+        });
+    }
+
+    if (addManualBtn) {
+        addManualBtn.addEventListener('click', function() {
+            const minutes = prompt('Enter screen time in minutes:');
+            if (minutes && !isNaN(minutes) && parseInt(minutes) > 0) {
+                screenTimeSeconds += parseInt(minutes) * 60;
+                updateScreenDisplay();
+                saveScreenData();
+                showNotification('📱 Screen Time', `${minutes} minutes added to screen time!`);
+            } else {
+                alert('Please enter a valid number of minutes.');
+            }
+        });
+    }
+
+    if (goalInput) {
+        goalInput.addEventListener('change', function() {
+            updateScreenDisplay();
+            saveScreenData();
+        });
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to reset today\'s screen time?')) {
+                screenTimeSeconds = 0;
+                updateScreenDisplay();
+                saveScreenData();
+                showNotification('📱 Screen Time', 'Screen time reset successfully!');
+            }
+        });
+    }
+
+    // Load previous tracking state
+    if (localStorage.getItem('lifesphere_screen_tracking') === 'true') {
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        screenTracking = true;
+        
+        screenTimeInterval = setInterval(() => {
+            screenTimeSeconds++;
+            updateScreenDisplay();
+        }, 1000);
+    }
+
+    loadScreenData();
+}
+
+// Enhanced notification function
+function showNotification(title, message, notificationId = null) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification success`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4CAF50;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        animation: slideInRight 0.3s ease;
+        max-width: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    `;
+    
+    notification.innerHTML = `
+        <div class="notification-content">
+            <strong>${title}</strong><br>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close">✕</button>
+    `;
+    
+    const closeBtn = notification.querySelector('.notification-close');
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-left: 1rem;
+        padding: 0;
+    `;
+    
+    closeBtn.addEventListener('click', () => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    });
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+    }, 5000);
+    
+    // Show browser notification if available
+    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+            body: message,
+            icon: '/favicon.ico',
+            tag: notificationId || 'general-notification'
+        });
+    }
+}
+
+// Make sure all delete functions are properly exposed
+window.deleteWaterHistory = deleteWaterHistory;
+window.deleteSubscription = deleteSubscription;
+
+// Update the initialization to ensure proper mobile display
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('LifeSphere initialized with mobile optimizations');
+    initializeApp();
+    // Force update screen display on load for mobile
+    setTimeout(updateScreenDisplay, 100);
+});
