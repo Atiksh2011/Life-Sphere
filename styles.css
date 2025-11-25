@@ -1856,3 +1856,134 @@ footer {
         transform: translateY(0);
     }
 }
+/* Add horizontal scroll to subscriptions table */
+.subscriptions-table-container {
+    overflow-x: auto;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.subscriptions-table {
+    min-width: 700px;
+    width: 100%;
+}
+
+/* Fix screen time display for mobile portrait */
+.mobile-screen-time {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+.time-display-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.time-unit-mobile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 60px;
+}
+
+.time-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+}
+
+.time-label {
+    font-size: 0.7rem;
+    color: #777;
+    text-transform: uppercase;
+    margin-top: 0.2rem;
+}
+
+.time-separator {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0.2rem;
+}
+
+/* Enhanced delete button styles for water tracker */
+.delete-btn {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.delete-btn:hover {
+    background: #ff5252;
+    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile portrait optimizations */
+@media (max-width: 768px) and (orientation: portrait) {
+    .mobile-screen-time {
+        padding: 0.5rem 0;
+    }
+    
+    .time-display-mobile {
+        gap: 0.3rem;
+    }
+    
+    .time-value {
+        font-size: 1.5rem;
+    }
+    
+    .time-label {
+        font-size: 0.6rem;
+    }
+    
+    .time-separator {
+        font-size: 1.2rem;
+        margin: 0 0.1rem;
+    }
+    
+    .time-unit-mobile {
+        min-width: 50px;
+    }
+    
+    .subscriptions-table-container {
+        margin: 0 -1rem;
+        padding: 0 1rem;
+    }
+    
+    .history-table {
+        font-size: 0.8rem;
+        min-width: 500px;
+    }
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+    .time-value {
+        font-size: 1.2rem;
+    }
+    
+    .time-unit-mobile {
+        min-width: 45px;
+    }
+    
+    .time-label {
+        font-size: 0.55rem;
+    }
+    
+    .delete-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+    }
+}
