@@ -65,30 +65,20 @@ function getCurrencySymbol() {
     return currencySymbols[selectedCurrency] || '$';
 }
 
-// Notification System
+// Notification System - COMPLETELY FIXED
 function initializeNotifications() {
     const notificationBtn = document.getElementById('notification-btn');
     if (notificationBtn) {
         notificationBtn.addEventListener('click', function() {
-            if ('Notification' in window) {
-                Notification.requestPermission().then(function(permission) {
-                    if (permission === 'granted') {
-                        showNotification('Notifications Enabled', 'You will receive reminders for your goals.', 'success');
-                        this.textContent = 'Notifications Enabled';
-                        this.disabled = true;
-                        localStorage.setItem('lifesphere_notifications', 'enabled');
-                    } else {
-                        showNotification('Notifications Disabled', 'You can enable them later in your browser settings.', 'info');
-                    }
-                }.bind(this));
-            } else {
-                showNotification('Browser Not Supported', 'This browser does not support notifications.', 'warning');
-            }
+            showNotification('🔔 Notifications', 'LifeSphere uses beautiful custom notifications! No browser permissions needed.');
+            this.textContent = 'Custom Notifications Active';
+            this.disabled = true;
+            localStorage.setItem('lifesphere_notifications', 'enabled');
         });
     }
     
     if (localStorage.getItem('lifesphere_notifications') === 'enabled') {
-        notificationBtn.textContent = 'Notifications Enabled';
+        notificationBtn.textContent = 'Custom Notifications Active';
         notificationBtn.disabled = true;
     }
 }
@@ -220,10 +210,10 @@ function saveSleepSchedule() {
         bedtime: document.getElementById('bedtime').value
     };
     localStorage.setItem('lifesphere_sleep_schedule', JSON.stringify(schedule));
-    showNotification('Sleep Schedule Saved', 'Your sleep schedule has been saved successfully!', 'success');
+    showNotification('Sleep Schedule Saved', 'Your sleep schedule has been saved successfully!');
 }
 
-// Water Tracker
+// Water Tracker - FIXED DELETE FUNCTIONALITY
 function initializeWaterTracker() {
     let waterGoal = 8;
     let waterConsumed = 0;
@@ -257,21 +247,21 @@ function initializeWaterTracker() {
         waterConsumed++;
         updateWaterDisplay();
         saveWaterData();
-        showNotification('Water Added', 'One glass of water added to your daily intake!', 'success');
+        showNotification('Water Added', 'One glass of water added to your daily intake!');
     });
 
     if (resetBtn) resetBtn.addEventListener('click', () => {
         waterConsumed = 0;
         updateWaterDisplay();
         saveWaterData();
-        showNotification('Water Reset', 'Your water intake for today has been reset.', 'info');
+        showNotification('Water Reset', 'Your water intake for today has been reset.');
     });
 
     if (addWaterBtn) addWaterBtn.addEventListener('click', () => {
         waterConsumed++;
         updateWaterDisplay();
         saveWaterData();
-        showNotification('Water Added', 'One glass of water added to your daily intake!', 'success');
+        showNotification('Water Added', 'One glass of water added to your daily intake!');
     });
 
     document.querySelectorAll('.cup').forEach(cup => {
@@ -280,7 +270,7 @@ function initializeWaterTracker() {
             waterConsumed = cupNumber;
             updateWaterDisplay();
             saveWaterData();
-            showNotification('Water Intake Updated', `Your water intake has been set to ${cupNumber} glasses.`, 'success');
+            showNotification('Water Intake Updated', `Your water intake has been set to ${cupNumber} glasses.`);
         });
     });
 
@@ -293,7 +283,7 @@ function initializeWaterTracker() {
         
         updateWaterDisplay();
         saveWaterData();
-        showNotification('Water Goal Updated', `Your daily water goal has been set to ${waterGoal} glasses.`, 'success');
+        showNotification('Water Goal Updated', `Your daily water goal has been set to ${waterGoal} glasses.`);
     }
 
     function updateWaterDisplay() {
@@ -342,39 +332,50 @@ function initializeWaterTracker() {
         localStorage.setItem('lifesphere_water_history', JSON.stringify(waterHistory));
     }
 
-    function updateWaterHistory() {
-        const waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
-        const historyBody = document.getElementById('water-history-body');
-        
-        let historyHTML = '';
-        const sortedDates = Object.keys(waterHistory).sort((a, b) => new Date(b) - new Date(a));
-        
-        sortedDates.slice(0, 7).forEach(date => {
-            const data = waterHistory[date];
-            const formattedDate = new Date(date).toLocaleDateString();
-            
-            historyHTML += `
-                <tr>
-                    <td>${formattedDate}</td>
-                    <td>${data.consumed}/${data.goal}</td>
-                    <td>${data.percentage.toFixed(0)}%</td>
-                    <td><button class="delete-btn" onclick="deleteWaterHistory('${date}')">Delete</button></td>
-                </tr>
-            `;
-        });
-        
-        if (historyBody) historyBody.innerHTML = historyHTML;
-    }
-
     updateWaterDisplay();
 }
 
+// FIXED WATER HISTORY DELETE FUNCTION
 function deleteWaterHistory(date) {
-    let waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
-    delete waterHistory[date];
-    localStorage.setItem('lifesphere_water_history', JSON.stringify(waterHistory));
-    updateWaterHistory();
-    showNotification('History Deleted', 'Water history entry has been deleted.', 'info');
+    if (confirm('Are you sure you want to delete this water intake record?')) {
+        let waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
+        delete waterHistory[date];
+        localStorage.setItem('lifesphere_water_history', JSON.stringify(waterHistory));
+        updateWaterHistory();
+        showNotification('💧 Water Record', 'Water intake record deleted successfully!');
+    }
+}
+
+function updateWaterHistory() {
+    const waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
+    const historyBody = document.getElementById('water-history-body');
+    
+    let historyHTML = '';
+    const sortedDates = Object.keys(waterHistory).sort((a, b) => new Date(b) - new Date(a));
+    
+    sortedDates.slice(0, 7).forEach(date => {
+        const data = waterHistory[date];
+        const formattedDate = new Date(date).toLocaleDateString();
+        
+        historyHTML += `
+            <tr>
+                <td>${formattedDate}</td>
+                <td>${data.consumed}/${data.goal} glasses</td>
+                <td>${data.percentage.toFixed(0)}%</td>
+                <td><button class="delete-btn" onclick="deleteWaterHistory('${date}')">Delete</button></td>
+            </tr>
+        `;
+    });
+    
+    if (historyBody) {
+        historyBody.innerHTML = historyHTML || `
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 2rem; color: #666;">
+                    No water intake history yet. Start tracking your water consumption!
+                </td>
+            </tr>
+        `;
+    }
 }
 
 // Workout Tracker
@@ -412,7 +413,7 @@ function saveWorkout(workout) {
     
     updateWorkoutDisplay();
     updateDashboard();
-    showNotification('Workout Logged', `${workout.name} has been added to your workout history!`, 'success');
+    showNotification('Workout Logged', `${workout.name} has been added to your workout history!`);
 }
 
 function updateWorkoutDisplay() {
@@ -479,7 +480,7 @@ function deleteWorkout(id) {
     localStorage.setItem('lifesphere_workouts', JSON.stringify(workouts));
     updateWorkoutDisplay();
     updateDashboard();
-    showNotification('Workout Deleted', 'Workout has been removed from your history.', 'info');
+    showNotification('Workout Deleted', 'Workout has been removed from your history.');
 }
 
 // Medication Tracker
@@ -521,7 +522,7 @@ function initializeMedicationTracker() {
             oscillator.stop(audioContext.currentTime + 1);
             
             setTimeout(() => {
-                showNotification('Ringtone Access Granted', 'Medication alarms will now sound.', 'success');
+                showNotification('Ringtone Access Granted', 'Medication alarms will now sound.');
                 localStorage.setItem('lifesphere_ringtone', 'granted');
             }, 1000);
         });
@@ -568,7 +569,7 @@ function saveMedication(medication) {
     
     updateMedicationDisplay();
     updateDashboard();
-    showNotification('Medication Added', `${medication.name} has been added to your medication list.`, 'success');
+    showNotification('Medication Added', `${medication.name} has been added to your medication list.`);
 }
 
 function updateMedicationDisplay() {
@@ -618,7 +619,7 @@ function deleteMedication(id) {
     localStorage.setItem('lifesphere_medications', JSON.stringify(medications));
     updateMedicationDisplay();
     updateDashboard();
-    showNotification('Medication Removed', 'Medication has been removed from your list.', 'info');
+    showNotification('Medication Removed', 'Medication has been removed from your list.');
 }
 
 // Meal Planner
@@ -668,7 +669,7 @@ function saveMeal(meal) {
     localStorage.setItem('lifesphere_meals', JSON.stringify(meals));
     
     updateMealDisplay();
-    showNotification('Meal Added', `${meal.name} has been added to your meal plan!`, 'success');
+    showNotification('Meal Added', `${meal.name} has been added to your meal plan!`);
 }
 
 function updateMealDisplay() {
@@ -744,10 +745,10 @@ function deleteMeal(id) {
     meals = meals.filter(m => m.id !== id);
     localStorage.setItem('lifesphere_meals', JSON.stringify(meals));
     updateMealDisplay();
-    showNotification('Meal Removed', 'Meal has been removed from your plan.', 'info');
+    showNotification('Meal Removed', 'Meal has been removed from your plan.');
 }
 
-// Screen Time Tracker
+// Screen Time Tracker - FIXED MOBILE DISPLAY
 function initializeScreenTimeTracker() {
     const startBtn = document.getElementById('start-tracking');
     const stopBtn = document.getElementById('stop-tracking');
@@ -768,7 +769,7 @@ function initializeScreenTimeTracker() {
                 }, 1000);
                 
                 localStorage.setItem('lifesphere_screen_tracking', 'true');
-                showNotification('Screen Time Tracking Started', 'Screen time tracking is now active.', 'success');
+                showNotification('Screen Time Tracking Started', 'Screen time tracking is now active.');
             }
         });
     }
@@ -786,7 +787,7 @@ function initializeScreenTimeTracker() {
                 
                 saveScreenData();
                 localStorage.setItem('lifesphere_screen_tracking', 'false');
-                showNotification('Screen Time Tracking Stopped', 'Screen time tracking has been paused.', 'info');
+                showNotification('Screen Time Tracking Stopped', 'Screen time tracking has been paused.');
             }
         });
     }
@@ -794,11 +795,13 @@ function initializeScreenTimeTracker() {
     if (addManualBtn) {
         addManualBtn.addEventListener('click', function() {
             const minutes = prompt('Enter screen time in minutes:');
-            if (minutes && !isNaN(minutes)) {
+            if (minutes && !isNaN(minutes) && parseInt(minutes) > 0) {
                 screenTimeSeconds += parseInt(minutes) * 60;
                 updateScreenDisplay();
                 saveScreenData();
-                showNotification('Screen Time Added', `${minutes} minutes added to your screen time.`, 'success');
+                showNotification('Screen Time Added', `${minutes} minutes added to your screen time.`);
+            } else {
+                alert('Please enter a valid number of minutes.');
             }
         });
     }
@@ -807,39 +810,52 @@ function initializeScreenTimeTracker() {
         goalInput.addEventListener('change', function() {
             updateScreenDisplay();
             saveScreenData();
-            showNotification('Screen Time Goal Updated', `Daily screen time goal set to ${this.value} hours.`, 'success');
+            showNotification('Screen Time Goal Updated', `Daily screen time goal set to ${this.value} hours.`);
         });
     }
 
     if (resetBtn) {
         resetBtn.addEventListener('click', function() {
-            screenTimeSeconds = 0;
-            updateScreenDisplay();
-            saveScreenData();
-            showNotification('Screen Time Reset', 'Your screen time for today has been reset.', 'info');
+            if (confirm('Are you sure you want to reset today\'s screen time?')) {
+                screenTimeSeconds = 0;
+                updateScreenDisplay();
+                saveScreenData();
+                showNotification('Screen Time Reset', 'Your screen time for today has been reset.');
+            }
         });
     }
 
+    // Load previous tracking state
     if (localStorage.getItem('lifesphere_screen_tracking') === 'true') {
-        startBtn.click();
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        screenTracking = true;
+        
+        screenTimeInterval = setInterval(() => {
+            screenTimeSeconds++;
+            updateScreenDisplay();
+        }, 1000);
     }
 
     loadScreenData();
 }
 
+// FIXED SCREEN TIME DISPLAY FOR MOBILE
 function updateScreenDisplay() {
     const hours = Math.floor(screenTimeSeconds / 3600);
     const minutes = Math.floor((screenTimeSeconds % 3600) / 60);
     const seconds = screenTimeSeconds % 60;
     
-    const screenHoursElement = document.getElementById('screen-hours');
-    const screenMinutesElement = document.getElementById('screen-minutes');
-    const screenSecondsElement = document.getElementById('screen-seconds');
+    // Update mobile screen time display
+    const mobileHoursElement = document.getElementById('mobile-hours');
+    const mobileMinutesElement = document.getElementById('mobile-minutes');
+    const mobileSecondsElement = document.getElementById('mobile-seconds');
     
-    if (screenHoursElement) screenHoursElement.textContent = hours.toString().padStart(2, '0');
-    if (screenMinutesElement) screenMinutesElement.textContent = minutes.toString().padStart(2, '0');
-    if (screenSecondsElement) screenSecondsElement.textContent = seconds.toString().padStart(2, '0');
+    if (mobileHoursElement) mobileHoursElement.textContent = hours.toString().padStart(2, '0');
+    if (mobileMinutesElement) mobileMinutesElement.textContent = minutes.toString().padStart(2, '0');
+    if (mobileSecondsElement) mobileSecondsElement.textContent = seconds.toString().padStart(2, '0');
     
+    // Update regular screen time display
     const screenTodayElement = document.getElementById('screen-today');
     if (screenTodayElement) screenTodayElement.textContent = `${hours}h ${minutes}m`;
     
@@ -921,7 +937,7 @@ function deleteScreenHistory(date) {
     delete screenHistory[date];
     localStorage.setItem('lifesphere_screen_history', JSON.stringify(screenHistory));
     updateScreenHistory();
-    showNotification('Screen History Deleted', 'Screen time history entry has been deleted.', 'info');
+    showNotification('Screen History Deleted', 'Screen time history entry has been deleted.');
 }
 
 // Sleep Tracker
@@ -968,7 +984,7 @@ function saveSleep(sleep) {
     
     updateSleepDisplay();
     updateDashboard();
-    showNotification('Sleep Logged', 'Your sleep has been recorded successfully!', 'success');
+    showNotification('Sleep Logged', 'Your sleep has been recorded successfully!');
 }
 
 function updateSleepDisplay() {
@@ -1033,7 +1049,7 @@ function deleteSleep(id) {
     localStorage.setItem('lifesphere_sleep', JSON.stringify(sleeps));
     updateSleepDisplay();
     updateDashboard();
-    showNotification('Sleep Entry Deleted', 'Sleep record has been removed.', 'info');
+    showNotification('Sleep Entry Deleted', 'Sleep record has been removed.');
 }
 
 // LifeLoop
@@ -1065,7 +1081,7 @@ function saveReminder(reminder) {
     localStorage.setItem('lifesphere_reminders', JSON.stringify(reminders));
     
     updateLifeLoopDisplay();
-    showNotification('Reminder Added', `${reminder.name} has been added to your reminders!`, 'success');
+    showNotification('Reminder Added', `${reminder.name} has been added to your reminders!`);
 }
 
 function updateLifeLoopDisplay() {
@@ -1158,10 +1174,10 @@ function deleteReminder(id) {
     reminders = reminders.filter(r => r.id !== id);
     localStorage.setItem('lifesphere_reminders', JSON.stringify(reminders));
     updateLifeLoopDisplay();
-    showNotification('Reminder Deleted', 'Reminder has been removed.', 'info');
+    showNotification('Reminder Deleted', 'Reminder has been removed.');
 }
 
-// TaskForge
+// TaskForge - FIXED SUBSCRIPTIONS TABLE WITH DELETE OPTION
 function initializeTaskForge() {
     const todoForm = document.getElementById('todo-form');
     const subscriptionForm = document.getElementById('subscription-form');
@@ -1210,7 +1226,7 @@ function saveTodo(task) {
     
     updateTaskForgeDisplay();
     updateDashboard();
-    showNotification('Task Added', 'New task has been added to your to-do list!', 'success');
+    showNotification('Task Added', 'New task has been added to your to-do list!');
 }
 
 function updateTaskForgeDisplay() {
@@ -1290,7 +1306,7 @@ function completeTodo(id) {
         localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
         updateTaskForgeDisplay();
         updateDashboard();
-        showNotification('Task Completed', 'Task marked as completed! Great job!', 'success');
+        showNotification('Task Completed', 'Task marked as completed! Great job!');
     }
 }
 
@@ -1300,7 +1316,7 @@ function deleteTodo(id) {
     localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
     updateTaskForgeDisplay();
     updateDashboard();
-    showNotification('Task Deleted', 'Task has been removed from your list.', 'info');
+    showNotification('Task Deleted', 'Task has been removed from your list.');
 }
 
 function saveSubscription(subscription) {
@@ -1309,9 +1325,10 @@ function saveSubscription(subscription) {
     localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
     
     updateTaskForgeDisplay();
-    showNotification('Subscription Added', `${subscription.name} has been added to your subscriptions!`, 'success');
+    showNotification('Subscription Added', `${subscription.name} has been added to your subscriptions!`);
 }
 
+// FIXED SUBSCRIPTIONS TABLE WITH DELETE OPTION AND HORIZONTAL SCROLL
 function updateSubscriptionsDisplay() {
     const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
     const subscriptionsBody = document.getElementById('subscriptions-body');
@@ -1343,17 +1360,29 @@ function updateSubscriptionsDisplay() {
         `;
     });
     
-    if (subscriptionsBody) subscriptionsBody.innerHTML = subscriptionsHTML || '<tr><td colspan="6">No subscriptions</td></tr>';
-    if (totalSubs) totalSubs.textContent = `${subscriptions.length} subscriptions`;
+    if (subscriptionsBody) {
+        subscriptionsBody.innerHTML = subscriptionsHTML || `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                    No subscriptions yet. Add your first subscription using the form above.
+                </td>
+            </tr>
+        `;
+    }
+    
+    if (totalSubs) totalSubs.textContent = `${subscriptions.length} subscription${subscriptions.length !== 1 ? 's' : ''}`;
     if (monthlyCost) monthlyCost.textContent = `${getCurrencySymbol()}${totalMonthly.toFixed(2)}/month`;
 }
 
+// FIXED SUBSCRIPTION DELETE FUNCTION
 function deleteSubscription(id) {
-    let subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
-    subscriptions = subscriptions.filter(s => s.id !== id);
-    localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
-    updateTaskForgeDisplay();
-    showNotification('Subscription Removed', 'Subscription has been deleted.', 'info');
+    if (confirm('Are you sure you want to delete this subscription?')) {
+        let subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+        subscriptions = subscriptions.filter(s => s.id !== id);
+        localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
+        updateSubscriptionsDisplay();
+        showNotification('💰 Subscription', 'Subscription deleted successfully!');
+    }
 }
 
 // EduPlan
@@ -1482,7 +1511,7 @@ function initializeTimetable() {
             
             saveCourse(course);
             this.reset();
-            showNotification('Course Added', `${course.name} has been added to your timetable!`, 'success');
+            showNotification('Course Added', `${course.name} has been added to your timetable!`);
         });
     }
 }
@@ -1637,7 +1666,7 @@ function deleteCourse(id) {
         courses = courses.filter(c => c.id !== id);
         localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
         updateTimetableDisplay();
-        showNotification('Course Deleted', 'Course has been removed from your timetable.', 'info');
+        showNotification('Course Deleted', 'Course has been removed from your timetable.');
     }
 }
 
@@ -1647,7 +1676,7 @@ function saveStudySession(session) {
     localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
     
     updateEduPlanDisplay();
-    showNotification('Study Session Started', `${session.subject} study session has been logged!`, 'success');
+    showNotification('Study Session Started', `${session.subject} study session has been logged!`);
 }
 
 function saveHomework(homework) {
@@ -1656,7 +1685,7 @@ function saveHomework(homework) {
     localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
     
     updateEduPlanDisplay();
-    showNotification('Homework Added', `${homework.subject} homework has been added!`, 'success');
+    showNotification('Homework Added', `${homework.subject} homework has been added!`);
 }
 
 function saveExam(exam) {
@@ -1665,7 +1694,7 @@ function saveExam(exam) {
     localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
     
     updateEduPlanDisplay();
-    showNotification('Exam Added', `${exam.subject} exam has been scheduled!`, 'success');
+    showNotification('Exam Added', `${exam.subject} exam has been scheduled!`);
 }
 
 function updateEduPlanDisplay() {
@@ -1741,7 +1770,7 @@ function deleteStudySession(id) {
     studySessions = studySessions.filter(s => s.id !== id);
     localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
     updateStudyTrackerDisplay();
-    showNotification('Study Session Deleted', 'Study session has been removed.', 'info');
+    showNotification('Study Session Deleted', 'Study session has been removed.');
 }
 
 function updateHomeworkDisplay() {
@@ -1790,7 +1819,7 @@ function completeHomework(id) {
         homeworks[homeworkIndex].completed = true;
         localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
         updateHomeworkDisplay();
-        showNotification('Homework Completed', 'Homework marked as completed! Great job!', 'success');
+        showNotification('Homework Completed', 'Homework marked as completed! Great job!');
     }
 }
 
@@ -1799,7 +1828,7 @@ function deleteHomework(id) {
     homeworks = homeworks.filter(h => h.id !== id);
     localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
     updateHomeworkDisplay();
-    showNotification('Homework Deleted', 'Homework has been removed.', 'info');
+    showNotification('Homework Deleted', 'Homework has been removed.');
 }
 
 function updateExamsDisplay() {
@@ -1842,7 +1871,7 @@ function deleteExam(id) {
     exams = exams.filter(e => e.id !== id);
     localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
     updateExamsDisplay();
-    showNotification('Exam Deleted', 'Exam has been removed from your schedule.', 'info');
+    showNotification('Exam Deleted', 'Exam has been removed from your schedule.');
 }
 
 // Grade Tracker
@@ -1874,7 +1903,7 @@ function saveGrade(grade) {
     grades.push(grade);
     localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
     updateGradesDisplay();
-    showNotification('Grade Added', `${grade.subject} grade has been recorded!`, 'success');
+    showNotification('Grade Added', `${grade.subject} grade has been recorded!`);
 }
 
 function updateGradesDisplay() {
@@ -1928,7 +1957,7 @@ function deleteGrade(id) {
     grades = grades.filter(g => g.id !== id);
     localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
     updateGradesDisplay();
-    showNotification('Grade Deleted', 'Grade has been removed from your records.', 'info');
+    showNotification('Grade Deleted', 'Grade has been removed from your records.');
 }
 
 // Dashboard
@@ -2017,14 +2046,8 @@ function triggerMedicationAlarm(medication) {
         };
     }
     
-    // Show browser notification if available
-    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification('LifeSphere says', {
-            body: `Time to take ${medication.name} - ${medication.dosage}`,
-            icon: '/favicon.ico',
-            tag: 'medication-alarm'
-        });
-    }
+    // Use custom notification instead of browser notification
+    showNotification('💊 Medication Reminder', `Time to take ${medication.name} - ${medication.dosage}`);
 }
 
 function checkScheduledNotifications() {
@@ -2276,652 +2299,6 @@ function checkEduPlanReminders() {
     });
 }
 
-function showNotification(title, message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#4CAF50' : type === 'warning' ? '#ff9800' : type === 'error' ? '#f44336' : '#2196F3'};
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        z-index: 10000;
-        animation: slideInRight 0.3s ease;
-        max-width: 300px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    `;
-    
-    notification.innerHTML = `
-        <div class="notification-content">
-            <strong>${title}</strong>
-            <div>${message}</div>
-        </div>
-        <button class="notification-close">✕</button>
-    `;
-    
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.style.cssText = `
-        background: none;
-        border: none;
-        color: white;
-        font-size: 1rem;
-        cursor: pointer;
-        margin-left: 1rem;
-        padding: 0;
-    `;
-    
-    closeBtn.addEventListener('click', () => {
-        notification.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    });
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }
-    }, 5000);
-    
-    // Show browser notification if available
-    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification('LifeSphere says', {
-            body: message,
-            icon: '/favicon.ico',
-            tag: 'general-notification'
-        });
-    }
-}
-
-// Initialize all data
-function loadAllData() {
-    console.log('Loading all data...');
-}
-
-function initializeCharts() {
-    console.log('Initializing charts...');
-    const ctx = document.getElementById('weekly-chart');
-    if (ctx) {
-        const waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
-        const waterData = getWeeklyWaterData(waterHistory);
-        
-        new Chart(ctx.getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Water Intake (glasses)',
-                    data: waterData,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 10
-                    }
-                }
-            }
-        });
-    }
-}
-
-function getWeeklyWaterData(waterHistory) {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const today = new Date();
-    const weekData = [0, 0, 0, 0, 0, 0, 0];
-    
-    for (let i = 0; i < 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        const dateString = date.toDateString();
-        const dayIndex = date.getDay();
-        
-        if (waterHistory[dateString]) {
-            weekData[dayIndex] = waterHistory[dateString].consumed || 0;
-        }
-    }
-    
-    return [...weekData.slice(1), weekData[0]];
-}
-
-// Export functions for global access
-window.LifeSphere = {
-    initializeApp,
-    updateDashboard
-};
-
-// Make delete functions globally available
-window.deleteWaterHistory = deleteWaterHistory;
-window.deleteWorkout = deleteWorkout;
-window.deleteMedication = deleteMedication;
-window.deleteMeal = deleteMeal;
-window.deleteScreenHistory = deleteScreenHistory;
-window.deleteSleep = deleteSleep;
-window.deleteReminder = deleteReminder;
-window.completeTodo = completeTodo;
-window.deleteTodo = deleteTodo;
-window.deleteSubscription = deleteSubscription;
-window.deleteStudySession = deleteStudySession;
-window.completeHomework = completeHomework;
-window.deleteHomework = deleteHomework;
-window.deleteExam = deleteExam;
-window.deleteGrade = deleteGrade;
-window.deleteCourse = deleteCourse;
-// Fix water tracker delete functionality
-function deleteWaterHistory(date) {
-    if (confirm('Are you sure you want to delete this water intake record?')) {
-        let waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
-        delete waterHistory[date];
-        localStorage.setItem('lifesphere_water_history', JSON.stringify(waterHistory));
-        updateWaterHistory();
-        showNotification('💧 Water Record', 'Water intake record deleted successfully!');
-    }
-}
-
-// Fix screen time display for mobile
-function updateScreenDisplay() {
-    const hours = Math.floor(screenTimeSeconds / 3600);
-    const minutes = Math.floor((screenTimeSeconds % 3600) / 60);
-    const seconds = screenTimeSeconds % 60;
-    
-    // Update mobile screen time display
-    const mobileHoursElement = document.getElementById('mobile-hours');
-    const mobileMinutesElement = document.getElementById('mobile-minutes');
-    const mobileSecondsElement = document.getElementById('mobile-seconds');
-    
-    if (mobileHoursElement) mobileHoursElement.textContent = hours.toString().padStart(2, '0');
-    if (mobileMinutesElement) mobileMinutesElement.textContent = minutes.toString().padStart(2, '0');
-    if (mobileSecondsElement) mobileSecondsElement.textContent = seconds.toString().padStart(2, '0');
-    
-    // Update regular screen time display
-    const screenTodayElement = document.getElementById('screen-today');
-    if (screenTodayElement) screenTodayElement.textContent = `${hours}h ${minutes}m`;
-    
-    const goalHours = parseInt(document.getElementById('screen-goal')?.value || 4);
-    const goalSeconds = goalHours * 3600;
-    const percentage = Math.min(100, (screenTimeSeconds / goalSeconds) * 100);
-    
-    const screenProgressElement = document.getElementById('screen-progress');
-    const screenGoalTextElement = document.getElementById('screen-goal-text');
-    
-    if (screenProgressElement) screenProgressElement.style.width = `${percentage}%`;
-    if (screenGoalTextElement) screenGoalTextElement.textContent = `${percentage.toFixed(0)}% of daily goal`;
-    
-    updateScreenHistory();
-}
-
-// Add delete functionality to subscriptions
-function updateSubscriptionsDisplay() {
-    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
-    const subscriptionsBody = document.getElementById('subscriptions-body');
-    const totalSubs = document.getElementById('total-subs');
-    const monthlyCost = document.getElementById('monthly-cost');
-    
-    const totalMonthly = subscriptions.reduce((sum, sub) => sum + sub.price, 0);
-    
-    let subscriptionsHTML = '';
-    
-    subscriptions.forEach(sub => {
-        const renewalDate = new Date(sub.renewal);
-        const now = new Date();
-        const daysUntil = Math.ceil((renewalDate - now) / (1000 * 60 * 60 * 24));
-        const status = daysUntil <= 7 ? 'renewing-soon' : daysUntil <= 0 ? 'expired' : 'active';
-        const statusText = daysUntil <= 7 ? 'Renewing Soon' : daysUntil <= 0 ? 'Expired' : 'Active';
-        
-        subscriptionsHTML += `
-            <tr>
-                <td>${sub.name}</td>
-                <td><span class="category-tag ${sub.category}">${sub.category}</span></td>
-                <td>${getCurrencySymbol()}${sub.price.toFixed(2)}</td>
-                <td>${renewalDate.toLocaleDateString()}</td>
-                <td><span class="status-badge ${status}">${statusText}</span></td>
-                <td>
-                    <button class="delete-btn" onclick="deleteSubscription(${sub.id})">Delete</button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    if (subscriptionsBody) {
-        subscriptionsBody.innerHTML = subscriptionsHTML || `
-            <tr>
-                <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
-                    No subscriptions yet. Add your first subscription using the form above.
-                </td>
-            </tr>
-        `;
-    }
-    
-    if (totalSubs) totalSubs.textContent = `${subscriptions.length} subscription${subscriptions.length !== 1 ? 's' : ''}`;
-    if (monthlyCost) monthlyCost.textContent = `${getCurrencySymbol()}${totalMonthly.toFixed(2)}/month`;
-}
-
-// Enhanced delete subscription function
-function deleteSubscription(id) {
-    if (confirm('Are you sure you want to delete this subscription?')) {
-        let subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
-        subscriptions = subscriptions.filter(s => s.id !== id);
-        localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
-        updateSubscriptionsDisplay();
-        showNotification('💰 Subscription', 'Subscription deleted successfully!');
-    }
-}
-
-// Fix water history display
-function updateWaterHistory() {
-    const waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
-    const historyBody = document.getElementById('water-history-body');
-    
-    let historyHTML = '';
-    const sortedDates = Object.keys(waterHistory).sort((a, b) => new Date(b) - new Date(a));
-    
-    sortedDates.slice(0, 7).forEach(date => {
-        const data = waterHistory[date];
-        const formattedDate = new Date(date).toLocaleDateString();
-        
-        historyHTML += `
-            <tr>
-                <td>${formattedDate}</td>
-                <td>${data.consumed}/${data.goal} glasses</td>
-                <td>${data.percentage.toFixed(0)}%</td>
-                <td><button class="delete-btn" onclick="deleteWaterHistory('${date}')">Delete</button></td>
-            </tr>
-        `;
-    });
-    
-    if (historyBody) {
-        historyBody.innerHTML = historyHTML || `
-            <tr>
-                <td colspan="4" style="text-align: center; padding: 2rem; color: #666;">
-                    No water intake history yet. Start tracking your water consumption!
-                </td>
-            </tr>
-        `;
-    }
-}
-
-// Initialize screen time display properly
-function initializeScreenTimeTracker() {
-    const startBtn = document.getElementById('start-tracking');
-    const stopBtn = document.getElementById('stop-tracking');
-    const addManualBtn = document.getElementById('add-manual');
-    const goalInput = document.getElementById('screen-goal');
-    const resetBtn = document.getElementById('reset-screen');
-
-    if (startBtn) {
-        startBtn.addEventListener('click', function() {
-            if (!screenTracking) {
-                screenTracking = true;
-                this.disabled = true;
-                document.getElementById('stop-tracking').disabled = false;
-                
-                screenTimeInterval = setInterval(() => {
-                    screenTimeSeconds++;
-                    updateScreenDisplay();
-                }, 1000);
-                
-                localStorage.setItem('lifesphere_screen_tracking', 'true');
-                showNotification('📱 Screen Time', 'Screen time tracking started!');
-            }
-        });
-    }
-
-    if (stopBtn) {
-        stopBtn.addEventListener('click', function() {
-            if (screenTracking) {
-                screenTracking = false;
-                document.getElementById('start-tracking').disabled = false;
-                this.disabled = true;
-                
-                if (screenTimeInterval) {
-                    clearInterval(screenTimeInterval);
-                }
-                
-                saveScreenData();
-                localStorage.setItem('lifesphere_screen_tracking', 'false');
-                showNotification('📱 Screen Time', 'Screen time tracking stopped!');
-            }
-        });
-    }
-
-    if (addManualBtn) {
-        addManualBtn.addEventListener('click', function() {
-            const minutes = prompt('Enter screen time in minutes:');
-            if (minutes && !isNaN(minutes) && parseInt(minutes) > 0) {
-                screenTimeSeconds += parseInt(minutes) * 60;
-                updateScreenDisplay();
-                saveScreenData();
-                showNotification('📱 Screen Time', `${minutes} minutes added to screen time!`);
-            } else {
-                alert('Please enter a valid number of minutes.');
-            }
-        });
-    }
-
-    if (goalInput) {
-        goalInput.addEventListener('change', function() {
-            updateScreenDisplay();
-            saveScreenData();
-        });
-    }
-
-    if (resetBtn) {
-        resetBtn.addEventListener('click', function() {
-            if (confirm('Are you sure you want to reset today\'s screen time?')) {
-                screenTimeSeconds = 0;
-                updateScreenDisplay();
-                saveScreenData();
-                showNotification('📱 Screen Time', 'Screen time reset successfully!');
-            }
-        });
-    }
-
-    // Load previous tracking state
-    if (localStorage.getItem('lifesphere_screen_tracking') === 'true') {
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-        screenTracking = true;
-        
-        screenTimeInterval = setInterval(() => {
-            screenTimeSeconds++;
-            updateScreenDisplay();
-        }, 1000);
-    }
-
-    loadScreenData();
-}
-
-// Enhanced notification function
-function showNotification(title, message, notificationId = null) {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification success`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #4CAF50;
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        z-index: 10000;
-        animation: slideInRight 0.3s ease;
-        max-width: 300px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    `;
-    
-    notification.innerHTML = `
-        <div class="notification-content">
-            <strong>${title}</strong><br>
-            <span>${message}</span>
-        </div>
-        <button class="notification-close">✕</button>
-    `;
-    
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.style.cssText = `
-        background: none;
-        border: none;
-        color: white;
-        font-size: 1rem;
-        cursor: pointer;
-        margin-left: 1rem;
-        padding: 0;
-    `;
-    
-    closeBtn.addEventListener('click', () => {
-        notification.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    });
-    
-    document.body.appendChild(notification);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }
-    }, 5000);
-    
-    // Show browser notification if available
-    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification(title, {
-            body: message,
-            icon: '/favicon.ico',
-            tag: notificationId || 'general-notification'
-        });
-    }
-}
-
-// Make sure all delete functions are properly exposed
-window.deleteWaterHistory = deleteWaterHistory;
-window.deleteSubscription = deleteSubscription;
-
-// Update the initialization to ensure proper mobile display
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('LifeSphere initialized with mobile optimizations');
-    initializeApp();
-    // Force update screen display on load for mobile
-    setTimeout(updateScreenDisplay, 100);
-});
-// Fix notification heading to show "LifeSphere says" instead of "Atiksh2011.github.io says"
-function showNotification(title, message, notificationId = null) {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification success`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #4CAF50;
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        z-index: 10000;
-        animation: slideInRight 0.3s ease;
-        max-width: 300px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    `;
-    
-    notification.innerHTML = `
-        <div class="notification-content">
-            <strong>LifeSphere says</strong><br>
-            <span>${message}</span>
-        </div>
-        <button class="notification-close">✕</button>
-    `;
-    
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.style.cssText = `
-        background: none;
-        border: none;
-        color: white;
-        font-size: 1rem;
-        cursor: pointer;
-        margin-left: 1rem;
-        padding: 0;
-    `;
-    
-    closeBtn.addEventListener('click', () => {
-        notification.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    });
-    
-    document.body.appendChild(notification);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }
-    }, 5000);
-    
-    // Show browser notification if available - FIXED HEADING HERE
-    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification('LifeSphere says', {
-            body: message,
-            icon: '/favicon.ico',
-            tag: notificationId || 'general-notification'
-        });
-    }
-}
-
-// Also fix the medication alarm notification heading
-function triggerMedicationAlarm(medication) {
-    if (localStorage.getItem('lifesphere_ringtone') !== 'granted') return;
-    
-    // Create a calm and peaceful alarm sound
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.5);
-    oscillator.frequency.setValueAtTime(440, audioContext.currentTime + 1);
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 1.5);
-    
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
-    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 1.1);
-    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 2);
-    
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 2);
-    
-    const alarmModal = document.getElementById('medication-alarm');
-    const alarmMessage = document.getElementById('alarm-message');
-    const stopAlarmBtn = document.getElementById('stop-alarm');
-    
-    if (alarmModal && alarmMessage && stopAlarmBtn) {
-        alarmMessage.textContent = `Time to take ${medication.name} - ${medication.dosage}`;
-        alarmModal.style.display = 'flex';
-        
-        stopAlarmBtn.onclick = function() {
-            alarmModal.style.display = 'none';
-        };
-    }
-    
-    // Show browser notification if available - FIXED HEADING HERE
-    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification('LifeSphere says', {
-            body: `Time to take ${medication.name} - ${medication.dosage}`,
-            icon: '/favicon.ico',
-            tag: 'medication-alarm'
-        });
-    }
-}
-
-// Fix the notification modal heading as well
-function showNotification(title, message, notificationId = null) {
-    // Show in-app notification
-    const notificationModal = document.getElementById('notification-modal');
-    const notificationTitle = document.getElementById('notification-title');
-    const notificationMessage = document.getElementById('notification-message');
-    const acknowledgeBtn = document.getElementById('acknowledge-notification');
-    const remindLaterBtn = document.getElementById('remind-later');
-    
-    if (notificationModal && notificationTitle && notificationMessage && acknowledgeBtn && remindLaterBtn) {
-        // FIXED: Set the title to "LifeSphere says" instead of the dynamic title
-        notificationTitle.textContent = 'LifeSphere says';
-        notificationMessage.textContent = message;
-        notificationModal.style.display = 'flex';
-        
-        if (notificationId && notificationTimeouts.has(notificationId)) {
-            clearTimeout(notificationTimeouts.get(notificationId));
-            notificationTimeouts.delete(notificationId);
-        }
-        
-        const resendTimeout = setTimeout(() => {
-            notificationModal.style.display = 'none';
-            setTimeout(() => {
-                showNotification(title, message, notificationId);
-            }, 15000);
-        }, 45000);
-        
-        acknowledgeBtn.onclick = function() {
-            notificationModal.style.display = 'none';
-            if (notificationId) {
-                clearTimeout(resendTimeout);
-                notificationTimeouts.delete(notificationId);
-            }
-        };
-        
-        remindLaterBtn.onclick = function() {
-            notificationModal.style.display = 'none';
-            if (notificationId) {
-                clearTimeout(resendTimeout);
-                notificationTimeouts.delete(notificationId);
-                setTimeout(() => {
-                    showNotification(title, message, notificationId);
-                }, 300000);
-            }
-        };
-        
-        if (notificationId) {
-            notificationTimeouts.set(notificationId, resendTimeout);
-        }
-    }
-    
-    // Show browser notification if available - FIXED HEADING HERE
-    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification('LifeSphere says', {
-            body: message,
-            icon: '/favicon.ico',
-            tag: notificationId || 'general-notification'
-        });
-    }
-}
 // COMPLETELY FIXED NOTIFICATION SYSTEM - No more "atiksh2011.github.io says"
 function showNotification(title, message, notificationId = null) {
     // Create custom notification element that completely bypasses browser notifications
@@ -2997,194 +2374,62 @@ function showNotification(title, message, notificationId = null) {
     // We'll only use our custom notifications
 }
 
-// Fix medication alarm to use custom notifications only
-function triggerMedicationAlarm(medication) {
-    if (localStorage.getItem('lifesphere_ringtone') !== 'granted') return;
-    
-    // Create a calm and peaceful alarm sound
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.5);
-    oscillator.frequency.setValueAtTime(440, audioContext.currentTime + 1);
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 1.5);
-    
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
-    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 1.1);
-    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 2);
-    
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 2);
-    
-    const alarmModal = document.getElementById('medication-alarm');
-    const alarmMessage = document.getElementById('alarm-message');
-    const stopAlarmBtn = document.getElementById('stop-alarm');
-    
-    if (alarmModal && alarmMessage && stopAlarmBtn) {
-        alarmMessage.textContent = `Time to take ${medication.name} - ${medication.dosage}`;
-        alarmModal.style.display = 'flex';
-        
-        stopAlarmBtn.onclick = function() {
-            alarmModal.style.display = 'none';
-        };
-    }
-    
-    // Use custom notification instead of browser notification
-    showNotification('💊 Medication Reminder', `Time to take ${medication.name} - ${medication.dosage}`);
+// Initialize all data
+function loadAllData() {
+    console.log('Loading all data...');
 }
 
-// Fix all other notification functions to use our custom system
-function checkWaterReminders() {
-    const waterData = JSON.parse(localStorage.getItem('lifesphere_water')) || {};
-    const waterGoal = waterData.goal || 8;
-    const waterConsumed = waterData.consumed || 0;
-    
-    if (waterConsumed < waterGoal) {
-        const remaining = waterGoal - waterConsumed;
+function initializeCharts() {
+    console.log('Initializing charts...');
+    const ctx = document.getElementById('weekly-chart');
+    if (ctx) {
+        const waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
+        const waterData = getWeeklyWaterData(waterHistory);
         
-        if (remaining === 2) {
-            showNotification('💧 Water Reminder', `C'mon! Only ${remaining} glasses of water left to reach your daily goal!`);
-        }
-        
-        const now = new Date();
-        if (now.getHours() === 15 && now.getMinutes() === 0 && waterConsumed < waterGoal / 2) {
-            showNotification('💧 Water Reminder', `You're halfway through the day but only drank ${waterConsumed}/${waterGoal} glasses. Keep hydrating!`);
-        }
-    }
-}
-
-function checkScreenTimeReminders() {
-    const screenData = JSON.parse(localStorage.getItem('lifesphere_screen')) || {};
-    const screenGoal = parseInt(document.getElementById('screen-goal')?.value || 4);
-    const screenSeconds = screenData.seconds || 0;
-    const screenHours = screenSeconds / 3600;
-    
-    if (screenHours > screenGoal) {
-        showNotification('📱 Screen Time', `It's enough time of watching today! You've exceeded your daily goal by ${(screenHours - screenGoal).toFixed(1)} hours.`);
-    }
-}
-
-function checkLifeLoopReminders() {
-    const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
-    const now = new Date();
-    
-    reminders.forEach(reminder => {
-        const eventDate = new Date(reminder.date);
-        const daysUntil = Math.ceil((eventDate - now) / (1000 * 60 * 60 * 24));
-        
-        if (daysUntil === 1) {
-            const eventType = reminder.type === 'birthday' ? 'birthday' : 'anniversary';
-            showNotification('🔄 LifeLoop Reminder', `It's ${reminder.name}'s ${eventType} tomorrow! Time to buy a gift!`);
-        }
-    });
-}
-
-function checkTaskReminders() {
-    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
-    const pendingTasks = todos.filter(t => !t.completed);
-    
-    if (pendingTasks.length > 0) {
-        const now = new Date();
-        const currentHour = now.getHours();
-        
-        const reminderHours = [9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20];
-        
-        if (reminderHours.includes(currentHour) && now.getMinutes() === 0) {
-            const randomTask = pendingTasks[Math.floor(Math.random() * pendingTasks.length)];
-            showNotification('⚒️ Task Reminder', `C'mon, it's time to do task "${randomTask.task}"!`);
-        }
-    }
-    
-    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
-    const now = new Date();
-    
-    subscriptions.forEach(sub => {
-        const renewalDate = new Date(sub.renewal);
-        const daysUntil = Math.ceil((renewalDate - now) / (1000 * 60 * 60 * 24));
-        
-        if (daysUntil === 1) {
-            showNotification('💰 Subscription Reminder', `Your ${sub.name} subscription is ending tomorrow, please renew!`);
-        }
-    });
-}
-
-function checkEduPlanReminders() {
-    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
-    const now = new Date();
-    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-    const today = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    
-    courses.forEach(course => {
-        if (course.day === today) {
-            const courseTime = new Date(`2000-01-01T${course.time}`);
-            const notifyTime = new Date(courseTime.getTime() - 30 * 60000);
-            const notifyTimeString = notifyTime.getHours().toString().padStart(2, '0') + ':' + notifyTime.getMinutes().toString().padStart(2, '0');
-            
-            if (notifyTimeString === currentTime) {
-                showNotification('📅 Class Reminder', `You have ${course.name} class in 30 minutes. Please get ready!`);
+        new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Water Intake (glasses)',
+                    data: waterData,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10
+                    }
+                }
             }
-        }
-    });
-    
-    const schedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
-    if (schedule.bedtime && schedule.bedtime === currentTime) {
-        const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
-        const today = new Date().toDateString();
-        const todaySessions = studySessions.filter(s => new Date(s.startTime).toDateString() === today);
-        const todayDuration = todaySessions.reduce((sum, s) => sum + s.duration, 0);
-        const todayHours = Math.floor(todayDuration / 60);
-        const todayMinutes = todayDuration % 60;
-        
-        showNotification('📚 Study Summary', `Today you studied ${todayHours}h ${todayMinutes}m. Great job!`);
-    }
-    
-    if (schedule.bedtime && schedule.bedtime === currentTime) {
-        const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
-        const pendingHomeworks = homeworks.filter(h => !h.completed);
-        
-        if (pendingHomeworks.length > 0) {
-            showNotification('📝 Homework Reminder', 'Are you done with your homework?');
-        }
-    }
-    
-    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
-    const nowDate = new Date();
-    
-    exams.forEach(exam => {
-        const examDate = new Date(exam.date);
-        const daysUntil = Math.ceil((examDate - nowDate) / (1000 * 60 * 60 * 24));
-        
-        if (daysUntil === 1) {
-            showNotification('📊 Exam Reminder', `You have an ${exam.subject} exam tomorrow. Prepare for it!`);
-        }
-    });
-}
-
-// Remove the browser notification permission request since we're not using it
-function initializeNotifications() {
-    const notificationBtn = document.getElementById('notification-btn');
-    if (notificationBtn) {
-        notificationBtn.addEventListener('click', function() {
-            // Just show a message that we use custom notifications
-            showNotification('🔔 Notifications', 'LifeSphere uses beautiful custom notifications! No browser permissions needed.');
-            this.textContent = 'Custom Notifications Active';
-            this.disabled = true;
-            localStorage.setItem('lifesphere_notifications', 'enabled');
         });
     }
+}
+
+function getWeeklyWaterData(waterHistory) {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = new Date();
+    const weekData = [0, 0, 0, 0, 0, 0, 0];
     
-    if (localStorage.getItem('lifesphere_notifications') === 'enabled') {
-        notificationBtn.textContent = 'Custom Notifications Active';
-        notificationBtn.disabled = true;
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateString = date.toDateString();
+        const dayIndex = date.getDay();
+        
+        if (waterHistory[dateString]) {
+            weekData[dayIndex] = waterHistory[dateString].consumed || 0;
+        }
     }
+    
+    return [...weekData.slice(1), weekData[0]];
 }
 
 // Add CSS animations for notifications
@@ -3233,3 +2478,35 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Export functions for global access
+window.LifeSphere = {
+    initializeApp,
+    updateDashboard
+};
+
+// Make delete functions globally available
+window.deleteWaterHistory = deleteWaterHistory;
+window.deleteWorkout = deleteWorkout;
+window.deleteMedication = deleteMedication;
+window.deleteMeal = deleteMeal;
+window.deleteScreenHistory = deleteScreenHistory;
+window.deleteSleep = deleteSleep;
+window.deleteReminder = deleteReminder;
+window.completeTodo = completeTodo;
+window.deleteTodo = deleteTodo;
+window.deleteSubscription = deleteSubscription;
+window.deleteStudySession = deleteStudySession;
+window.completeHomework = completeHomework;
+window.deleteHomework = deleteHomework;
+window.deleteExam = deleteExam;
+window.deleteGrade = deleteGrade;
+window.deleteCourse = deleteCourse;
+
+// Update the initialization to ensure proper mobile display
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('LifeSphere initialized with mobile optimizations');
+    initializeApp();
+    // Force update screen display on load for mobile
+    setTimeout(updateScreenDisplay, 100);
+});
