@@ -5,6 +5,18 @@ let screenTracking = false;
 let currentWeekOffset = 0;
 let medicationAlarmAudio = null;
 let notificationTimeouts = new Map();
+let selectedCurrency = 'USD';
+
+// Currency symbols mapping
+const currencySymbols = {
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'INR': '₹',
+    'CAD': 'C$',
+    'AUD': 'A$'
+};
 
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -26,9 +38,31 @@ function initializeApp() {
     initializeTaskForge();
     initializeEduPlan();
     initializeSleepSchedule();
+    initializeCurrency();
     loadAllData();
     initializeCharts();
     startBackgroundServices();
+}
+
+// Initialize currency settings
+function initializeCurrency() {
+    const savedCurrency = localStorage.getItem('lifesphere_currency') || 'USD';
+    selectedCurrency = savedCurrency;
+    
+    const currencySelect = document.getElementById('sub-currency');
+    if (currencySelect) {
+        currencySelect.value = selectedCurrency;
+        currencySelect.addEventListener('change', function() {
+            selectedCurrency = this.value;
+            localStorage.setItem('lifesphere_currency', selectedCurrency);
+            updateSubscriptionsDisplay();
+        });
+    }
+}
+
+// Get currency symbol
+function getCurrencySymbol() {
+    return currencySymbols[selectedCurrency] || '$';
 }
 
 // Notification System
@@ -459,15 +493,29 @@ function initializeMedicationTracker() {
 
     if (ringtoneBtn) {
         ringtoneBtn.addEventListener('click', function() {
-            medicationAlarmAudio = new Audio();
-            medicationAlarmAudio.src = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dyvm0eBzF/z/LQdSkFJHfH8N2QQAoUXrTp66hVFApGn+Dyvm0eBzF/z/LQdSk=";
-            medicationAlarmAudio.play().then(() => {
-                medicationAlarmAudio.pause();
+            // Create a calm and peaceful alarm sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.5);
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 1);
+            
+            setTimeout(() => {
                 alert('Ringtone access granted! Medication alarms will now sound.');
                 localStorage.setItem('lifesphere_ringtone', 'granted');
-            }).catch(error => {
-                alert('Please allow audio permissions for medication alarms to work properly.');
-            });
+            }, 1000);
         });
     }
 
@@ -1259,7 +1307,7 @@ function updateSubscriptionsDisplay() {
             <tr>
                 <td>${sub.name}</td>
                 <td><span class="category-tag ${sub.category}">${sub.category}</span></td>
-                <td>$${sub.price.toFixed(2)}</td>
+                <td>${getCurrencySymbol()}${sub.price.toFixed(2)}</td>
                 <td>${renewalDate.toLocaleDateString()}</td>
                 <td><span class="status-badge ${status}">${statusText}</span></td>
                 <td>
@@ -1271,7 +1319,7 @@ function updateSubscriptionsDisplay() {
     
     if (subscriptionsBody) subscriptionsBody.innerHTML = subscriptionsHTML || '<tr><td colspan="6">No subscriptions</td></tr>';
     if (totalSubs) totalSubs.textContent = `${subscriptions.length} subscriptions`;
-    if (monthlyCost) monthlyCost.textContent = `$${totalMonthly.toFixed(2)}/month`;
+    if (monthlyCost) monthlyCost.textContent = `${getCurrencySymbol()}${totalMonthly.toFixed(2)}/month`;
 }
 
 function deleteSubscription(id) {
@@ -1890,6 +1938,11 @@ function updateDashboard() {
 function startBackgroundServices() {
     setInterval(checkMedicationAlarms, 60000);
     setInterval(checkScheduledNotifications, 60000);
+    setInterval(checkTaskReminders, 60000);
+    setInterval(checkWaterReminders, 60000);
+    setInterval(checkScreenTimeReminders, 60000);
+    setInterval(checkLifeLoopReminders, 60000);
+    setInterval(checkEduPlanReminders, 60000);
 }
 
 function checkMedicationAlarms() {
@@ -1909,6 +1962,29 @@ function checkMedicationAlarms() {
 function triggerMedicationAlarm(medication) {
     if (localStorage.getItem('lifesphere_ringtone') !== 'granted') return;
     
+    // Create a calm and peaceful alarm sound
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.5);
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime + 1);
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 1.5);
+    
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
+    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 1.1);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 2);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 2);
+    
     const alarmModal = document.getElementById('medication-alarm');
     const alarmMessage = document.getElementById('alarm-message');
     const stopAlarmBtn = document.getElementById('stop-alarm');
@@ -1917,16 +1993,18 @@ function triggerMedicationAlarm(medication) {
         alarmMessage.textContent = `Time to take ${medication.name} - ${medication.dosage}`;
         alarmModal.style.display = 'flex';
         
-        medicationAlarmAudio = new Audio();
-        medicationAlarmAudio.src = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dyvm0eBzF/z/LQdSkFJHfH8N2QQAoUXrTp66hVFApGn+Dyvm0eBzF/z/LQdSk=";
-        medicationAlarmAudio.loop = true;
-        medicationAlarmAudio.play();
-        
         stopAlarmBtn.onclick = function() {
             alarmModal.style.display = 'none';
-            medicationAlarmAudio.pause();
-            medicationAlarmAudio.currentTime = 0;
         };
+    }
+    
+    // Show browser notification if available
+    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('LifeSphere says', {
+            body: `Time to take ${medication.name} - ${medication.dosage}`,
+            icon: '/favicon.ico',
+            tag: 'medication-alarm'
+        });
     }
 }
 
@@ -1945,7 +2023,6 @@ function checkScheduledNotifications() {
     }
     
     checkMealNotifications();
-    checkScreenTimeNotifications(currentTime);
 }
 
 function checkSleepScheduleNotifications(currentTime) {
@@ -2005,34 +2082,21 @@ function sendEveningNotifications() {
     });
 }
 
-function checkScreenTimeNotifications(currentTime) {
-    if (currentTime === '09:00') {
-        const startBtn = document.getElementById('start-tracking');
-        if (startBtn && !startBtn.disabled) {
-            showNotification('📱 Screen Time', 'Remember to start tracking your screen time for the day!');
-        }
-    }
-    
-    if (currentTime === '20:00') {
-        const stopBtn = document.getElementById('stop-tracking');
-        if (stopBtn && !stopBtn.disabled) {
-            showNotification('📱 Screen Time', 'Remember to stop tracking your screen time for the night!');
-        }
-    }
-}
-
 function checkMealNotifications() {
     const meals = JSON.parse(localStorage.getItem('lifesphere_meals')) || [];
     const now = new Date();
     const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    const today = now.toISOString().split('T')[0];
     
     meals.forEach(meal => {
-        const mealTime = new Date(`2000-01-01T${meal.time}`);
-        const notifyTime = new Date(mealTime.getTime() - 2 * 60000);
-        const notifyTimeString = notifyTime.getHours().toString().padStart(2, '0') + ':' + notifyTime.getMinutes().toString().padStart(2, '0');
-        
-        if (notifyTimeString === currentTime) {
-            showMealNotification(meal);
+        if (meal.date === today) {
+            const mealTime = new Date(`2000-01-01T${meal.time}`);
+            const notifyTime = new Date(mealTime.getTime() - 60 * 60000); // 1 hour before
+            const notifyTimeString = notifyTime.getHours().toString().padStart(2, '0') + ':' + notifyTime.getMinutes().toString().padStart(2, '0');
+            
+            if (notifyTimeString === currentTime) {
+                showMealNotification(meal);
+            }
         }
     });
 }
@@ -2045,12 +2109,156 @@ function showMealNotification(meal) {
     if (notificationTimeouts.has(notificationId)) return;
     
     const title = `🍽️ ${meal.type.charAt(0).toUpperCase() + meal.type.slice(1)} Time`;
-    const message = `Time for ${meal.name} in 2 minutes!`;
+    const message = `Have you started to cook ${meal.name} yet?`;
     
     showNotification(title, message, notificationId);
 }
 
+// Water Tracker Reminders
+function checkWaterReminders() {
+    const waterData = JSON.parse(localStorage.getItem('lifesphere_water')) || {};
+    const waterGoal = waterData.goal || 8;
+    const waterConsumed = waterData.consumed || 0;
+    
+    if (waterConsumed < waterGoal) {
+        const remaining = waterGoal - waterConsumed;
+        
+        // Send reminder when there are only 2 glasses left
+        if (remaining === 2) {
+            showNotification('💧 Water Reminder', `C'mon! Only ${remaining} glasses of water left to reach your daily goal!`);
+        }
+        
+        // Send reminder at 3 PM if user is behind
+        const now = new Date();
+        if (now.getHours() === 15 && now.getMinutes() === 0 && waterConsumed < waterGoal / 2) {
+            showNotification('💧 Water Reminder', `You're halfway through the day but only drank ${waterConsumed}/${waterGoal} glasses. Keep hydrating!`);
+        }
+    }
+}
+
+// Screen Time Reminders
+function checkScreenTimeReminders() {
+    const screenData = JSON.parse(localStorage.getItem('lifesphere_screen')) || {};
+    const screenGoal = parseInt(document.getElementById('screen-goal')?.value || 4);
+    const screenSeconds = screenData.seconds || 0;
+    const screenHours = screenSeconds / 3600;
+    
+    // Send reminder when screen time exceeds goal
+    if (screenHours > screenGoal) {
+        showNotification('📱 Screen Time', `It's enough time of watching today! You've exceeded your daily goal by ${(screenHours - screenGoal).toFixed(1)} hours.`);
+    }
+}
+
+// LifeLoop Reminders
+function checkLifeLoopReminders() {
+    const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
+    const now = new Date();
+    
+    reminders.forEach(reminder => {
+        const eventDate = new Date(reminder.date);
+        const daysUntil = Math.ceil((eventDate - now) / (1000 * 60 * 60 * 24));
+        
+        // Send reminder 1 day before
+        if (daysUntil === 1) {
+            const eventType = reminder.type === 'birthday' ? 'birthday' : 'anniversary';
+            showNotification('🔄 LifeLoop Reminder', `It's ${reminder.name}'s ${eventType} tomorrow! Time to buy a gift!`);
+        }
+    });
+}
+
+// TaskForge Reminders
+function checkTaskReminders() {
+    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const pendingTasks = todos.filter(t => !t.completed);
+    
+    if (pendingTasks.length > 0) {
+        const now = new Date();
+        const currentHour = now.getHours();
+        
+        // Send reminders at random times throughout the day (preferably 1-1.5 hours apart)
+        const reminderHours = [9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20];
+        
+        if (reminderHours.includes(currentHour) && now.getMinutes() === 0) {
+            const randomTask = pendingTasks[Math.floor(Math.random() * pendingTasks.length)];
+            showNotification('⚒️ Task Reminder', `C'mon, it's time to do task "${randomTask.task}"!`);
+        }
+    }
+    
+    // Check subscription renewals
+    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    const now = new Date();
+    
+    subscriptions.forEach(sub => {
+        const renewalDate = new Date(sub.renewal);
+        const daysUntil = Math.ceil((renewalDate - now) / (1000 * 60 * 60 * 24));
+        
+        // Send reminder 1 day before renewal
+        if (daysUntil === 1) {
+            showNotification('💰 Subscription Reminder', `Your ${sub.name} subscription is ending tomorrow, please renew!`);
+        }
+    });
+}
+
+// EduPlan Reminders
+function checkEduPlanReminders() {
+    // Timetable reminders
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    const today = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    courses.forEach(course => {
+        if (course.day === today) {
+            const courseTime = new Date(`2000-01-01T${course.time}`);
+            const notifyTime = new Date(courseTime.getTime() - 30 * 60000); // 30 minutes before
+            const notifyTimeString = notifyTime.getHours().toString().padStart(2, '0') + ':' + notifyTime.getMinutes().toString().padStart(2, '0');
+            
+            if (notifyTimeString === currentTime) {
+                showNotification('📅 Class Reminder', `You have ${course.name} class in 30 minutes. Please get ready!`);
+            }
+        }
+    });
+    
+    // Study tracker reminders at bedtime
+    const schedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
+    if (schedule.bedtime && schedule.bedtime === currentTime) {
+        const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+        const today = new Date().toDateString();
+        const todaySessions = studySessions.filter(s => new Date(s.startTime).toDateString() === today);
+        const todayDuration = todaySessions.reduce((sum, s) => sum + s.duration, 0);
+        const todayHours = Math.floor(todayDuration / 60);
+        const todayMinutes = todayDuration % 60;
+        
+        showNotification('📚 Study Summary', `Today you studied ${todayHours}h ${todayMinutes}m. Great job!`);
+    }
+    
+    // Homework reminders at bedtime
+    if (schedule.bedtime && schedule.bedtime === currentTime) {
+        const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+        const pendingHomeworks = homeworks.filter(h => !h.completed);
+        
+        if (pendingHomeworks.length > 0) {
+            showNotification('📝 Homework Reminder', 'Are you done with your homework?');
+        }
+    }
+    
+    // Exam reminders
+    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    const nowDate = new Date();
+    
+    exams.forEach(exam => {
+        const examDate = new Date(exam.date);
+        const daysUntil = Math.ceil((examDate - nowDate) / (1000 * 60 * 60 * 24));
+        
+        // Send reminder 1 day before exam
+        if (daysUntil === 1) {
+            showNotification('📊 Exam Reminder', `You have an ${exam.subject} exam tomorrow. Prepare for it!`);
+        }
+    });
+}
+
 function showNotification(title, message, notificationId = null) {
+    // Show in-app notification
     const notificationModal = document.getElementById('notification-modal');
     const notificationTitle = document.getElementById('notification-title');
     const notificationMessage = document.getElementById('notification-message');
@@ -2096,6 +2304,15 @@ function showNotification(title, message, notificationId = null) {
         if (notificationId) {
             notificationTimeouts.set(notificationId, resendTimeout);
         }
+    }
+    
+    // Show browser notification if available
+    if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('LifeSphere says', {
+            body: message,
+            icon: '/favicon.ico',
+            tag: notificationId || 'general-notification'
+        });
     }
 }
 
