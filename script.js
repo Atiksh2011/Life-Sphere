@@ -73,16 +73,16 @@ function initializeNotifications() {
             if ('Notification' in window) {
                 Notification.requestPermission().then(function(permission) {
                     if (permission === 'granted') {
-                        alert('Notifications enabled! You will receive reminders for your goals.');
+                        showNotification('Notifications Enabled', 'You will receive reminders for your goals.', 'success');
                         this.textContent = 'Notifications Enabled';
                         this.disabled = true;
                         localStorage.setItem('lifesphere_notifications', 'enabled');
                     } else {
-                        alert('Notifications disabled. You can enable them later in your browser settings.');
+                        showNotification('Notifications Disabled', 'You can enable them later in your browser settings.', 'info');
                     }
                 }.bind(this));
             } else {
-                alert('This browser does not support notifications.');
+                showNotification('Browser Not Supported', 'This browser does not support notifications.', 'warning');
             }
         });
     }
@@ -220,7 +220,7 @@ function saveSleepSchedule() {
         bedtime: document.getElementById('bedtime').value
     };
     localStorage.setItem('lifesphere_sleep_schedule', JSON.stringify(schedule));
-    alert('Sleep schedule saved! Notifications will be sent at these times.');
+    showNotification('Sleep Schedule Saved', 'Your sleep schedule has been saved successfully!', 'success');
 }
 
 // Water Tracker
@@ -257,18 +257,21 @@ function initializeWaterTracker() {
         waterConsumed++;
         updateWaterDisplay();
         saveWaterData();
+        showNotification('Water Added', 'One glass of water added to your daily intake!', 'success');
     });
 
     if (resetBtn) resetBtn.addEventListener('click', () => {
         waterConsumed = 0;
         updateWaterDisplay();
         saveWaterData();
+        showNotification('Water Reset', 'Your water intake for today has been reset.', 'info');
     });
 
     if (addWaterBtn) addWaterBtn.addEventListener('click', () => {
         waterConsumed++;
         updateWaterDisplay();
         saveWaterData();
+        showNotification('Water Added', 'One glass of water added to your daily intake!', 'success');
     });
 
     document.querySelectorAll('.cup').forEach(cup => {
@@ -277,6 +280,7 @@ function initializeWaterTracker() {
             waterConsumed = cupNumber;
             updateWaterDisplay();
             saveWaterData();
+            showNotification('Water Intake Updated', `Your water intake has been set to ${cupNumber} glasses.`, 'success');
         });
     });
 
@@ -289,6 +293,7 @@ function initializeWaterTracker() {
         
         updateWaterDisplay();
         saveWaterData();
+        showNotification('Water Goal Updated', `Your daily water goal has been set to ${waterGoal} glasses.`, 'success');
     }
 
     function updateWaterDisplay() {
@@ -369,6 +374,7 @@ function deleteWaterHistory(date) {
     delete waterHistory[date];
     localStorage.setItem('lifesphere_water_history', JSON.stringify(waterHistory));
     updateWaterHistory();
+    showNotification('History Deleted', 'Water history entry has been deleted.', 'info');
 }
 
 // Workout Tracker
@@ -406,6 +412,7 @@ function saveWorkout(workout) {
     
     updateWorkoutDisplay();
     updateDashboard();
+    showNotification('Workout Logged', `${workout.name} has been added to your workout history!`, 'success');
 }
 
 function updateWorkoutDisplay() {
@@ -472,6 +479,7 @@ function deleteWorkout(id) {
     localStorage.setItem('lifesphere_workouts', JSON.stringify(workouts));
     updateWorkoutDisplay();
     updateDashboard();
+    showNotification('Workout Deleted', 'Workout has been removed from your history.', 'info');
 }
 
 // Medication Tracker
@@ -513,7 +521,7 @@ function initializeMedicationTracker() {
             oscillator.stop(audioContext.currentTime + 1);
             
             setTimeout(() => {
-                alert('Ringtone access granted! Medication alarms will now sound.');
+                showNotification('Ringtone Access Granted', 'Medication alarms will now sound.', 'success');
                 localStorage.setItem('lifesphere_ringtone', 'granted');
             }, 1000);
         });
@@ -560,6 +568,7 @@ function saveMedication(medication) {
     
     updateMedicationDisplay();
     updateDashboard();
+    showNotification('Medication Added', `${medication.name} has been added to your medication list.`, 'success');
 }
 
 function updateMedicationDisplay() {
@@ -609,6 +618,7 @@ function deleteMedication(id) {
     localStorage.setItem('lifesphere_medications', JSON.stringify(medications));
     updateMedicationDisplay();
     updateDashboard();
+    showNotification('Medication Removed', 'Medication has been removed from your list.', 'info');
 }
 
 // Meal Planner
@@ -658,6 +668,7 @@ function saveMeal(meal) {
     localStorage.setItem('lifesphere_meals', JSON.stringify(meals));
     
     updateMealDisplay();
+    showNotification('Meal Added', `${meal.name} has been added to your meal plan!`, 'success');
 }
 
 function updateMealDisplay() {
@@ -733,6 +744,7 @@ function deleteMeal(id) {
     meals = meals.filter(m => m.id !== id);
     localStorage.setItem('lifesphere_meals', JSON.stringify(meals));
     updateMealDisplay();
+    showNotification('Meal Removed', 'Meal has been removed from your plan.', 'info');
 }
 
 // Screen Time Tracker
@@ -756,6 +768,7 @@ function initializeScreenTimeTracker() {
                 }, 1000);
                 
                 localStorage.setItem('lifesphere_screen_tracking', 'true');
+                showNotification('Screen Time Tracking Started', 'Screen time tracking is now active.', 'success');
             }
         });
     }
@@ -773,6 +786,7 @@ function initializeScreenTimeTracker() {
                 
                 saveScreenData();
                 localStorage.setItem('lifesphere_screen_tracking', 'false');
+                showNotification('Screen Time Tracking Stopped', 'Screen time tracking has been paused.', 'info');
             }
         });
     }
@@ -784,6 +798,7 @@ function initializeScreenTimeTracker() {
                 screenTimeSeconds += parseInt(minutes) * 60;
                 updateScreenDisplay();
                 saveScreenData();
+                showNotification('Screen Time Added', `${minutes} minutes added to your screen time.`, 'success');
             }
         });
     }
@@ -792,6 +807,7 @@ function initializeScreenTimeTracker() {
         goalInput.addEventListener('change', function() {
             updateScreenDisplay();
             saveScreenData();
+            showNotification('Screen Time Goal Updated', `Daily screen time goal set to ${this.value} hours.`, 'success');
         });
     }
 
@@ -800,6 +816,7 @@ function initializeScreenTimeTracker() {
             screenTimeSeconds = 0;
             updateScreenDisplay();
             saveScreenData();
+            showNotification('Screen Time Reset', 'Your screen time for today has been reset.', 'info');
         });
     }
 
@@ -904,6 +921,7 @@ function deleteScreenHistory(date) {
     delete screenHistory[date];
     localStorage.setItem('lifesphere_screen_history', JSON.stringify(screenHistory));
     updateScreenHistory();
+    showNotification('Screen History Deleted', 'Screen time history entry has been deleted.', 'info');
 }
 
 // Sleep Tracker
@@ -950,6 +968,7 @@ function saveSleep(sleep) {
     
     updateSleepDisplay();
     updateDashboard();
+    showNotification('Sleep Logged', 'Your sleep has been recorded successfully!', 'success');
 }
 
 function updateSleepDisplay() {
@@ -1014,6 +1033,7 @@ function deleteSleep(id) {
     localStorage.setItem('lifesphere_sleep', JSON.stringify(sleeps));
     updateSleepDisplay();
     updateDashboard();
+    showNotification('Sleep Entry Deleted', 'Sleep record has been removed.', 'info');
 }
 
 // LifeLoop
@@ -1045,6 +1065,7 @@ function saveReminder(reminder) {
     localStorage.setItem('lifesphere_reminders', JSON.stringify(reminders));
     
     updateLifeLoopDisplay();
+    showNotification('Reminder Added', `${reminder.name} has been added to your reminders!`, 'success');
 }
 
 function updateLifeLoopDisplay() {
@@ -1137,6 +1158,7 @@ function deleteReminder(id) {
     reminders = reminders.filter(r => r.id !== id);
     localStorage.setItem('lifesphere_reminders', JSON.stringify(reminders));
     updateLifeLoopDisplay();
+    showNotification('Reminder Deleted', 'Reminder has been removed.', 'info');
 }
 
 // TaskForge
@@ -1188,6 +1210,7 @@ function saveTodo(task) {
     
     updateTaskForgeDisplay();
     updateDashboard();
+    showNotification('Task Added', 'New task has been added to your to-do list!', 'success');
 }
 
 function updateTaskForgeDisplay() {
@@ -1267,6 +1290,7 @@ function completeTodo(id) {
         localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
         updateTaskForgeDisplay();
         updateDashboard();
+        showNotification('Task Completed', 'Task marked as completed! Great job!', 'success');
     }
 }
 
@@ -1276,6 +1300,7 @@ function deleteTodo(id) {
     localStorage.setItem('lifesphere_todos', JSON.stringify(todos));
     updateTaskForgeDisplay();
     updateDashboard();
+    showNotification('Task Deleted', 'Task has been removed from your list.', 'info');
 }
 
 function saveSubscription(subscription) {
@@ -1284,6 +1309,7 @@ function saveSubscription(subscription) {
     localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
     
     updateTaskForgeDisplay();
+    showNotification('Subscription Added', `${subscription.name} has been added to your subscriptions!`, 'success');
 }
 
 function updateSubscriptionsDisplay() {
@@ -1327,11 +1353,13 @@ function deleteSubscription(id) {
     subscriptions = subscriptions.filter(s => s.id !== id);
     localStorage.setItem('lifesphere_subscriptions', JSON.stringify(subscriptions));
     updateTaskForgeDisplay();
+    showNotification('Subscription Removed', 'Subscription has been deleted.', 'info');
 }
 
 // EduPlan
 function initializeEduPlan() {
     initializeTimetable();
+    initializeGradeForm();
     
     const studyForm = document.getElementById('study-form');
     const homeworkForm = document.getElementById('homework-form');
@@ -1454,7 +1482,7 @@ function initializeTimetable() {
             
             saveCourse(course);
             this.reset();
-            showTimetableNotification('Course added successfully!', 'success');
+            showNotification('Course Added', `${course.name} has been added to your timetable!`, 'success');
         });
     }
 }
@@ -1470,7 +1498,7 @@ function updateTimetableDisplay() {
     if (courses.length === 0) {
         timetableHTML = '<div class="empty-state"><p>No courses added yet. Add some courses to see your timetable.</p></div>';
     } else {
-        const timeSlots = generateTimeSlots();
+        const timeSlots = generateDynamicTimeSlots(courses);
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         
@@ -1521,12 +1549,46 @@ function updateTimetableDisplay() {
     timetableView.innerHTML = timetableHTML;
 }
 
-function generateTimeSlots() {
-    const timeSlots = [];
-    for (let hour = 8; hour <= 20; hour++) {
-        timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+function generateDynamicTimeSlots(courses) {
+    const allTimes = new Set();
+    
+    courses.forEach(course => {
+        const startTime = course.time;
+        const endTime = calculateEndTime(course.time, course.duration);
+        
+        allTimes.add(startTime);
+        allTimes.add(endTime);
+        
+        // Add intermediate times if needed for better visualization
+        const startMinutes = timeToMinutes(startTime);
+        const endMinutes = timeToMinutes(endTime);
+        const duration = endMinutes - startMinutes;
+        
+        if (duration > 60) {
+            const midTime = minutesToTime(startMinutes + Math.floor(duration / 2));
+            allTimes.add(midTime);
+        }
+    });
+    
+    // Convert to array and sort
+    const timeArray = Array.from(allTimes).sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+    
+    // Fill gaps if there are large time gaps
+    const filledTimes = [];
+    for (let i = 0; i < timeArray.length - 1; i++) {
+        filledTimes.push(timeArray[i]);
+        const currentTime = timeToMinutes(timeArray[i]);
+        const nextTime = timeToMinutes(timeArray[i + 1]);
+        
+        // If gap is more than 60 minutes, add an intermediate time
+        if (nextTime - currentTime > 60) {
+            const midTime = minutesToTime(currentTime + 60);
+            filledTimes.push(midTime);
+        }
     }
-    return timeSlots;
+    filledTimes.push(timeArray[timeArray.length - 1]);
+    
+    return filledTimes.length > 0 ? filledTimes : ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
 }
 
 function isCourseInTimeSlot(course, timeSlot) {
@@ -1555,6 +1617,12 @@ function timeToMinutes(time) {
     return hours * 60 + minutes;
 }
 
+function minutesToTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+}
+
 function saveCourse(course) {
     let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
     courses.push(course);
@@ -1569,66 +1637,8 @@ function deleteCourse(id) {
         courses = courses.filter(c => c.id !== id);
         localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
         updateTimetableDisplay();
-        showTimetableNotification('Course deleted successfully!', 'success');
+        showNotification('Course Deleted', 'Course has been removed from your timetable.', 'info');
     }
-}
-
-function showTimetableNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `timetable-notification timetable-notification-${type}`;
-    notification.innerHTML = `
-        <div class="timetable-notification-content">
-            <span>${message}</span>
-            <button class="timetable-notification-close">✕</button>
-        </div>
-    `;
-    
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#4CAF50' : '#2196F3'};
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        z-index: 10000;
-        animation: slideInRight 0.3s ease;
-        max-width: 300px;
-    `;
-    
-    const closeBtn = notification.querySelector('.timetable-notification-close');
-    closeBtn.style.cssText = `
-        background: none;
-        border: none;
-        color: white;
-        font-size: 1rem;
-        cursor: pointer;
-        margin-left: 1rem;
-        padding: 0;
-    `;
-    
-    closeBtn.addEventListener('click', () => {
-        notification.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    });
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }
-    }, 3000);
 }
 
 function saveStudySession(session) {
@@ -1637,6 +1647,7 @@ function saveStudySession(session) {
     localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
     
     updateEduPlanDisplay();
+    showNotification('Study Session Started', `${session.subject} study session has been logged!`, 'success');
 }
 
 function saveHomework(homework) {
@@ -1645,6 +1656,7 @@ function saveHomework(homework) {
     localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
     
     updateEduPlanDisplay();
+    showNotification('Homework Added', `${homework.subject} homework has been added!`, 'success');
 }
 
 function saveExam(exam) {
@@ -1653,6 +1665,7 @@ function saveExam(exam) {
     localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
     
     updateEduPlanDisplay();
+    showNotification('Exam Added', `${exam.subject} exam has been scheduled!`, 'success');
 }
 
 function updateEduPlanDisplay() {
@@ -1728,6 +1741,7 @@ function deleteStudySession(id) {
     studySessions = studySessions.filter(s => s.id !== id);
     localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
     updateStudyTrackerDisplay();
+    showNotification('Study Session Deleted', 'Study session has been removed.', 'info');
 }
 
 function updateHomeworkDisplay() {
@@ -1776,6 +1790,7 @@ function completeHomework(id) {
         homeworks[homeworkIndex].completed = true;
         localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
         updateHomeworkDisplay();
+        showNotification('Homework Completed', 'Homework marked as completed! Great job!', 'success');
     }
 }
 
@@ -1784,6 +1799,7 @@ function deleteHomework(id) {
     homeworks = homeworks.filter(h => h.id !== id);
     localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
     updateHomeworkDisplay();
+    showNotification('Homework Deleted', 'Homework has been removed.', 'info');
 }
 
 function updateExamsDisplay() {
@@ -1826,6 +1842,7 @@ function deleteExam(id) {
     exams = exams.filter(e => e.id !== id);
     localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
     updateExamsDisplay();
+    showNotification('Exam Deleted', 'Exam has been removed from your schedule.', 'info');
 }
 
 // Grade Tracker
@@ -1857,6 +1874,7 @@ function saveGrade(grade) {
     grades.push(grade);
     localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
     updateGradesDisplay();
+    showNotification('Grade Added', `${grade.subject} grade has been recorded!`, 'success');
 }
 
 function updateGradesDisplay() {
@@ -1910,6 +1928,7 @@ function deleteGrade(id) {
     grades = grades.filter(g => g.id !== id);
     localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
     updateGradesDisplay();
+    showNotification('Grade Deleted', 'Grade has been removed from your records.', 'info');
 }
 
 // Dashboard
@@ -2257,61 +2276,74 @@ function checkEduPlanReminders() {
     });
 }
 
-function showNotification(title, message, notificationId = null) {
-    // Show in-app notification
-    const notificationModal = document.getElementById('notification-modal');
-    const notificationTitle = document.getElementById('notification-title');
-    const notificationMessage = document.getElementById('notification-message');
-    const acknowledgeBtn = document.getElementById('acknowledge-notification');
-    const remindLaterBtn = document.getElementById('remind-later');
+function showNotification(title, message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#4CAF50' : type === 'warning' ? '#ff9800' : type === 'error' ? '#f44336' : '#2196F3'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        animation: slideInRight 0.3s ease;
+        max-width: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    `;
     
-    if (notificationModal && notificationTitle && notificationMessage && acknowledgeBtn && remindLaterBtn) {
-        notificationTitle.textContent = title;
-        notificationMessage.textContent = message;
-        notificationModal.style.display = 'flex';
-        
-        if (notificationId && notificationTimeouts.has(notificationId)) {
-            clearTimeout(notificationTimeouts.get(notificationId));
-            notificationTimeouts.delete(notificationId);
-        }
-        
-        const resendTimeout = setTimeout(() => {
-            notificationModal.style.display = 'none';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <strong>${title}</strong>
+            <div>${message}</div>
+        </div>
+        <button class="notification-close">✕</button>
+    `;
+    
+    const closeBtn = notification.querySelector('.notification-close');
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-left: 1rem;
+        padding: 0;
+    `;
+    
+    closeBtn.addEventListener('click', () => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    });
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => {
-                showNotification(title, message, notificationId);
-            }, 15000);
-        }, 45000);
-        
-        acknowledgeBtn.onclick = function() {
-            notificationModal.style.display = 'none';
-            if (notificationId) {
-                clearTimeout(resendTimeout);
-                notificationTimeouts.delete(notificationId);
-            }
-        };
-        
-        remindLaterBtn.onclick = function() {
-            notificationModal.style.display = 'none';
-            if (notificationId) {
-                clearTimeout(resendTimeout);
-                notificationTimeouts.delete(notificationId);
-                setTimeout(() => {
-                    showNotification(title, message, notificationId);
-                }, 300000);
-            }
-        };
-        
-        if (notificationId) {
-            notificationTimeouts.set(notificationId, resendTimeout);
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
         }
-    }
+    }, 5000);
     
     // Show browser notification if available
     if (localStorage.getItem('lifesphere_notifications') === 'enabled' && 'Notification' in window && Notification.permission === 'granted') {
         new Notification('LifeSphere says', {
             body: message,
             icon: '/favicon.ico',
-            tag: notificationId || 'general-notification'
+            tag: 'general-notification'
         });
     }
 }
