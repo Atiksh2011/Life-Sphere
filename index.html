@@ -42,6 +42,7 @@
                 <div id="dashboard" class="tab-content active">
                     <h2 class="section-title">Life Management Dashboard</h2>
                     
+                    <!-- Sleep Schedule at the top -->
                     <div class="sleep-schedule">
                         <h3 class="section-title">Sleep Schedule</h3>
                         <div class="form-row">
@@ -681,8 +682,19 @@
                                                     <input type="text" id="sub-name" class="form-control" placeholder="Netflix, Spotify, etc." required>
                                                 </div>
                                                 <div class="form-group">
-                                                    <label for="sub-price">Monthly Price ($)</label>
-                                                    <input type="number" id="sub-price" class="form-control" min="0" step="0.01" placeholder="0.00" required>
+                                                    <label for="sub-price">Monthly Price</label>
+                                                    <div class="currency-input-container">
+                                                        <select id="sub-currency" class="currency-select">
+                                                            <option value="USD">$</option>
+                                                            <option value="EUR">€</option>
+                                                            <option value="GBP">£</option>
+                                                            <option value="JPY">¥</option>
+                                                            <option value="INR">₹</option>
+                                                            <option value="CAD">C$</option>
+                                                            <option value="AUD">A$</option>
+                                                        </select>
+                                                        <input type="number" id="sub-price" class="form-control currency-input" min="0" step="0.01" placeholder="0.00" required>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="form-row">
@@ -753,7 +765,7 @@
                                 </div>
                                   
                                 <div class="timetable-container">
-                                    <!-- Add Class Section -->
+                                    <!-- Add Class Section (initially visible) -->
                                     <div id="add-class-section" class="timetable-setup">
                                         <h4>Add Class</h4>
                                         <form id="timetable-form" class="timetable-form">
@@ -798,7 +810,7 @@
                                         <button id="view-timetable-btn" class="btn-secondary" style="margin-top: 1rem;">View Timetable</button>
                                     </div>
                                       
-                                    <!-- Timetable Display Section -->
+                                    <!-- Timetable Display Section (initially hidden) -->
                                     <div id="timetable-display-section" class="timetable-display" style="display: none;">
                                         <div class="timetable-header">
                                             <h4>Weekly Schedule</h4>
