@@ -15,6 +15,7 @@ body {
     background-color: #f5f7fa;
     color: #333;
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* Container */
@@ -91,6 +92,7 @@ header {
     height: fit-content;
     position: sticky;
     top: 100px;
+    overflow: hidden;
 }
 
 .sidebar h3 {
@@ -110,6 +112,26 @@ header {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.nav-tabs::-webkit-scrollbar {
+    width: 6px;
+}
+
+.nav-tabs::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.nav-tabs::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.nav-tabs::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
 .nav-tabs li {
@@ -125,6 +147,7 @@ header {
     border-radius: 8px;
     transition: all 0.3s ease;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .nav-tabs a i {
@@ -154,6 +177,7 @@ header {
     padding: 2rem;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     min-height: 600px;
+    overflow: hidden;
 }
 
 .tab-content {
@@ -262,6 +286,26 @@ header {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Currency Input Styles */
+.currency-input-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.currency-select {
+    flex: 0 0 60px;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    font-family: 'Poppins', sans-serif;
+}
+
+.currency-input {
+    flex: 1;
+}
+
 /* Button Styles */
 .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -318,6 +362,7 @@ header {
     padding: 1.5rem;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     border: 1px solid #f0f2f5;
+    overflow: hidden;
 }
 
 .overview-item h4 {
@@ -363,6 +408,7 @@ header {
     border-radius: 10px;
     padding: 1.5rem;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
 }
 
 /* Sleep Schedule Styles */
@@ -371,6 +417,7 @@ header {
     border-radius: 10px;
     padding: 1.5rem;
     margin-bottom: 2rem;
+    overflow: hidden;
 }
 
 /* Water Tracker Styles */
@@ -378,6 +425,7 @@ header {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
+    overflow: hidden;
 }
 
 .water-goal {
@@ -475,6 +523,11 @@ header {
     background: #f8f9fa;
     padding: 1.5rem;
     border-radius: 10px;
+    overflow: hidden;
+}
+
+.history-container {
+    overflow-x: auto;
 }
 
 .history-table {
@@ -484,6 +537,7 @@ header {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-width: 600px;
 }
 
 .history-table th,
@@ -524,6 +578,7 @@ header {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
+    overflow: hidden;
 }
 
 .workout-stats {
@@ -595,6 +650,7 @@ header {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
+    overflow: hidden;
 }
 
 .med-time {
@@ -634,6 +690,7 @@ header {
 .med-times {
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .med-time-item {
@@ -653,6 +710,7 @@ header {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 2rem;
+    overflow: hidden;
 }
 
 .week-navigation {
@@ -676,6 +734,7 @@ header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 1rem;
+    min-width: 800px;
 }
 
 .day-meals {
@@ -736,6 +795,7 @@ header {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
+    overflow: hidden;
 }
 
 .screen-time-display {
@@ -787,12 +847,14 @@ header {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
+    overflow: hidden;
 }
 
 .quality-rating {
     display: flex;
     justify-content: space-between;
     margin: 1rem 0;
+    flex-wrap: wrap;
 }
 
 .quality-option {
@@ -863,6 +925,7 @@ header {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
+    overflow: hidden;
 }
 
 .reminder-item {
@@ -879,6 +942,7 @@ header {
 .taskforge-container, .eduplan-container {
     display: flex;
     gap: 2rem;
+    overflow: hidden;
 }
 
 .taskforge-sidebar, .eduplan-sidebar {
@@ -916,6 +980,7 @@ header {
 
 .taskforge-content, .eduplan-content {
     flex: 1;
+    overflow: hidden;
 }
 
 .taskforge-section, .eduplan-section {
@@ -1011,6 +1076,7 @@ header {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-width: 700px;
 }
 
 .subscriptions-table th, .study-sessions-table th, .grades-table th {
@@ -1430,10 +1496,16 @@ footer {
         flex: none;
         position: static;
         width: 100%;
+        max-height: 70vh;
+    }
+    
+    .nav-tabs {
+        max-height: 50vh;
     }
     
     .content-area {
         padding: 1.5rem;
+        overflow-x: hidden;
     }
     
     .stats-container {
@@ -1487,6 +1559,7 @@ footer {
     
     .weekly-meal-plan-popup {
         grid-template-columns: repeat(2, 1fr);
+        min-width: 400px;
     }
     
     .todo-lists {
@@ -1568,6 +1641,16 @@ footer {
         padding: 0.3rem;
         font-size: 0.7rem;
     }
+    
+    .currency-input-container {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .currency-select {
+        flex: none;
+        width: 100%;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1598,6 +1681,7 @@ footer {
     
     .weekly-meal-plan-popup {
         grid-template-columns: 1fr;
+        min-width: 300px;
     }
     
     .workout-stats,
