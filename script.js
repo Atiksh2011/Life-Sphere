@@ -2922,3 +2922,314 @@ function showNotification(title, message, notificationId = null) {
         });
     }
 }
+// COMPLETELY FIXED NOTIFICATION SYSTEM - No more "atiksh2011.github.io says"
+function showNotification(title, message, notificationId = null) {
+    // Create custom notification element that completely bypasses browser notifications
+    const notification = document.createElement('div');
+    notification.className = `notification success`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        z-index: 10000;
+        animation: slideInRight 0.3s ease;
+        max-width: 350px;
+        border-left: 4px solid #5a6fd8;
+        font-family: 'Poppins', sans-serif;
+    `;
+    
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                <div style="font-size: 1.2rem; margin-right: 10px;">🌐</div>
+                <strong style="font-size: 1.1rem;">LifeSphere says</strong>
+            </div>
+            <div style="font-size: 0.95rem; line-height: 1.4;">${message}</div>
+        </div>
+        <button class="notification-close" style="
+            background: rgba(255,255,255,0.2); 
+            border: none; 
+            color: white; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            margin-left: 1rem; 
+            padding: 0.3rem 0.6rem;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        ">✕</button>
+    `;
+    
+    const closeBtn = notification.querySelector('.notification-close');
+    
+    closeBtn.addEventListener('click', () => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    });
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+    }, 5000);
+    
+    // DON'T use browser notifications at all - they always show domain name
+    // We'll only use our custom notifications
+}
+
+// Fix medication alarm to use custom notifications only
+function triggerMedicationAlarm(medication) {
+    if (localStorage.getItem('lifesphere_ringtone') !== 'granted') return;
+    
+    // Create a calm and peaceful alarm sound
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 0.5);
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime + 1);
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime + 1.5);
+    
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
+    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 1.1);
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 2);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 2);
+    
+    const alarmModal = document.getElementById('medication-alarm');
+    const alarmMessage = document.getElementById('alarm-message');
+    const stopAlarmBtn = document.getElementById('stop-alarm');
+    
+    if (alarmModal && alarmMessage && stopAlarmBtn) {
+        alarmMessage.textContent = `Time to take ${medication.name} - ${medication.dosage}`;
+        alarmModal.style.display = 'flex';
+        
+        stopAlarmBtn.onclick = function() {
+            alarmModal.style.display = 'none';
+        };
+    }
+    
+    // Use custom notification instead of browser notification
+    showNotification('💊 Medication Reminder', `Time to take ${medication.name} - ${medication.dosage}`);
+}
+
+// Fix all other notification functions to use our custom system
+function checkWaterReminders() {
+    const waterData = JSON.parse(localStorage.getItem('lifesphere_water')) || {};
+    const waterGoal = waterData.goal || 8;
+    const waterConsumed = waterData.consumed || 0;
+    
+    if (waterConsumed < waterGoal) {
+        const remaining = waterGoal - waterConsumed;
+        
+        if (remaining === 2) {
+            showNotification('💧 Water Reminder', `C'mon! Only ${remaining} glasses of water left to reach your daily goal!`);
+        }
+        
+        const now = new Date();
+        if (now.getHours() === 15 && now.getMinutes() === 0 && waterConsumed < waterGoal / 2) {
+            showNotification('💧 Water Reminder', `You're halfway through the day but only drank ${waterConsumed}/${waterGoal} glasses. Keep hydrating!`);
+        }
+    }
+}
+
+function checkScreenTimeReminders() {
+    const screenData = JSON.parse(localStorage.getItem('lifesphere_screen')) || {};
+    const screenGoal = parseInt(document.getElementById('screen-goal')?.value || 4);
+    const screenSeconds = screenData.seconds || 0;
+    const screenHours = screenSeconds / 3600;
+    
+    if (screenHours > screenGoal) {
+        showNotification('📱 Screen Time', `It's enough time of watching today! You've exceeded your daily goal by ${(screenHours - screenGoal).toFixed(1)} hours.`);
+    }
+}
+
+function checkLifeLoopReminders() {
+    const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
+    const now = new Date();
+    
+    reminders.forEach(reminder => {
+        const eventDate = new Date(reminder.date);
+        const daysUntil = Math.ceil((eventDate - now) / (1000 * 60 * 60 * 24));
+        
+        if (daysUntil === 1) {
+            const eventType = reminder.type === 'birthday' ? 'birthday' : 'anniversary';
+            showNotification('🔄 LifeLoop Reminder', `It's ${reminder.name}'s ${eventType} tomorrow! Time to buy a gift!`);
+        }
+    });
+}
+
+function checkTaskReminders() {
+    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const pendingTasks = todos.filter(t => !t.completed);
+    
+    if (pendingTasks.length > 0) {
+        const now = new Date();
+        const currentHour = now.getHours();
+        
+        const reminderHours = [9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20];
+        
+        if (reminderHours.includes(currentHour) && now.getMinutes() === 0) {
+            const randomTask = pendingTasks[Math.floor(Math.random() * pendingTasks.length)];
+            showNotification('⚒️ Task Reminder', `C'mon, it's time to do task "${randomTask.task}"!`);
+        }
+    }
+    
+    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    const now = new Date();
+    
+    subscriptions.forEach(sub => {
+        const renewalDate = new Date(sub.renewal);
+        const daysUntil = Math.ceil((renewalDate - now) / (1000 * 60 * 60 * 24));
+        
+        if (daysUntil === 1) {
+            showNotification('💰 Subscription Reminder', `Your ${sub.name} subscription is ending tomorrow, please renew!`);
+        }
+    });
+}
+
+function checkEduPlanReminders() {
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    const today = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    courses.forEach(course => {
+        if (course.day === today) {
+            const courseTime = new Date(`2000-01-01T${course.time}`);
+            const notifyTime = new Date(courseTime.getTime() - 30 * 60000);
+            const notifyTimeString = notifyTime.getHours().toString().padStart(2, '0') + ':' + notifyTime.getMinutes().toString().padStart(2, '0');
+            
+            if (notifyTimeString === currentTime) {
+                showNotification('📅 Class Reminder', `You have ${course.name} class in 30 minutes. Please get ready!`);
+            }
+        }
+    });
+    
+    const schedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
+    if (schedule.bedtime && schedule.bedtime === currentTime) {
+        const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+        const today = new Date().toDateString();
+        const todaySessions = studySessions.filter(s => new Date(s.startTime).toDateString() === today);
+        const todayDuration = todaySessions.reduce((sum, s) => sum + s.duration, 0);
+        const todayHours = Math.floor(todayDuration / 60);
+        const todayMinutes = todayDuration % 60;
+        
+        showNotification('📚 Study Summary', `Today you studied ${todayHours}h ${todayMinutes}m. Great job!`);
+    }
+    
+    if (schedule.bedtime && schedule.bedtime === currentTime) {
+        const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+        const pendingHomeworks = homeworks.filter(h => !h.completed);
+        
+        if (pendingHomeworks.length > 0) {
+            showNotification('📝 Homework Reminder', 'Are you done with your homework?');
+        }
+    }
+    
+    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    const nowDate = new Date();
+    
+    exams.forEach(exam => {
+        const examDate = new Date(exam.date);
+        const daysUntil = Math.ceil((examDate - nowDate) / (1000 * 60 * 60 * 24));
+        
+        if (daysUntil === 1) {
+            showNotification('📊 Exam Reminder', `You have an ${exam.subject} exam tomorrow. Prepare for it!`);
+        }
+    });
+}
+
+// Remove the browser notification permission request since we're not using it
+function initializeNotifications() {
+    const notificationBtn = document.getElementById('notification-btn');
+    if (notificationBtn) {
+        notificationBtn.addEventListener('click', function() {
+            // Just show a message that we use custom notifications
+            showNotification('🔔 Notifications', 'LifeSphere uses beautiful custom notifications! No browser permissions needed.');
+            this.textContent = 'Custom Notifications Active';
+            this.disabled = true;
+            localStorage.setItem('lifesphere_notifications', 'enabled');
+        });
+    }
+    
+    if (localStorage.getItem('lifesphere_notifications') === 'enabled') {
+        notificationBtn.textContent = 'Custom Notifications Active';
+        notificationBtn.disabled = true;
+    }
+}
+
+// Add CSS animations for notifications
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    .notification {
+        animation: slideInRight 0.3s ease;
+    }
+    
+    .notification.success {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .notification.info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .notification.warning {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .notification.error {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+`;
+document.head.appendChild(style);
