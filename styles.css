@@ -400,6 +400,54 @@ header {
     border-color: #667eea;
 }
 
+/* Upcoming Events Container */
+.upcoming-container {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.upcoming-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.upcoming-column {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 150px;
+}
+
+.upcoming-column h4 {
+    margin-bottom: 1rem;
+    color: #444;
+    font-weight: 600;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.5rem;
+}
+
+.upcoming-item {
+    background: white;
+    border-radius: 6px;
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid #667eea;
+}
+
+.upcoming-item .item-title {
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+
+.upcoming-item .item-details {
+    font-size: 0.9rem;
+    color: #666;
+}
+
 /* Chart Container */
 .chart-container {
     height: 300px;
@@ -1590,6 +1638,10 @@ footer {
     .today-overview {
         grid-template-columns: 1fr;
         gap: 1rem;
+    }
+    
+    .upcoming-columns {
+        grid-template-columns: 1fr;
     }
     
     .water-container,
