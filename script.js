@@ -1,4 +1,4 @@
-// Global variables
+\// Global variables
 let screenTimeInterval;
 let screenTimeSeconds = 0;
 let screenTracking = false;
@@ -1411,7 +1411,7 @@ function deleteSubscription(id) {
     }
 }
 
-// EduPlan - FIXED TIMETABLE TO SHOW 0 VALUES WHEN NO DATA
+// EduPlan - FIXED: Data in table with delete options, removed legend
 function initializeEduPlan() {
     initializeTimetable();
     initializeGradeForm();
@@ -1500,7 +1500,7 @@ function initializeEduPlan() {
     updateEduPlanDisplay();
 }
 
-// Timetable functionality - FIXED TO SHOW 0 WHEN NO DATA
+// Timetable functionality - FIXED: Data in table with delete options
 function initializeTimetable() {
     const timetableForm = document.getElementById('timetable-form');
     const addClassBtn = document.getElementById('add-class-btn');
@@ -1606,9 +1606,6 @@ function initializeTimetable() {
                 return;
             }
 
-            // Determine course category based on name
-            const category = determineCourseCategory(courseName);
-            
             const course = {
                 id: Date.now(),
                 name: courseName,
@@ -1618,7 +1615,6 @@ function initializeTimetable() {
                 duration: courseDuration,
                 location: courseLocation,
                 instructor: courseInstructor,
-                category: category,
                 created: new Date().toISOString()
             };
             
@@ -1636,33 +1632,8 @@ function initializeTimetable() {
         });
     }
 
-    // Load existing courses on page load - FIXED: Initialize with 0 values
+    // Load existing courses on page load
     updateTimetableStats();
-}
-
-function determineCourseCategory(courseName) {
-    const name = courseName.toLowerCase();
-    
-    if (name.includes('math') || name.includes('calculus') || name.includes('algebra') || 
-        name.includes('physics') || name.includes('chemistry') || name.includes('biology')) {
-        return 'math';
-    } else if (name.includes('programming') || name.includes('computer') || name.includes('coding') ||
-               name.includes('software') || name.includes('web') || name.includes('data')) {
-        return 'technology';
-    } else if (name.includes('english') || name.includes('language') || name.includes('spanish') ||
-               name.includes('french') || name.includes('german') || name.includes('literature')) {
-        return 'language';
-    } else if (name.includes('art') || name.includes('music') || name.includes('drama') ||
-               name.includes('design') || name.includes('drawing') || name.includes('painting')) {
-        return 'arts';
-    } else if (name.includes('sport') || name.includes('physical') || name.includes('health') ||
-               name.includes('gym') || name.includes('exercise') || name.includes('yoga')) {
-        return 'sports';
-    } else if (name.includes('science') || name.includes('technology') || name.includes('engineering')) {
-        return 'science';
-    } else {
-        return 'other';
-    }
 }
 
 function updateTimetableDisplay() {
@@ -1681,111 +1652,45 @@ function updateTimetableDisplay() {
             </div>
         `;
     } else {
-        // Generate time slots from 8:00 AM to 8:00 PM
-        const timeSlots = generateTimeSlots();
-        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        
-        timetableHTML = '<div class="timetable-grid">';
-        
-        // Header row
-        timetableHTML += '<div class="timetable-header-cell time-header">Time</div>';
-        dayNames.forEach(day => {
-            timetableHTML += `<div class="timetable-header-cell">${day}</div>`;
-        });
-        
-        // Time slots and classes
-        timeSlots.forEach(timeSlot => {
-            const timeDisplay = formatTimeDisplay(timeSlot);
-            timetableHTML += `<div class="timetable-time-cell">${timeDisplay}</div>`;
-            
-            days.forEach(day => {
-                const cellCourses = courses.filter(course => 
-                    course.day === day && isCourseInTimeSlot(course, timeSlot)
-                );
-                
-                timetableHTML += `<div class="timetable-cell">`;
-                
-                if (cellCourses.length > 0) {
-                    cellCourses.forEach(course => {
-                        const endTime = calculateEndTime(course.time, course.duration);
-                        timetableHTML += `
-                            <div class="course-block ${course.category}" data-course-id="${course.id}">
-                                <div class="course-block-content">
-                                    <div class="course-name">${course.name}</div>
-                                    <div class="course-details">${course.time} - ${endTime}</div>
-                                    ${course.location ? `<div class="course-location">${course.location}</div>` : ''}
-                                    ${course.instructor ? `<div class="course-instructor">${course.instructor}</div>` : ''}
-                                </div>
-                                <div class="course-actions">
-                                    <button class="delete-course-btn" onclick="deleteCourse(${course.id})" title="Delete Course">✕</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    timetableHTML += '<div class="timetable-empty"></div>';
-                }
-                
-                timetableHTML += `</div>`;
-            });
-        });
-        
-        timetableHTML += '</div>';
+        // Create a simple table view instead of grid timetable
+        timetableHTML = `
+            <div class="courses-table-container">
+                <table class="courses-table">
+                    <thead>
+                        <tr>
+                            <th>Course Name</th>
+                            <th>Code</th>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Duration</th>
+                            <th>Location</th>
+                            <th>Instructor</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${courses.map(course => `
+                            <tr>
+                                <td>${course.name}</td>
+                                <td>${course.code || '-'}</td>
+                                <td>${course.day.charAt(0).toUpperCase() + course.day.slice(1)}</td>
+                                <td>${course.time}</td>
+                                <td>${course.duration} min</td>
+                                <td>${course.location || '-'}</td>
+                                <td>${course.instructor || '-'}</td>
+                                <td>
+                                    <button class="delete-btn" onclick="deleteCourse(${course.id})">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
     }
     
     timetableView.innerHTML = timetableHTML;
     updateTimetableStats();
-}
-
-function generateTimeSlots() {
-    const timeSlots = [];
-    for (let hour = 8; hour <= 20; hour++) {
-        timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
-        if (hour < 20) {
-            timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
-        }
-    }
-    return timeSlots;
-}
-
-function formatTimeDisplay(time) {
-    const [hours, minutes] = time.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-}
-
-function isCourseInTimeSlot(course, timeSlot) {
-    const courseStartTime = course.time;
-    const courseEndTime = calculateEndTime(course.time, course.duration);
-    
-    const slotMinutes = timeToMinutes(timeSlot);
-    const courseStartMinutes = timeToMinutes(courseStartTime);
-    const courseEndMinutes = timeToMinutes(courseEndTime);
-    
-    return slotMinutes >= courseStartMinutes && slotMinutes < courseEndMinutes;
-}
-
-function calculateEndTime(startTime, duration) {
-    const startMinutes = timeToMinutes(startTime);
-    const endMinutes = startMinutes + duration;
-    
-    const endHour = Math.floor(endMinutes / 60);
-    const endMinute = endMinutes % 60;
-    
-    return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
-}
-
-function timeToMinutes(time) {
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours * 60 + minutes;
-}
-
-function minutesToTime(minutes) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 }
 
 function saveCourse(course) {
@@ -1794,24 +1699,21 @@ function saveCourse(course) {
     localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
     
     updateTimetableStats();
-    
-    // Schedule class reminder notification
-    scheduleClassReminder(course);
 }
 
-// FIXED TIMETABLE STATS TO SHOW 0 WHEN NO DATA
+// FIXED: Show 0 when no data
 function updateTimetableStats() {
     const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
     const totalClassesElement = document.getElementById('total-classes');
     const weeklyHoursElement = document.getElementById('weekly-hours');
     const todayClassesElement = document.getElementById('today-classes');
     
-    // Total classes - FIXED: Show 0 when no data
+    // Total classes - Show 0 when no data
     if (totalClassesElement) {
         totalClassesElement.textContent = courses.length;
     }
     
-    // Weekly hours - FIXED: Show 0 when no data
+    // Weekly hours - Show 0 when no data
     const totalMinutes = courses.reduce((sum, course) => sum + course.duration, 0);
     const weeklyHours = Math.floor(totalMinutes / 60);
     const weeklyMinutes = totalMinutes % 60;
@@ -1820,7 +1722,7 @@ function updateTimetableStats() {
         weeklyHoursElement.textContent = `${weeklyHours}h ${weeklyMinutes}m`;
     }
     
-    // Today's classes - FIXED: Show 0 when no data
+    // Today's classes - Show 0 when no data
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     const todayCourses = courses.filter(course => course.day === today);
     
@@ -1839,12 +1741,7 @@ function deleteCourse(id) {
     }
 }
 
-// Schedule class reminder notifications
-function scheduleClassReminder(course) {
-    console.log(`Scheduled reminder for ${course.name} on ${course.day} at ${course.time}`);
-}
-
-// Class reminder notification check - FIXED TO WORK PROPERLY
+// Class reminder notification check
 function checkClassReminders() {
     const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
     const now = new Date();
@@ -1855,7 +1752,6 @@ function checkClassReminders() {
     
     courses.forEach(course => {
         if (course.day === today) {
-            // Check if class starts in 30 minutes
             const courseStartMinutes = timeToMinutes(course.time);
             const currentTimeMinutes = timeToMinutes(currentTime);
             const timeDifference = courseStartMinutes - currentTimeMinutes;
@@ -1865,13 +1761,17 @@ function checkClassReminders() {
                     `You have ${course.name} class in 30 minutes at ${course.location || 'your usual location'}.`);
             }
             
-            // Check if class starts in 10 minutes
             if (timeDifference === 10) {
                 showNotification('📅 Class Starting Soon', 
                     `You have ${course.name} class in 10 minutes!`);
             }
         }
     });
+}
+
+function timeToMinutes(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
 }
 
 // Make deleteCourse function globally available
@@ -2084,51 +1984,100 @@ function updateExamDisplay() {
                         <span class="exam-date">${examDate.toLocaleDateString()}</span>
                     </div>
                     <div class="exam-details">
+                        <span>Time: ${exam.time}</spandiv>
+                    <div class="exam-details">
                         <span>Time: ${exam.time}</span>
-                        ${exam.location ? `<span>Location: ${exam.location}</span>` : ''}
-                        ${exam.duration ? `<span>Duration: ${exam.duration} min</span>` : ''}
-                        <span class="days-until">${daysUntil} day${daysUntil !== 1 ? 's' : ''} until exam</span>
+                       >
+                        ${exam.location ? `<span>Location: ${exam.location ${exam.location ? `<span>Location: ${exam.location}</span>` :}</span>` : ''}
+ ''}
+                        ${exam.duration ? `<span>                        ${exam.duration ?Duration: ${exam.d `<span>Duration: ${uration} min</span>` :exam.duration} min</ ''span>` : ''}
+                        <span class="days-until">}
+                        <span class${daysUntil="days-until">${days} day${daysUntil !== 1 ?Until} day${daysUntil 's !== 1 ? 's'' : ''} until exam</span>
+                    : ''} until exam</span </div>
+                </div>
                     </div>
                 </div>
-                <button class="delete-btn" onclick="deleteExam(${exam.id})">Delete</button>
+                <button class="delete-btn" onclick>
+="delete                <button class="delete-btn" onclick="deleteExam(${exam.id})">Delete</buttonExam(${exam.id})">Delete</button>
+            </div>
             </div>
         `;
     });
     
+    if (>
+        `;
+    });
+examList    
     if (examList) {
-        examList.innerHTML = examHTML || `
-            <div class="empty-state">
-                <p>No exams scheduled</p>
-                <small>Add your upcoming exams to see them here</small>
+) {
+        examList.innerHTML = examHTML ||        examList.innerHTML = exam `
+HTML || `
+            <div            <div class="empty-state">
+ class="empty-state">
+                               <p>No exams scheduled</p>
+                <small <p>No exams scheduled</p>
+                <small>Add your>Add your upcoming exams to see them here upcoming exams to see them here</small>
+</small>
             </div>
         `;
+               </div>
+        ` }
+;
     }
 }
 
+function delete}
+
 function deleteExam(id) {
-    let exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    letExam(id) {
+    let exams exams = JSON = JSON.parse(l.parse(localStorage.getItem('lifesphere_exams')) || [];
+    examsocalStorage.getItem('lifesphere_exams')) || [];
     exams = exams.filter(e => e.id !== id);
-    localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
-    updateExamDisplay();
-    showNotification('Exam Deleted', 'Exam has been removed from your schedule.');
+ = exams.filter(e => e.id !== id);
+    localStorage    localStorage.setItem('l.setItem('lifespifesphere_exams', JSON.stringify(exams));
+here_exams', JSON.stringify   (exams));
+    updateExam updateExamDisplay();
+    showNotification('Display();
+    showNotification('Exam Deleted',Exam Deleted', 'Exam 'Exam has been removed from your schedule has been removed from your schedule.');
 }
 
-function updateGradeDisplay() {
-    const grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
-    const gradeList = document.getElementById('grade-list');
+function update.');
+}
+
+function updateGradeDisplayGradeDisplay() {
+    const grades =() {
+    const grades = JSON.parse(local JSON.parse(localStorage.getItem('lStorage.getItem('lifesphere_grades')) || [];
+ifesphere_grades')) || [];
+    const gradeList = document.getElementById('    const gradeList = document.getElementById('grade-listgrade-list');
     
-    let gradeHTML = '';
+');
+    
+    let    let gradeHTML = '';
+    
+    // Calculate grade average grade
+    letHTML = '';
     
     // Calculate average grade
+    let total totalWeightedScore = 0;
     let totalWeightedScore = 0;
-    let totalWeight = 0;
+   Weight = let totalWeight = 0;
+    
+    grades.forEach( 0;
     
     grades.forEach(grade => {
-        const percentage = (grade.score / grade.total) * 100;
-        const weightedScore = percentage * (grade.weight / 100);
+       grade => {
+        const percentage = ( const percentage = (grade.score / gradegrade.score / grade.total).total) *  * 100;
+        const100;
+        const weightedScore weightedScore = percentage * ( = percentage * (gradegrade.weight / .weight / 100);
         
-        totalWeightedScore += weightedScore;
+        totalWeightedScore100);
+        
+        totalWeightedScore += weighted += weightedScore;
+        totalWeight +=Score;
         totalWeight += grade.weight;
+    });
+    
+ grade.weight;
     });
     
     const averageGrade = totalWeight > 0 ? (totalWeightedScore / totalWeight) : 0;
@@ -2138,65 +2087,131 @@ function updateGradeDisplay() {
         averageGradeElement.textContent = `${averageGrade.toFixed(1)}%`;
     }
     
-    grades.slice(-10).reverse().forEach(grade => {
-        const percentage = (grade.score / grade.total) * 100;
-        const gradeDate = new Date(grade.date).toLocaleDateString();
+    grades.slice(-10).    const averageGrade = totalWeight > 0 ? (totalWeightedScore / totalWeight) : 0;
+    
+    const averageGradeElement = document.getElementById('average-grade');
+    if (averageGradeElement) {
+        averageGradeElement.textContent = `${averageGrade.toFixed(1)}%`;
+    }
+    
+    grades.slicereverse().forEach(grade => {
+        const percentage(-10).reverse().forEach(grade => {
+        const = (grade percentage = (grade.score /.score / grade.total) * 100 grade.total) * 100;
+        const grade;
+        const gradeDate =Date = new Date(grade.date).toLocale new Date(grade.date).toLocaleDateString();
         
-        gradeHTML += `
+        gradeDateString();
+        
+        gradeHTMLHTML += `
+            <div class=" += `
             <div class="grade-item">
+                <div classgrade-item">
                 <div class="grade-info">
-                    <div class="grade-header">
-                        <strong>${grade.subject}</strong>
-                        <span class="grade-percentage">${percentage.toFixed(1)}%</span>
+                   ="grade-info">
+                    <div class=" <div class="grade-header">
+                        <grade-header">
+                        <strong>strong>${grade.subject}</strong>
+                       ${grade.subject}</strong>
+                        <span class="grade-per <span class="grade-percentage">${percentage.toFixed(1centage">${percentage.toFixed(1)})}%</span>
                     </div>
-                    <div class="grade-details">
-                        <span>${grade.assignment}</span>
-                        <span>${grade.score}/${grade.total}</span>
-                        <span>Weight: ${grade.weight}%</span>
+                   %</span>
+                    </div>
+                    < <div classdiv class="grade-details">
+                        <span>="grade-details">
+                        <span>${${grade.assignment}</span>
+                       grade.assignment}</span>
+                        <span>${grade.score <span>${grade.score}/${grade.total}</span>
+                       }/${grade.total}</span>
+                        <span>Weight: ${grade.weight}% <span>Weight: ${grade</span>
+                       .weight}%</span>
                         <span>${gradeDate}</span>
                     </div>
+                </ <span>${gradeDate}</divspan>
+                    </div>
                 </div>
-                <button class="delete-btn" onclick="deleteGrade(${grade.id})">Delete</button>
-            </div>
+                <button class="delete>
+                <button class="delete-btn" onclick="-btn" onclick="deleteGradedeleteGrade(${(${grade.id})">Delete</button>
+            </grade.id})">Delete</button>
+            </divdiv>
         `;
     });
     
-    if (gradeList) {
+    if>
+        `;
+    });
+    
+ (gradeList)    if (gradeList) {
+        gradeList.innerHTML = {
         gradeList.innerHTML = gradeHTML || `
-            <div class="empty-state">
+            gradeHTML || `
+            <div class="empty <div class="empty-state">
+                <-state">
                 <p>No grades recorded</p>
-                <small>Add your grades to track your academic performance</small>
+               p>No grades recorded</p>
+                <small>Add your <small>Add your grades to track your academic performance</ grades to track your academic performance</small>
+            </div>
+       small>
             </div>
         `;
+ `;
     }
 }
 
 function deleteGrade(id) {
-    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
-    grades = grades.filter(g => g.id !== id);
-    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
+       }
+}
+
+function deleteGrade(id) {
+    let grades = JSON.parse(l let grades = JSON.parse(localStorageocalStorage.getItem('lif.getItem('lifesphere_gradesesphere_grades')) ||')) || [];
+    [];
+    grades = grades.filter grades = grades.filter(g => g.id(g => g.id !== id !== id);
+   );
+    localStorage.setItem(' localStorage.setItem('lifesphere_gradeslifesphere_grades', JSON.stringify(grades));
+', JSON.stringify(grades));
     updateGradeDisplay();
-    showNotification('Grade Deleted', 'Grade has been removed from your records.');
+    showNotification('Grade    updateGradeDisplay();
+    showNotification('Grade Deleted Deleted', 'Grade has', 'Grade has been removed been removed from your from your records records.');
 }
 
 // Notification functions
-function showNotification(title, message) {
-    // Create notification element
+function.');
+}
+
+// Notification functions
+function show showNotification(title, message) {
+    // CreateNotification(title, message) {
+    notification element // Create notification element
+    const
     const notification = document.createElement('div');
+    notification = document.createElement('div');
     notification.className = 'notification';
     notification.innerHTML = `
-        <div class="notification-content">
+ notification.className = 'notification';
+    notification.innerHTML = `
+        <div class="notification        <div class="notification-content">
+           -content">
             <div class="notification-title">${title}</div>
-            <div class="notification-message">${message}</div>
-        </div>
+            <div class="notification-title">${title}</ <div classdiv>
+            <div class="notification-message">="notification-message">${message}</div>
+        </${message}</div>
+        </divdiv>
+        <>
         <div class="notification-progress"></div>
     `;
+div class="notification-progress"></div>
+       
+    `;
     
-    // Add to notification container
-    const container = document.getElementById('notification-container');
-    if (container) {
+    // Add // Add to notification container
+    const to notification container
+    const container = container = document.getElementById('notification document.getElementById('notification-container');
+    if (container-container');
+    if (container)) {
         container.appendChild(notification);
         
+        {
+        container.appendChild(notification);
+ // Show        
         // Show notification
         setTimeout(() => {
             notification.classList.add('show');
@@ -2209,96 +2224,200 @@ function showNotification(title, message) {
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);
                 }
+            }, 300 notification
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        // Hide and remove after 5 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
             }, 300);
-        }, 5000);
+);
+        }, 5000        }, 5000);
     }
 }
 
-// Load all data
+//);
+    }
+}
+
+// Load Load all data
+function loadAll all data
 function loadAllData() {
     updateDashboard();
-    updateWaterDisplay();
+   Data() {
+    update updateDashboard();
+    updateWaterDisplayWaterDisplay();
+    updateWorkoutDisplay();
+    updateMedicationDisplay();
+();
     updateWorkoutDisplay();
     updateMedicationDisplay();
     updateMealDisplay();
+    update    updateMealDisplay();
     updateScreenDisplay();
+   ScreenDisplay();
     updateSleepDisplay();
+    updateLife updateSleepDisplay();
     updateLifeLoopDisplay();
+LoopDisplay();
     updateTaskForgeDisplay();
-    updateEduPlanDisplay();
+    updateE    updateTaskForgeDisplay();
+    updateEduPlanduPlanDisplay();
 }
 
 // Initialize charts
-function initializeCharts() {
+functionDisplay();
+}
+
+// Initialize charts
+function initializeCharts() initializeCharts() {
     // Chart initialization would go here
-    console.log('Charts initialized');
+ {
+    // Chart initialization would go here
+       console.log('Charts console.log('Charts initialized');
+}
+
+ initialized');
 }
 
 // Start background services
+function startBackgroundServices()// Start background services
 function startBackgroundServices() {
-    console.log('Background services started');
+    console {
+    console.log('Background.log('Background services started');
+ services started');
 }
 
-// Make functions globally available
+}
+
+//// Make Make functions globally available
+ functions globally availablewindow.deleteWaterHistory = deleteWaterHistory;
+
 window.deleteWaterHistory = deleteWaterHistory;
 window.deleteWorkout = deleteWorkout;
-window.deleteMedication = deleteMedication;
-window.deleteMeal = deleteMeal;
-window.deleteScreenHistory = deleteScreenHistory;
-window.deleteSleep = deleteSleep;
-window.deleteReminder = deleteReminder;
-window.completeTodo = completeTodo;
+window.deletewindow.deleteWorkout = deleteWorkout;
+window.deleteMedMedication = deleteMedication;
+window.deleteMeal = deleteMealication = deleteMedication;
+window.deleteMeal;
+window = deleteMeal;
+window.deleteScreenHistory =.deleteScreenHistory = deleteScreenHistory;
+window.deleteSleep = delete deleteScreenHistory;
+window.deleteSleepSleep;
+window = deleteSleep;
+window.delete.deleteReminder = deleteReminder;
+window.completeReminder = deleteReminder;
+Todo =window.completeTodo = completeTodo;
+window.deleteTodo = delete completeTodo;
 window.deleteTodo = deleteTodo;
-window.deleteSubscription = deleteSubscription;
-window.deleteStudySession = deleteStudySession;
+window.deleteTodo;
+window.deleteSubscriptionSubscription = deleteSubscription;
+window.deleteStudySession = = deleteSubscription;
+window.deleteStudy deleteStudySession = deleteStudySession;
+Session;
+window.completeHomework = completeHomework;
 window.completeHomework = completeHomework;
 window.deleteHomework = deleteHomework;
+window.deleteExamwindow.deleteHomework = deleteHomework;
 window.deleteExam = deleteExam;
+ = deleteExam;
 window.deleteGrade = deleteGrade;
 
-// Placeholder functions for notification checks
+//window.deleteGrade = deleteGrade;
+
+// Placeholder functions for Placeholder functions for notification checks
 function checkSleepScheduleNotifications() {
-    // Implementation for sleep schedule notifications
+    // notification checks
+function checkSleepScheduleNotifications() {
+    // Implementation Implementation for sleep schedule notifications
 }
 
-function checkWaterNotifications() {
+ for sleep schedule notifications
+}
+
+function checkWaterfunction checkWaterNotifications() {
+    // Implementation for water notifications
+Notifications() {
     // Implementation for water notifications
 }
 
-function checkWorkoutNotifications() {
-    // Implementation for workout notifications
+function}
+
+function checkWork checkWorkoutNotifications() {
+outNotifications() {
+    // Implementation for workout    // Implementation for workout notifications
+}
+
+function checkMedication notifications
 }
 
 function checkMedicationNotifications() {
+    // ImplementationNotifications() {
     // Implementation for medication notifications
+ for medication notifications
 }
 
-function checkMealNotifications() {
-    // Implementation for meal notifications
+function checkMe}
+
+function checkMealalNotifications() {
+    //Notifications() {
+    // Implementation for meal Implementation for meal notifications
+ notifications}
+
+function checkScreenTimeNotifications()
 }
 
 function checkScreenTimeNotifications() {
+    // Implementation {
     // Implementation for screen time notifications
 }
 
+function check for screen time notifications
+}
+
 function checkSleepTrackingNotifications() {
+    // ImplementationSleepTrackingNotifications for sleep tracking notifications() {
     // Implementation for sleep tracking notifications
 }
 
-function checkLifeLoopNotifications() {
-    // Implementation for life loop notifications
+function check
+}
+
+function checkLifeLoopNotifications()LifeLoopNotifications() {
+ {
+    // Implementation for    // Implementation for life loop notifications
+}
+
+function check life loop notifications
 }
 
 function checkTaskForgeNotifications() {
-    // Implementation for task forge notifications
+    //TaskForgeNotifications() {
+    // Implementation for task forge Implementation for task forge notifications
 }
 
-function checkEduPlanNotifications() {
+function notifications
+}
+
+function checkEduPlanNotifications() checkEduPlanNotifications() {
+    // Implementation for edu {
     // Implementation for edu plan notifications
 }
 
 // Update dashboard
-function updateDashboard() {
-    // Update dashboard with latest data from all trackers
-    console.log('Dashboard updated');
+ plan notifications
 }
+
+// Updatefunction updateDashboard() dashboard
+function updateDashboard() {
+    // Update dashboard with latest data from all {
+    // Update dashboard with trackers latest data from all trackers
+    console.log('Dashboard updated');
+
+    console.log('Dashboard updated');
+}}
