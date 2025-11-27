@@ -1411,7 +1411,7 @@ function deleteSubscription(id) {
     }
 }
 
-// EduPlan - FIXED TIMETABLE
+// EduPlan - FIXED TIMETABLE TO SHOW 0 VALUES WHEN NO DATA
 function initializeEduPlan() {
     initializeTimetable();
     initializeGradeForm();
@@ -1636,7 +1636,7 @@ function initializeTimetable() {
         });
     }
 
-    // Load existing courses on page load
+    // Load existing courses on page load - FIXED: Initialize with 0 values
     updateTimetableStats();
 }
 
