@@ -5,7 +5,7 @@ let screenTracking = false;
 let currentWeekOffset = 0;
 let medicationAlarmAudio = null;
 let notificationTimeouts = new Map();
-let selectedCurrency = 'INR';
+let selectedCurrency = 'USD';
 let backgroundNotificationInterval;
 
 // Currency symbols mapping
@@ -1422,7 +1422,7 @@ function deleteSubscription(id) {
     }
 }
 
-// EduPlan - TIMETABLE BACK TO ORIGINAL GRID VIEW
+// EduPlan - FIXED TIMETABLE
 function initializeEduPlan() {
     initializeTimetable();
     initializeGradeForm();
@@ -1511,7 +1511,7 @@ function initializeEduPlan() {
     updateEduPlanDisplay();
 }
 
-// Timetable functionality - BACK TO ORIGINAL GRID VIEW
+// Timetable functionality - FIXED
 function initializeTimetable() {
     const timetableForm = document.getElementById('timetable-form');
     const addClassBtn = document.getElementById('add-class-btn');
@@ -1616,9 +1616,6 @@ function initializeTimetable() {
                 showNotification('Error', 'Please enter a valid duration (minimum 15 minutes).');
                 return;
             }
-
-            // Determine course category based on name
-            const category = determineCourseCategory(courseName);
             
             const course = {
                 id: Date.now(),
@@ -1629,7 +1626,6 @@ function initializeTimetable() {
                 duration: courseDuration,
                 location: courseLocation,
                 instructor: courseInstructor,
-                category: category,
                 created: new Date().toISOString()
             };
             
@@ -1651,31 +1647,6 @@ function initializeTimetable() {
     updateTimetableStats();
 }
 
-function determineCourseCategory(courseName) {
-    const name = courseName.toLowerCase();
-    
-    if (name.includes('math') || name.includes('calculus') || name.includes('algebra') || 
-        name.includes('physics') || name.includes('chemistry') || name.includes('biology')) {
-        return 'math';
-    } else if (name.includes('programming') || name.includes('computer') || name.includes('coding') ||
-               name.includes('software') || name.includes('web') || name.includes('data')) {
-        return 'technology';
-    } else if (name.includes('english') || name.includes('language') || name.includes('spanish') ||
-               name.includes('french') || name.includes('german') || name.includes('literature')) {
-        return 'language';
-    } else if (name.includes('art') || name.includes('music') || name.includes('drama') ||
-               name.includes('design') || name.includes('drawing') || name.includes('painting')) {
-        return 'arts';
-    } else if (name.includes('sport') || name.includes('physical') || name.includes('health') ||
-               name.includes('gym') || name.includes('exercise') || name.includes('yoga')) {
-        return 'sports';
-    } else if (name.includes('science') || name.includes('technology') || name.includes('engineering')) {
-        return 'science';
-    } else {
-        return 'other';
-    }
-}
-
 function updateTimetableDisplay() {
     const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
     const timetableView = document.getElementById('timetable-view');
@@ -1692,90 +1663,92 @@ function updateTimetableDisplay() {
             </div>
         `;
     } else {
-        // Generate time slots from 8:00 AM to 8:00 PM
-        const timeSlots = generateTimeSlots();
+        // Days of the week
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         
-        timetableHTML = '<div class="timetable-grid">';
+        // Time slots from 8 AM to 8 PM
+        const timeSlots = [];
+        for (let hour = 8; hour <= 20; hour++) {
+            timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+            if (hour < 20) {
+                timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
+            }
+        }
         
-        // Header row
-        timetableHTML += '<div class="timetable-header-cell time-header">Time</div>';
-        dayNames.forEach(day => {
-            timetableHTML += `<div class="timetable-header-cell">${day}</div>`;
-        });
+        timetableHTML = `
+            <div class="timetable-container">
+                <table class="timetable-table">
+                    <thead>
+                        <tr>
+                            <th class="time-column">Time</th>
+                            ${dayNames.map(day => `<th>${day}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
         
-        // Time slots and classes
+        // Create rows for each time slot
         timeSlots.forEach(timeSlot => {
-            const timeDisplay = formatTimeDisplay(timeSlot);
-            timetableHTML += `<div class="timetable-time-cell">${timeDisplay}</div>`;
+            const [hours, minutes] = timeSlot.split(':').map(Number);
+            const displayTime = `${hours % 12 || 12}:${minutes.toString().padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`;
             
+            timetableHTML += `
+                <tr>
+                    <td class="time-column">${displayTime}</td>
+            `;
+            
+            // For each day, check if there's a course at this time
             days.forEach(day => {
-                const cellCourses = courses.filter(course => 
-                    course.day === day && isCourseInTimeSlot(course, timeSlot)
+                const courseAtThisTime = courses.find(course => 
+                    course.day === day && isCourseAtTime(course, timeSlot)
                 );
                 
-                timetableHTML += `<div class="timetable-cell">`;
-                
-                if (cellCourses.length > 0) {
-                    cellCourses.forEach(course => {
-                        const endTime = calculateEndTime(course.time, course.duration);
-                        timetableHTML += `
-                            <div class="course-block ${course.category}" data-course-id="${course.id}">
-                                <div class="course-block-content">
-                                    <div class="course-name">${course.name}</div>
-                                    <div class="course-details">${course.time} - ${endTime}</div>
-                                    ${course.location ? `<div class="course-location">${course.location}</div>` : ''}
-                                    ${course.instructor ? `<div class="course-instructor">${course.instructor}</div>` : ''}
+                if (courseAtThisTime) {
+                    const endTime = calculateEndTime(courseAtThisTime.time, courseAtThisTime.duration);
+                    timetableHTML += `
+                        <td class="course-cell">
+                            <div class="course-block">
+                                <div class="course-info">
+                                    <strong>${courseAtThisTime.name}</strong>
+                                    <div>${courseAtThisTime.time} - ${endTime}</div>
+                                    ${courseAtThisTime.location ? `<div>${courseAtThisTime.location}</div>` : ''}
+                                    ${courseAtThisTime.instructor ? `<div>${courseAtThisTime.instructor}</div>` : ''}
                                 </div>
-                                <div class="course-actions">
-                                    <button class="delete-course-btn" onclick="deleteCourse(${course.id})" title="Delete Course">✕</button>
-                                </div>
+                                <button class="delete-course-btn" onclick="deleteCourse(${courseAtThisTime.id})">Delete</button>
                             </div>
-                        `;
-                    });
+                        </td>
+                    `;
                 } else {
-                    timetableHTML += '<div class="timetable-empty"></div>';
+                    timetableHTML += `<td class="empty-cell"></td>`;
                 }
-                
-                timetableHTML += `</div>`;
             });
+            
+            timetableHTML += `</tr>`;
         });
         
-        timetableHTML += '</div>';
+        timetableHTML += `
+                    </tbody>
+                </table>
+            </div>
+        `;
     }
     
     timetableView.innerHTML = timetableHTML;
     updateTimetableStats();
 }
 
-function generateTimeSlots() {
-    const timeSlots = [];
-    for (let hour = 8; hour <= 20; hour++) {
-        timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
-        if (hour < 20) {
-            timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
-        }
-    }
-    return timeSlots;
-}
-
-function formatTimeDisplay(time) {
-    const [hours, minutes] = time.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-}
-
-function isCourseInTimeSlot(course, timeSlot) {
-    const courseStartTime = course.time;
-    const courseEndTime = calculateEndTime(course.time, course.duration);
-    
+function isCourseAtTime(course, timeSlot) {
+    const courseStartMinutes = timeToMinutes(course.time);
     const slotMinutes = timeToMinutes(timeSlot);
-    const courseStartMinutes = timeToMinutes(courseStartTime);
-    const courseEndMinutes = timeToMinutes(courseEndTime);
+    const courseEndMinutes = courseStartMinutes + course.duration;
     
     return slotMinutes >= courseStartMinutes && slotMinutes < courseEndMinutes;
+}
+
+function timeToMinutes(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
 }
 
 function calculateEndTime(startTime, duration) {
@@ -1788,41 +1761,26 @@ function calculateEndTime(startTime, duration) {
     return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
 }
 
-function timeToMinutes(time) {
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours * 60 + minutes;
-}
-
-function minutesToTime(minutes) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-}
-
 function saveCourse(course) {
     let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
     courses.push(course);
     localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
     
     updateTimetableStats();
-    
-    // Schedule class reminder notification
-    scheduleClassReminder(course);
 }
 
-// FIXED: Show 0 when no data
 function updateTimetableStats() {
     const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
     const totalClassesElement = document.getElementById('total-classes');
     const weeklyHoursElement = document.getElementById('weekly-hours');
     const todayClassesElement = document.getElementById('today-classes');
     
-    // Total classes - Show 0 when no data
+    // Total classes
     if (totalClassesElement) {
         totalClassesElement.textContent = courses.length;
     }
     
-    // Weekly hours - Show 0 when no data
+    // Weekly hours
     const totalMinutes = courses.reduce((sum, course) => sum + course.duration, 0);
     const weeklyHours = Math.floor(totalMinutes / 60);
     const weeklyMinutes = totalMinutes % 60;
@@ -1831,7 +1789,7 @@ function updateTimetableStats() {
         weeklyHoursElement.textContent = `${weeklyHours}h ${weeklyMinutes}m`;
     }
     
-    // Today's classes - Show 0 when no data
+    // Today's classes
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     const todayCourses = courses.filter(course => course.day === today);
     
@@ -1848,41 +1806,6 @@ function deleteCourse(id) {
         updateTimetableDisplay();
         showNotification('Course Deleted', 'Course has been removed from your timetable.');
     }
-}
-
-// Schedule class reminder notifications
-function scheduleClassReminder(course) {
-    console.log(`Scheduled reminder for ${course.name} on ${course.day} at ${course.time}`);
-}
-
-// Class reminder notification check
-function checkClassReminders() {
-    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
-    const now = new Date();
-    const currentHours = now.getHours().toString().padStart(2, '0');
-    const currentMinutes = now.getMinutes().toString().padStart(2, '0');
-    const currentTime = `${currentHours}:${currentMinutes}`;
-    const today = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    
-    courses.forEach(course => {
-        if (course.day === today) {
-            // Check if class starts in 30 minutes
-            const courseStartMinutes = timeToMinutes(course.time);
-            const currentTimeMinutes = timeToMinutes(currentTime);
-            const timeDifference = courseStartMinutes - currentTimeMinutes;
-            
-            if (timeDifference === 30) {
-                showNotification('📅 Class Reminder', 
-                    `You have ${course.name} class in 30 minutes at ${course.location || 'your usual location'}.`);
-            }
-            
-            // Check if class starts in 10 minutes
-            if (timeDifference === 10) {
-                showNotification('📅 Class Starting Soon', 
-                    `You have ${course.name} class in 10 minutes!`);
-            }
-        }
-    });
 }
 
 // Make deleteCourse function globally available
