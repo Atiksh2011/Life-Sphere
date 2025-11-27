@@ -6,6 +6,7 @@ let currentWeekOffset = 0;
 let medicationAlarmAudio = null;
 let notificationTimeouts = new Map();
 let selectedCurrency = 'USD';
+let backgroundNotificationInterval;
 
 // Currency symbols mapping
 const currencySymbols = {
@@ -42,6 +43,32 @@ function initializeApp() {
     loadAllData();
     initializeCharts();
     startBackgroundServices();
+    startBackgroundNotificationService();
+}
+
+// Initialize background notification service
+function startBackgroundNotificationService() {
+    // Check for notifications every minute
+    backgroundNotificationInterval = setInterval(() => {
+        checkAllNotifications();
+    }, 60000);
+    
+    // Also check immediately on load
+    setTimeout(checkAllNotifications, 5000);
+}
+
+// Check all types of notifications
+function checkAllNotifications() {
+    checkSleepScheduleNotifications();
+    checkWaterNotifications();
+    checkWorkoutNotifications();
+    checkMedicationNotifications();
+    checkMealNotifications();
+    checkScreenTimeNotifications();
+    checkSleepTrackingNotifications();
+    checkLifeLoopNotifications();
+    checkTaskForgeNotifications();
+    checkEduPlanNotifications();
 }
 
 // Initialize currency settings
@@ -1980,12 +2007,79 @@ function updateDashboard() {
         
         todayTasksList.innerHTML = tasksHTML || '<p>No tasks for today</p>';
     }
+    
+    // Update upcoming events
+    updateUpcomingEvents();
+}
+
+// Update upcoming events in dashboard
+function updateUpcomingEvents() {
+    const todayClassesList = document.getElementById('today-classes-list');
+    const upcomingExamsList = document.getElementById('upcoming-exams-list');
+    const pendingTasksList = document.getElementById('pending-tasks-list');
+    
+    // Today's classes
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const todayCourses = courses.filter(course => course.day === today);
+    
+    let todayClassesHTML = '';
+    todayCourses.forEach(course => {
+        todayClassesHTML += `
+            <div class="upcoming-item">
+                <div class="item-title">${course.name}</div>
+                <div class="item-details">${course.time} - ${course.location || 'No location'}</div>
+            </div>
+        `;
+    });
+    
+    if (todayClassesList) {
+        todayClassesList.innerHTML = todayClassesHTML || '<div class="empty-state"><p>No classes today</p></div>';
+    }
+    
+    // Upcoming exams
+    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    const now = new Date();
+    const upcomingExams = exams.filter(exam => new Date(exam.date) >= now).slice(0, 3);
+    
+    let upcomingExamsHTML = '';
+    upcomingExams.forEach(exam => {
+        const examDate = new Date(exam.date).toLocaleDateString();
+        upcomingExamsHTML += `
+            <div class="upcoming-item">
+                <div class="item-title">${exam.subject}</div>
+                <div class="item-details">${examDate} at ${exam.time}</div>
+            </div>
+        `;
+    });
+    
+    if (upcomingExamsList) {
+        upcomingExamsList.innerHTML = upcomingExamsHTML || '<div class="empty-state"><p>No upcoming exams</p></div>';
+    }
+    
+    // Pending tasks
+    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const pendingTasks = todos.filter(t => !t.completed).slice(0, 3);
+    
+    let pendingTasksHTML = '';
+    pendingTasks.forEach(task => {
+        const dueDate = task.due ? new Date(task.due).toLocaleDateString() : 'No due date';
+        pendingTasksHTML += `
+            <div class="upcoming-item">
+                <div class="item-title">${task.task}</div>
+                <div class="item-details">Due: ${dueDate}</div>
+            </div>
+        `;
+    });
+    
+    if (pendingTasksList) {
+        pendingTasksList.innerHTML = pendingTasksHTML || '<div class="empty-state"><p>No pending tasks</p></div>';
+    }
 }
 
 // Background Services
 function startBackgroundServices() {
     setInterval(checkMedicationAlarms, 60000);
-    setInterval(checkScheduledNotifications, 60000);
     setInterval(checkTaskReminders, 60000);
     setInterval(checkWaterReminders, 60000);
     setInterval(checkScreenTimeReminders, 60000);
@@ -2002,6 +2096,11 @@ function checkMedicationAlarms() {
         med.times.forEach(time => {
             if (time === currentTime) {
                 triggerMedicationAlarm(med);
+                
+                // Schedule follow-up notification 15 minutes later
+                setTimeout(() => {
+                    showNotification('💊 Medication Reminder', `Precautionary reminder: Don't forget to take ${med.name} - ${med.dosage}`);
+                }, 15 * 60 * 1000);
             }
         });
     });
@@ -2050,85 +2149,90 @@ function triggerMedicationAlarm(medication) {
     showNotification('💊 Medication Reminder', `Time to take ${medication.name} - ${medication.dosage}`);
 }
 
-function checkScheduledNotifications() {
+// Enhanced notification system for all features
+function checkSleepScheduleNotifications() {
+    const schedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
     const now = new Date();
     const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
     
-    checkSleepScheduleNotifications(currentTime);
-    
-    if (now.getHours() === 8 && now.getMinutes() === 0) {
-        sendMorningNotifications();
-    }
-    
-    if (now.getHours() === 21 && now.getMinutes() === 0) {
-        sendEveningNotifications();
-    }
-    
-    checkMealNotifications();
-}
-
-function checkSleepScheduleNotifications(currentTime) {
-    const schedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
-    
     if (schedule.wakeUpTime && schedule.wakeUpTime === currentTime) {
         showNotification('🌅 Good Morning!', 'Time to wake up and start your day!');
-        const startBtn = document.getElementById('start-tracking');
-        if (startBtn && !startBtn.disabled) {
-            startBtn.click();
-        }
+        
+        // Trigger other morning notifications
+        setTimeout(() => {
+            checkWaterNotifications(true);
+            checkWorkoutNotifications(true);
+            checkScreenTimeNotifications(true);
+            checkSleepTrackingNotifications(true);
+        }, 1000);
     }
     
     if (schedule.bedtime && schedule.bedtime === currentTime) {
         showNotification('🌙 Good Night!', 'Time to wind down and prepare for sleep.');
-        const stopBtn = document.getElementById('stop-tracking');
-        if (stopBtn && !stopBtn.disabled) {
-            stopBtn.click();
+        
+        // Trigger other evening notifications
+        setTimeout(() => {
+            checkWaterNotifications(false);
+            checkWorkoutNotifications(false);
+            checkScreenTimeNotifications(false);
+            checkSleepTrackingNotifications(false);
+            checkEduPlanReminders(false);
+        }, 1000);
+    }
+}
+
+function checkWaterNotifications(isMorning = null) {
+    const waterData = JSON.parse(localStorage.getItem('lifesphere_water')) || {};
+    const waterGoal = waterData.goal || 8;
+    const waterConsumed = waterData.consumed || 0;
+    
+    if (isMorning === true) {
+        showNotification('💧 Water Tracker', 'Good morning! Start tracking your water intake today.');
+    } else if (isMorning === false) {
+        showNotification('💧 Water Tracker', `You drank ${waterConsumed}/${waterGoal} glasses of water today. Great job!`);
+    }
+}
+
+function checkWorkoutNotifications(isMorning = null) {
+    const workouts = JSON.parse(localStorage.getItem('lifesphere_workouts')) || [];
+    const today = new Date().toDateString();
+    const todayWorkouts = workouts.filter(w => new Date(w.date).toDateString() === today);
+    
+    if (isMorning === true) {
+        showNotification('💪 Workout Logger', 'Good morning! Time to plan your workout for today.');
+        
+        // Schedule workout reminders every 2 hours if no workout logged
+        if (todayWorkouts.length === 0) {
+            for (let i = 2; i <= 12; i += 2) {
+                setTimeout(() => {
+                    const currentWorkouts = JSON.parse(localStorage.getItem('lifesphere_workouts')) || [];
+                    const currentTodayWorkouts = currentWorkouts.filter(w => new Date(w.date).toDateString() === today);
+                    
+                    if (currentTodayWorkouts.length === 0) {
+                        showNotification('💪 Workout Reminder', `Haven't done your workout yet? It's been ${i} hours since you woke up!`);
+                    }
+                }, i * 60 * 60 * 1000);
+            }
+        }
+    } else if (isMorning === false) {
+        if (todayWorkouts.length > 0) {
+            const totalDuration = todayWorkouts.reduce((sum, w) => sum + w.duration, 0);
+            showNotification('💪 Workout Summary', `Great job! You completed ${todayWorkouts.length} workout${todayWorkouts.length > 1 ? 's' : ''} totaling ${totalDuration} minutes today.`);
+        } else {
+            showNotification('💪 Workout Reminder', "You didn't log any workouts today. Remember to stay active!");
         }
     }
 }
 
-function sendMorningNotifications() {
-    if (localStorage.getItem('lifesphere_notifications') !== 'enabled') return;
-    
-    const notifications = [
-        { title: '🌅 Good Morning!', message: 'Time to start your day. Check your water intake goals.' },
-        { title: '💧 Water Reminder', message: 'Don\'t forget to track your water intake today!' },
-        { title: '🎓 Study Time', message: 'Plan your study sessions for today.' },
-        { title: '⚒️ Tasks', message: 'Review your tasks for today.' },
-        { title: '💪 Workout', message: 'Plan your workout for today.' },
-        { title: '🍽️ Meal Planner', message: 'Check your meal plan for today.' }
-    ];
-    
-    notifications.forEach((notification, index) => {
-        setTimeout(() => {
-            showNotification(notification.title, notification.message);
-        }, index * 30000);
-    });
-}
-
-function sendEveningNotifications() {
-    if (localStorage.getItem('lifesphere_notifications') !== 'enabled') return;
-    
-    const notifications = [
-        { title: '🌙 Evening Review', message: 'How was your day? Log your activities.' },
-        { title: '😴 Sleep Tracker', message: 'Don\'t forget to log your sleep!' },
-        { title: '📱 Screen Time', message: 'Stop screen time tracking for the night.' },
-        { title: '🎓 Study Review', message: 'Review what you studied today.' },
-        { title: '⚒️ Tasks', message: 'Check off completed tasks.' }
-    ];
-    
-    notifications.forEach((notification, index) => {
-        setTimeout(() => {
-            showNotification(notification.title, notification.message);
-        }, index * 30000);
-    });
+function checkMedicationNotifications() {
+    // Handled in checkMedicationAlarms
 }
 
 function checkMealNotifications() {
     const meals = JSON.parse(localStorage.getItem('lifesphere_meals')) || [];
     const now = new Date();
-    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
     const today = now.toISOString().split('T')[0];
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
     
     meals.forEach(meal => {
         if (meal.date === today) {
@@ -2137,62 +2241,39 @@ function checkMealNotifications() {
             const notifyTimeString = notifyTime.getHours().toString().padStart(2, '0') + ':' + notifyTime.getMinutes().toString().padStart(2, '0');
             
             if (notifyTimeString === currentTime) {
-                showMealNotification(meal);
+                showNotification('🍽️ Meal Reminder', `Don't forget about your ${meal.type}: ${meal.name} in 1 hour!`);
             }
         }
     });
 }
 
-function showMealNotification(meal) {
-    if (localStorage.getItem('lifesphere_notifications') !== 'enabled') return;
-    
-    const notificationId = `meal-${meal.id}`;
-    
-    if (notificationTimeouts.has(notificationId)) return;
-    
-    const title = `🍽️ ${meal.type.charAt(0).toUpperCase() + meal.type.slice(1)} Time`;
-    const message = `Have you started to cook ${meal.name} yet?`;
-    
-    showNotification(title, message, notificationId);
-}
-
-// Water Tracker Reminders
-function checkWaterReminders() {
-    const waterData = JSON.parse(localStorage.getItem('lifesphere_water')) || {};
-    const waterGoal = waterData.goal || 8;
-    const waterConsumed = waterData.consumed || 0;
-    
-    if (waterConsumed < waterGoal) {
-        const remaining = waterGoal - waterConsumed;
+function checkScreenTimeNotifications(isMorning = null) {
+    if (isMorning === true) {
+        showNotification('📱 Screen Time', 'Good morning! Screen time tracking has started automatically.');
         
-        // Send reminder when there are only 2 glasses left
-        if (remaining === 2) {
-            showNotification('💧 Water Reminder', `C'mon! Only ${remaining} glasses of water left to reach your daily goal!`);
+        // Auto-start screen time tracking
+        const startBtn = document.getElementById('start-tracking');
+        if (startBtn && !startBtn.disabled) {
+            startBtn.click();
         }
+    } else if (isMorning === false) {
+        showNotification('📱 Screen Time', 'Good night! Screen time tracking has been stopped.');
         
-        // Send reminder at 3 PM if user is behind
-        const now = new Date();
-        if (now.getHours() === 15 && now.getMinutes() === 0 && waterConsumed < waterGoal / 2) {
-            showNotification('💧 Water Reminder', `You're halfway through the day but only drank ${waterConsumed}/${waterGoal} glasses. Keep hydrating!`);
+        // Auto-stop screen time tracking
+        const stopBtn = document.getElementById('stop-tracking');
+        if (stopBtn && !stopBtn.disabled) {
+            stopBtn.click();
         }
     }
 }
 
-// Screen Time Reminders
-function checkScreenTimeReminders() {
-    const screenData = JSON.parse(localStorage.getItem('lifesphere_screen')) || {};
-    const screenGoal = parseInt(document.getElementById('screen-goal')?.value || 4);
-    const screenSeconds = screenData.seconds || 0;
-    const screenHours = screenSeconds / 3600;
-    
-    // Send reminder when screen time exceeds goal
-    if (screenHours > screenGoal) {
-        showNotification('📱 Screen Time', `It's enough time of watching today! You've exceeded your daily goal by ${(screenHours - screenGoal).toFixed(1)} hours.`);
+function checkSleepTrackingNotifications(isMorning = null) {
+    if (isMorning === true) {
+        showNotification('😴 Sleep Tracker', 'Good morning! Remember to log your sleep from last night.');
     }
 }
 
-// LifeLoop Reminders
-function checkLifeLoopReminders() {
+function checkLifeLoopNotifications() {
     const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
     const now = new Date();
     
@@ -2200,33 +2281,47 @@ function checkLifeLoopReminders() {
         const eventDate = new Date(reminder.date);
         const daysUntil = Math.ceil((eventDate - now) / (1000 * 60 * 60 * 24));
         
-        // Send reminder 1 day before
-        if (daysUntil === 1) {
-            const eventType = reminder.type === 'birthday' ? 'birthday' : 'anniversary';
-            showNotification('🔄 LifeLoop Reminder', `It's ${reminder.name}'s ${eventType} tomorrow! Time to buy a gift!`);
+        // Send reminder according to user's preference
+        if (daysUntil === reminder.notice) {
+            const eventType = reminder.type === 'birthday' ? 'birthday' : 
+                             reminder.type === 'anniversary' ? 'anniversary' : 'event';
+            showNotification('🔄 LifeLoop Reminder', `${reminder.name}'s ${eventType} is in ${reminder.notice} day${reminder.notice !== 1 ? 's' : ''}!`);
         }
     });
 }
 
-// TaskForge Reminders
-function checkTaskReminders() {
+function checkTaskForgeNotifications() {
+    // To-Do List notifications
     const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
     const pendingTasks = todos.filter(t => !t.completed);
     
     if (pendingTasks.length > 0) {
-        const now = new Date();
-        const currentHour = now.getHours();
-        
-        // Send reminders at random times throughout the day (preferably 1-1.5 hours apart)
-        const reminderHours = [9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20];
-        
-        if (reminderHours.includes(currentHour) && now.getMinutes() === 0) {
-            const randomTask = pendingTasks[Math.floor(Math.random() * pendingTasks.length)];
-            showNotification('⚒️ Task Reminder', `C'mon, it's time to do task "${randomTask.task}"!`);
-        }
+        pendingTasks.forEach(task => {
+            const notificationKey = `task-${task.id}-${new Date().toDateString()}`;
+            
+            if (!localStorage.getItem(notificationKey)) {
+                let interval;
+                switch(task.priority) {
+                    case 'high':
+                        interval = 30 * 60 * 1000; // 30 minutes
+                        break;
+                    case 'medium':
+                        interval = 60 * 60 * 1000; // 1 hour
+                        break;
+                    case 'low':
+                        interval = 2 * 60 * 60 * 1000; // 2 hours
+                        break;
+                }
+                
+                setTimeout(() => {
+                    showNotification('⚒️ Task Reminder', `Don't forget: ${task.task}`);
+                    localStorage.setItem(notificationKey, 'sent');
+                }, interval);
+            }
+        });
     }
     
-    // Check subscription renewals
+    // Subscription notifications
     const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
     const now = new Date();
     
@@ -2236,14 +2331,13 @@ function checkTaskReminders() {
         
         // Send reminder 1 day before renewal
         if (daysUntil === 1) {
-            showNotification('💰 Subscription Reminder', `Your ${sub.name} subscription is ending tomorrow, please renew!`);
+            showNotification('💰 Subscription Reminder', `Your ${sub.name} subscription renews tomorrow for ${getCurrencySymbol()}${sub.price.toFixed(2)}!`);
         }
     });
 }
 
-// EduPlan Reminders
-function checkEduPlanReminders() {
-    // Timetable reminders
+function checkEduPlanReminders(isMorning = null) {
+    // Timetable notifications
     const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
     const now = new Date();
     const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
@@ -2256,14 +2350,13 @@ function checkEduPlanReminders() {
             const notifyTimeString = notifyTime.getHours().toString().padStart(2, '0') + ':' + notifyTime.getMinutes().toString().padStart(2, '0');
             
             if (notifyTimeString === currentTime) {
-                showNotification('📅 Class Reminder', `You have ${course.name} class in 30 minutes. Please get ready!`);
+                showNotification('📅 Class Reminder', `You have ${course.name} class in 30 minutes at ${course.location || 'your usual location'}.`);
             }
         }
     });
     
-    // Study tracker reminders at bedtime
-    const schedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
-    if (schedule.bedtime && schedule.bedtime === currentTime) {
+    // Study tracker notifications
+    if (isMorning === false) {
         const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
         const today = new Date().toDateString();
         const todaySessions = studySessions.filter(s => new Date(s.startTime).toDateString() === today);
@@ -2271,20 +2364,33 @@ function checkEduPlanReminders() {
         const todayHours = Math.floor(todayDuration / 60);
         const todayMinutes = todayDuration % 60;
         
-        showNotification('📚 Study Summary', `Today you studied ${todayHours}h ${todayMinutes}m. Great job!`);
-    }
-    
-    // Homework reminders at bedtime
-    if (schedule.bedtime && schedule.bedtime === currentTime) {
-        const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
-        const pendingHomeworks = homeworks.filter(h => !h.completed);
+        if (todayDuration > 0) {
+            showNotification('📚 Study Summary', `Today you studied ${todayHours}h ${todayMinutes}m. Great job!`);
+        }
+    } else {
+        // Random study reminders during the day
+        const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+        const today = new Date().toDateString();
+        const todaySessions = studySessions.filter(s => new Date(s.startTime).toDateString() === today);
         
-        if (pendingHomeworks.length > 0) {
-            showNotification('📝 Homework Reminder', 'Are you done with your homework?');
+        if (todaySessions.length === 0 && Math.random() < 0.3) { // 30% chance
+            showNotification('📚 Study Reminder', 'Time to start a study session!');
         }
     }
     
-    // Exam reminders
+    // Homework notifications
+    const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    const pendingHomeworks = homeworks.filter(h => !h.completed);
+    
+    if (pendingHomeworks.length > 0) {
+        // Send reminder every hour during the day
+        const now = new Date();
+        if (now.getHours() >= 8 && now.getHours() <= 22 && now.getMinutes() === 0) {
+            showNotification('📝 Homework Reminder', `You have ${pendingHomeworks.length} pending homework assignment${pendingHomeworks.length > 1 ? 's' : ''}. Time to finish them!`);
+        }
+    }
+    
+    // Exam notifications
     const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
     const nowDate = new Date();
     
@@ -2294,7 +2400,7 @@ function checkEduPlanReminders() {
         
         // Send reminder 1 day before exam
         if (daysUntil === 1) {
-            showNotification('📊 Exam Reminder', `You have an ${exam.subject} exam tomorrow. Prepare for it!`);
+            showNotification('📊 Exam Reminder', `You have an ${exam.subject} exam tomorrow at ${exam.time}. Prepare for it!`);
         }
     });
 }
@@ -2324,7 +2430,7 @@ function showNotification(title, message, notificationId = null) {
         <div class="notification-content">
             <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
                 <div style="font-size: 1.2rem; margin-right: 10px;">🌐</div>
-                <strong style="font-size: 1.1rem;">LifeSphere says</strong>
+                <strong style="font-size: 1.1rem;">LifeSphere Says</strong>
             </div>
             <div style="font-size: 0.95rem; line-height: 1.4;">${message}</div>
         </div>
@@ -2370,8 +2476,17 @@ function showNotification(title, message, notificationId = null) {
         }
     }, 5000);
     
-    // DON'T use browser notifications at all - they always show domain name
-    // We'll only use our custom notifications
+    // Store notification in localStorage for background service
+    if (notificationId) {
+        const notifications = JSON.parse(localStorage.getItem('lifesphere_background_notifications')) || [];
+        notifications.push({
+            id: notificationId,
+            title: title,
+            message: message,
+            timestamp: new Date().toISOString()
+        });
+        localStorage.setItem('lifesphere_background_notifications', JSON.stringify(notifications));
+    }
 }
 
 // Initialize all data
@@ -2381,55 +2496,7 @@ function loadAllData() {
 
 function initializeCharts() {
     console.log('Initializing charts...');
-    const ctx = document.getElementById('weekly-chart');
-    if (ctx) {
-        const waterHistory = JSON.parse(localStorage.getItem('lifesphere_water_history')) || {};
-        const waterData = getWeeklyWaterData(waterHistory);
-        
-        new Chart(ctx.getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Water Intake (glasses)',
-                    data: waterData,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 10
-                    }
-                }
-            }
-        });
-    }
-}
-
-function getWeeklyWaterData(waterHistory) {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const today = new Date();
-    const weekData = [0, 0, 0, 0, 0, 0, 0];
-    
-    for (let i = 0; i < 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        const dateString = date.toDateString();
-        const dayIndex = date.getDay();
-        
-        if (waterHistory[dateString]) {
-            weekData[dayIndex] = waterHistory[dateString].consumed || 0;
-        }
-    }
-    
-    return [...weekData.slice(1), weekData[0]];
+    // Chart initialization removed as per requirements
 }
 
 // Add CSS animations for notifications
