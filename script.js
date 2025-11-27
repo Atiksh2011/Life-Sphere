@@ -1975,3 +1975,41 @@ function checkAllNotifications() {
 // Make deleteCourse function globally available
 window.deleteCourse = deleteCourse;
 window.clearAllTimetableData = clearAllTimetableData; // For testing if needed
+function initializeApp() {
+    initializeNotifications();
+    initializeTabNavigation();
+    initializeSubtabNavigation();
+    initializeWaterTracker();
+    initializeWorkoutTracker();
+    initializeMedicationTracker();
+    initializeMealPlanner();
+    initializeScreenTimeTracker();
+    initializeSleepTracker();
+    initializeLifeLoop();
+    initializeTaskForge();
+    initializeEduPlan();
+    initializeSleepSchedule();
+    initializeCurrency();
+    loadAllData();
+    initializeCharts();
+    startBackgroundServices();
+    startBackgroundNotificationService();
+    
+    // Clear any existing dummy data
+    clearDummyData();
+}
+
+function clearDummyData() {
+    // Clear any existing timetable data to ensure fresh start
+    if (localStorage.getItem('lifesphere_courses')) {
+        const courses = JSON.parse(localStorage.getItem('lifesphere_courses'));
+        if (courses.length > 0) {
+            // Keep only user-added courses (you can modify this logic if needed)
+            // For now, we'll keep existing data but ensure no dummy data is added
+            console.log('Existing courses found:', courses.length);
+        }
+    } else {
+        // Initialize empty courses array
+        localStorage.setItem('lifesphere_courses', JSON.stringify([]));
+    }
+}
