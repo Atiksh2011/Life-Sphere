@@ -2577,7 +2577,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Force update screen display on load for mobile
     setTimeout(updateScreenDisplay, 100);
 });
-// Timetable functionality - COMPLETELY FIXED
+// Timetable functionality - FIXED DATA ENTRY
 function initializeTimetable() {
     const timetableForm = document.getElementById('timetable-form');
     const addClassBtn = document.getElementById('add-class-btn');
@@ -2695,6 +2695,14 @@ function initializeTimetable() {
             // Reset time to current time
             document.getElementById('course-time').value = currentTime;
             showNotification('Course Added', `${course.name} has been added to your timetable!`);
+            
+            // Auto-switch to timetable view if there are classes
+            const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+            if (courses.length > 0) {
+                addClassSection.style.display = 'none';
+                timetableDisplaySection.style.display = 'block';
+                updateTimetableDisplay();
+            }
         });
     }
 
@@ -2856,6 +2864,9 @@ function saveCourse(course) {
     localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
     
     updateTimetableStats();
+    
+    // Schedule class reminder notification
+    scheduleClassReminder(course);
 }
 
 function updateTimetableStats() {
@@ -2897,9 +2908,36 @@ function deleteCourse(id) {
     }
 }
 
+// Schedule class reminder notifications
+function scheduleClassReminder(course) {
+    // This function sets up notifications for class reminders
+    // Notifications will be triggered by the background notification service
+    console.log(`Scheduled reminder for ${course.name} on ${course.day} at ${course.time}`);
+}
+
+// Class reminder notification check
+function checkClassReminders() {
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    const today = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    courses.forEach(course => {
+        if (course.day === today) {
+            const courseTime = new Date(`2000-01-01T${course.time}`);
+            const notifyTime = new Date(courseTime.getTime() - 30 * 60000); // 30 minutes before
+            const notifyTimeString = notifyTime.getHours().toString().padStart(2, '0') + ':' + notifyTime.getMinutes().toString().padStart(2, '0');
+            
+            if (notifyTimeString === currentTime) {
+                showNotification('📅 Class Reminder', `You have ${course.name} class in 30 minutes at ${course.location || 'your usual location'}.`);
+            }
+        }
+    });
+}
+
 // Make sure to call initializeTimetable in your main initializeEduPlan function
 function initializeEduPlan() {
-    initializeTimetable(); // Add this line
+    initializeTimetable();
     initializeGradeForm();
     
     const studyForm = document.getElementById('study-form');
@@ -2910,7 +2948,95 @@ function initializeEduPlan() {
     const closeStudyHistoryBtn = document.getElementById('close-study-history');
     const studyHistoryPopup = document.getElementById('study-history-popup');
     
-    // ... rest of existing EduPlan initialization code ...
+    if (showStudyHistoryBtn) {
+        showStudyHistoryBtn.addEventListener('click', function() {
+            studyHistoryPopup.style.display = 'flex';
+            updateStudyTrackerDisplay();
+        });
+    }
+    
+    if (closeStudyHistoryBtn) {
+        closeStudyHistoryBtn.addEventListener('click', function() {
+            studyHistoryPopup.style.display = 'none';
+        });
+    }
+    
+    if (studyForm) {
+        studyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const studySession = {
+                id: Date.now(),
+                subject: document.getElementById('study-subject').value,
+                topic: document.getElementById('study-topic').value,
+                duration: parseInt(document.getElementById('study-duration').value),
+                goal: document.getElementById('study-goal').value,
+                startTime: new Date().toISOString(),
+                endTime: new Date(Date.now() + parseInt(document.getElementById('study-duration').value) * 60 * 1000).toISOString()
+            };
+            
+            saveStudySession(studySession);
+            this.reset();
+        });
+    }
+    
+    if (homeworkForm) {
+        homeworkForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const homework = {
+                id: Date.now(),
+                subject: document.getElementById('hw-subject').value,
+                task: document.getElementById('hw-task').value,
+                due: document.getElementById('hw-due').value,
+                priority: document.getElementById('hw-priority').value,
+                estimate: parseInt(document.getElementById('hw-estimate').value),
+                completed: false,
+                created: new Date().toISOString()
+            };
+            
+            saveHomework(homework);
+            this.reset();
+        });
+    }
+    
+    if (examForm) {
+        examForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const exam = {
+                id: Date.now(),
+                subject: document.getElementById('exam-subject').value,
+                type: document.getElementById('exam-type').value,
+                date: document.getElementById('exam-date').value,
+                time: document.getElementById('exam-time').value,
+                location: document.getElementById('exam-location').value,
+                duration: parseInt(document.getElementById('exam-duration').value),
+                created: new Date().toISOString()
+            };
+            
+            saveExam(exam);
+            this.reset();
+        });
+    }
+    
+    // Update EduPlan display on initialization
+    updateEduPlanDisplay();
+}
+
+// Update the background notification service to include class reminders
+function checkAllNotifications() {
+    checkSleepScheduleNotifications();
+    checkWaterNotifications();
+    checkWorkoutNotifications();
+    checkMedicationNotifications();
+    checkMealNotifications();
+    checkScreenTimeNotifications();
+    checkSleepTrackingNotifications();
+    checkLifeLoopNotifications();
+    checkTaskForgeNotifications();
+    checkEduPlanReminders();
+    checkClassReminders(); // Add this line for class reminders
 }
 
 // Make deleteCourse function globally available
