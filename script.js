@@ -1422,7 +1422,7 @@ function deleteSubscription(id) {
     }
 }
 
-// EduPlan - FIXED TIMETABLE
+// EduPlan - PERFECT TIMETABLE
 function initializeEduPlan() {
     initializeTimetable();
     initializeGradeForm();
@@ -1511,7 +1511,7 @@ function initializeEduPlan() {
     updateEduPlanDisplay();
 }
 
-// Timetable functionality - FIXED
+// PERFECT Timetable functionality
 function initializeTimetable() {
     const timetableForm = document.getElementById('timetable-form');
     const addClassBtn = document.getElementById('add-class-btn');
@@ -1667,7 +1667,7 @@ function updateTimetableDisplay() {
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         
-        // Time slots from 8 AM to 8 PM
+        // Time slots from 8 AM to 8 PM in 30-minute intervals
         const timeSlots = [];
         for (let hour = 8; hour <= 20; hour++) {
             timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
