@@ -2577,3 +2577,341 @@ document.addEventListener('DOMContentLoaded', function() {
     // Force update screen display on load for mobile
     setTimeout(updateScreenDisplay, 100);
 });
+// Timetable functionality - COMPLETELY FIXED
+function initializeTimetable() {
+    const timetableForm = document.getElementById('timetable-form');
+    const addClassBtn = document.getElementById('add-class-btn');
+    const viewTimetableBtn = document.getElementById('view-timetable-btn');
+    const backToAddClassBtn = document.getElementById('back-to-add-class');
+    const refreshTimetableBtn = document.getElementById('refresh-timetable');
+    const clearFormBtn = document.getElementById('clear-form');
+    const addClassSection = document.getElementById('add-class-section');
+    const timetableDisplaySection = document.getElementById('timetable-display-section');
+
+    // Set current time as default for course time
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    document.getElementById('course-time').value = currentTime;
+
+    // Add class button
+    if (addClassBtn) {
+        addClassBtn.addEventListener('click', function() {
+            addClassSection.style.display = 'block';
+            timetableDisplaySection.style.display = 'none';
+        });
+    }
+
+    // View timetable button
+    if (viewTimetableBtn) {
+        viewTimetableBtn.addEventListener('click', function() {
+            const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+            if (courses.length === 0) {
+                showNotification('Timetable', 'No classes added yet. Please add some classes first.');
+                return;
+            }
+            addClassSection.style.display = 'none';
+            timetableDisplaySection.style.display = 'block';
+            updateTimetableDisplay();
+        });
+    }
+
+    // Back to add class button
+    if (backToAddClassBtn) {
+        backToAddClassBtn.addEventListener('click', function() {
+            timetableDisplaySection.style.display = 'none';
+            addClassSection.style.display = 'block';
+        });
+    }
+
+    // Refresh timetable button
+    if (refreshTimetableBtn) {
+        refreshTimetableBtn.addEventListener('click', function() {
+            updateTimetableDisplay();
+            showNotification('Timetable', 'Timetable refreshed successfully!');
+        });
+    }
+
+    // Clear form button
+    if (clearFormBtn) {
+        clearFormBtn.addEventListener('click', function() {
+            timetableForm.reset();
+            // Reset time to current time
+            document.getElementById('course-time').value = currentTime;
+            showNotification('Form Cleared', 'All form fields have been reset.');
+        });
+    }
+
+    // Form submission
+    if (timetableForm) {
+        timetableForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const courseName = document.getElementById('course-name').value.trim();
+            const courseCode = document.getElementById('course-code').value.trim();
+            const courseDay = document.getElementById('course-day').value;
+            const courseTime = document.getElementById('course-time').value;
+            const courseDuration = parseInt(document.getElementById('course-duration').value);
+            const courseLocation = document.getElementById('course-location').value.trim();
+            const courseInstructor = document.getElementById('course-instructor').value.trim();
+            
+            if (!courseName) {
+                showNotification('Error', 'Please enter a course name.');
+                return;
+            }
+            
+            if (!courseDay) {
+                showNotification('Error', 'Please select a day.');
+                return;
+            }
+            
+            if (!courseTime) {
+                showNotification('Error', 'Please select a time.');
+                return;
+            }
+            
+            if (!courseDuration || courseDuration < 15) {
+                showNotification('Error', 'Please enter a valid duration (minimum 15 minutes).');
+                return;
+            }
+
+            // Determine course category based on name
+            const category = determineCourseCategory(courseName);
+            
+            const course = {
+                id: Date.now(),
+                name: courseName,
+                code: courseCode,
+                day: courseDay,
+                time: courseTime,
+                duration: courseDuration,
+                location: courseLocation,
+                instructor: courseInstructor,
+                category: category,
+                created: new Date().toISOString()
+            };
+            
+            saveCourse(course);
+            this.reset();
+            // Reset time to current time
+            document.getElementById('course-time').value = currentTime;
+            showNotification('Course Added', `${course.name} has been added to your timetable!`);
+        });
+    }
+
+    // Load existing courses on page load
+    updateTimetableStats();
+}
+
+function determineCourseCategory(courseName) {
+    const name = courseName.toLowerCase();
+    
+    if (name.includes('math') || name.includes('calculus') || name.includes('algebra') || 
+        name.includes('physics') || name.includes('chemistry') || name.includes('biology')) {
+        return 'math';
+    } else if (name.includes('programming') || name.includes('computer') || name.includes('coding') ||
+               name.includes('software') || name.includes('web') || name.includes('data')) {
+        return 'technology';
+    } else if (name.includes('english') || name.includes('language') || name.includes('spanish') ||
+               name.includes('french') || name.includes('german') || name.includes('literature')) {
+        return 'language';
+    } else if (name.includes('art') || name.includes('music') || name.includes('drama') ||
+               name.includes('design') || name.includes('drawing') || name.includes('painting')) {
+        return 'arts';
+    } else if (name.includes('sport') || name.includes('physical') || name.includes('health') ||
+               name.includes('gym') || name.includes('exercise') || name.includes('yoga')) {
+        return 'sports';
+    } else if (name.includes('science') || name.includes('technology') || name.includes('engineering')) {
+        return 'science';
+    } else {
+        return 'other';
+    }
+}
+
+function updateTimetableDisplay() {
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const timetableView = document.getElementById('timetable-view');
+    
+    if (!timetableView) return;
+    
+    let timetableHTML = '';
+    
+    if (courses.length === 0) {
+        timetableHTML = `
+            <div class="empty-state">
+                <p>No classes added yet</p>
+                <small>Add your first class using the form above</small>
+            </div>
+        `;
+    } else {
+        // Generate time slots from 8:00 AM to 8:00 PM
+        const timeSlots = generateTimeSlots();
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        timetableHTML = '<div class="timetable-grid">';
+        
+        // Header row
+        timetableHTML += '<div class="timetable-header-cell time-header">Time</div>';
+        dayNames.forEach(day => {
+            timetableHTML += `<div class="timetable-header-cell">${day}</div>`;
+        });
+        
+        // Time slots and classes
+        timeSlots.forEach(timeSlot => {
+            const timeDisplay = formatTimeDisplay(timeSlot);
+            timetableHTML += `<div class="timetable-time-cell">${timeDisplay}</div>`;
+            
+            days.forEach(day => {
+                const cellCourses = courses.filter(course => 
+                    course.day === day && isCourseInTimeSlot(course, timeSlot)
+                );
+                
+                timetableHTML += `<div class="timetable-cell">`;
+                
+                if (cellCourses.length > 0) {
+                    cellCourses.forEach(course => {
+                        const endTime = calculateEndTime(course.time, course.duration);
+                        timetableHTML += `
+                            <div class="course-block ${course.category}" data-course-id="${course.id}">
+                                <div class="course-block-content">
+                                    <div class="course-name">${course.name}</div>
+                                    <div class="course-details">${course.time} - ${endTime}</div>
+                                    ${course.location ? `<div class="course-location">${course.location}</div>` : ''}
+                                    ${course.instructor ? `<div class="course-instructor">${course.instructor}</div>` : ''}
+                                </div>
+                                <div class="course-actions">
+                                    <button class="delete-course-btn" onclick="deleteCourse(${course.id})" title="Delete Course">✕</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    timetableHTML += '<div class="timetable-empty"></div>';
+                }
+                
+                timetableHTML += `</div>`;
+            });
+        });
+        
+        timetableHTML += '</div>';
+    }
+    
+    timetableView.innerHTML = timetableHTML;
+    updateTimetableStats();
+}
+
+function generateTimeSlots() {
+    const timeSlots = [];
+    for (let hour = 8; hour <= 20; hour++) {
+        timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+        if (hour < 20) {
+            timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
+        }
+    }
+    return timeSlots;
+}
+
+function formatTimeDisplay(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
+function isCourseInTimeSlot(course, timeSlot) {
+    const courseStartTime = course.time;
+    const courseEndTime = calculateEndTime(course.time, course.duration);
+    
+    const slotMinutes = timeToMinutes(timeSlot);
+    const courseStartMinutes = timeToMinutes(courseStartTime);
+    const courseEndMinutes = timeToMinutes(courseEndTime);
+    
+    return slotMinutes >= courseStartMinutes && slotMinutes < courseEndMinutes;
+}
+
+function calculateEndTime(startTime, duration) {
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = startMinutes + duration;
+    
+    const endHour = Math.floor(endMinutes / 60);
+    const endMinute = endMinutes % 60;
+    
+    return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+}
+
+function timeToMinutes(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+function minutesToTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+}
+
+function saveCourse(course) {
+    let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    courses.push(course);
+    localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
+    
+    updateTimetableStats();
+}
+
+function updateTimetableStats() {
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const totalClassesElement = document.getElementById('total-classes');
+    const weeklyHoursElement = document.getElementById('weekly-hours');
+    const todayClassesElement = document.getElementById('today-classes');
+    
+    // Total classes
+    if (totalClassesElement) {
+        totalClassesElement.textContent = courses.length;
+    }
+    
+    // Weekly hours
+    const totalMinutes = courses.reduce((sum, course) => sum + course.duration, 0);
+    const weeklyHours = Math.floor(totalMinutes / 60);
+    const weeklyMinutes = totalMinutes % 60;
+    
+    if (weeklyHoursElement) {
+        weeklyHoursElement.textContent = `${weeklyHours}h ${weeklyMinutes}m`;
+    }
+    
+    // Today's classes
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const todayCourses = courses.filter(course => course.day === today);
+    
+    if (todayClassesElement) {
+        todayClassesElement.textContent = todayCourses.length;
+    }
+}
+
+function deleteCourse(id) {
+    if (confirm('Are you sure you want to delete this course from your timetable?')) {
+        let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+        courses = courses.filter(c => c.id !== id);
+        localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
+        updateTimetableDisplay();
+        showNotification('Course Deleted', 'Course has been removed from your timetable.');
+    }
+}
+
+// Make sure to call initializeTimetable in your main initializeEduPlan function
+function initializeEduPlan() {
+    initializeTimetable(); // Add this line
+    initializeGradeForm();
+    
+    const studyForm = document.getElementById('study-form');
+    const homeworkForm = document.getElementById('homework-form');
+    const examForm = document.getElementById('exam-form');
+    
+    const showStudyHistoryBtn = document.getElementById('show-study-history');
+    const closeStudyHistoryBtn = document.getElementById('close-study-history');
+    const studyHistoryPopup = document.getElementById('study-history-popup');
+    
+    // ... rest of existing EduPlan initialization code ...
+}
+
+// Make deleteCourse function globally available
+window.deleteCourse = deleteCourse;
