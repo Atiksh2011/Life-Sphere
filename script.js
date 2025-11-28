@@ -1422,7 +1422,7 @@ function deleteSubscription(id) {
     }
 }
 
-// EduPlan - PERFECT TIMETABLE
+// EduPlan - FIXED TIMETABLE
 function initializeEduPlan() {
     initializeTimetable();
     initializeGradeForm();
@@ -1511,7 +1511,7 @@ function initializeEduPlan() {
     updateEduPlanDisplay();
 }
 
-// PERFECT Timetable functionality
+// FIXED Timetable functionality
 function initializeTimetable() {
     const timetableForm = document.getElementById('timetable-form');
     const addClassBtn = document.getElementById('add-class-btn');
@@ -1667,13 +1667,10 @@ function updateTimetableDisplay() {
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         
-        // Time slots from 8 AM to 8 PM in 30-minute intervals
+        // Time slots from 8 AM to 8 PM in 1-hour intervals
         const timeSlots = [];
         for (let hour = 8; hour <= 20; hour++) {
             timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
-            if (hour < 20) {
-                timeSlots.push(`${hour.toString().padStart(2, '0')}:30`);
-            }
         }
         
         timetableHTML = `
@@ -1775,12 +1772,12 @@ function updateTimetableStats() {
     const weeklyHoursElement = document.getElementById('weekly-hours');
     const todayClassesElement = document.getElementById('today-classes');
     
-    // Total classes
+    // Total classes - FIXED: Show 0 when empty
     if (totalClassesElement) {
         totalClassesElement.textContent = courses.length;
     }
     
-    // Weekly hours
+    // Weekly hours - FIXED: Show 0h 0m when empty
     const totalMinutes = courses.reduce((sum, course) => sum + course.duration, 0);
     const weeklyHours = Math.floor(totalMinutes / 60);
     const weeklyMinutes = totalMinutes % 60;
@@ -1789,7 +1786,7 @@ function updateTimetableStats() {
         weeklyHoursElement.textContent = `${weeklyHours}h ${weeklyMinutes}m`;
     }
     
-    // Today's classes
+    // Today's classes - FIXED: Show 0 when empty
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     const todayCourses = courses.filter(course => course.day === today);
     
