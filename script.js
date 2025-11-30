@@ -2393,12 +2393,13 @@ function deleteGrade(id) {
 }
 
 // Update EduPlan display
-function updateEduPlanDisplay() {
-    updateTimetableStats();
-    updateStudyTrackerDisplay();
-    updateHomeworkDisplay();
-    updateExamDisplay();
-    updateGradeDisplay();
+function initializeEduPlan() {
+    initializeTimetable();
+    initializeStudyTracker();
+    initializeHomeworkTracker();
+    initializeExamsTracker();
+    initializeGradesTracker();
+    updateEduPlanDisplay();
 }
 
 // Load all data
@@ -2787,5 +2788,483 @@ function initializeTimetableReset() {
     if (resetTimetableBtn) {
         resetTimetableBtn.addEventListener('click', resetTimetableDatabase);
     }
+}
+// Study Tracker Functions
+function initializeStudyTracker() {
+    const studyForm = document.getElementById('study-form');
+    const showStudyHistoryBtn = document.getElementById('show-study-history');
+    const closeStudyHistoryBtn = document.getElementById('close-study-history');
+
+    if (studyForm) {
+        studyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const studySession = {
+                id: Date.now(),
+                subject: document.getElementById('study-subject').value,
+                topic: document.getElementById('study-topic').value,
+                duration: parseInt(document.getElementById('study-duration').value),
+                goal: document.getElementById('study-goal').value,
+                startTime: new Date().toISOString(),
+                completed: false
+            };
+            
+            saveStudySession(studySession);
+            this.reset();
+        });
+    }
+
+    if (showStudyHistoryBtn) {
+        showStudyHistoryBtn.addEventListener('click', function() {
+            const studyHistoryPopup = document.getElementById('study-history-popup');
+            if (studyHistoryPopup) studyHistoryPopup.style.display = 'flex';
+            updateStudyTrackerDisplay();
+        });
+    }
+
+    if (closeStudyHistoryBtn) {
+        closeStudyHistoryBtn.addEventListener('click', function() {
+            const studyHistoryPopup = document.getElementById('study-history-popup');
+            if (studyHistoryPopup) studyHistoryPopup.style.display = 'none';
+        });
+    }
+}
+
+function saveStudySession(session) {
+    let studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+    studySessions.push(session);
+    localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
+    
+    updateStudyTrackerDisplay();
+    showNotification('📚 Study Session', `${session.subject} study session has been logged!`);
+}
+
+function updateStudyTrackerDisplay() {
+    const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+    const studySessionsBody = document.getElementById('study-sessions-body');
+    
+    // Update study stats
+    const today = new Date().toDateString();
+    const todaySessions = studySessions.filter(s => new Date(s.startTime).toDateString() === today);
+    const todayDuration = todaySessions.reduce((sum, s) => sum + s.duration, 0);
+    const todayHours = Math.floor(todayDuration / 60);
+    const todayMinutes = todayDuration % 60;
+
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const weekSessions = studySessions.filter(s => new Date(s.startTime) >= weekAgo);
+    const weekDuration = weekSessions.reduce((sum, s) => sum + s.duration, 0);
+    const weekHours = Math.floor(weekDuration / 60);
+    const weekMinutes = weekDuration % 60;
+
+    const totalDuration = studySessions.reduce((sum, s) => sum + s.duration, 0);
+    const totalHours = Math.floor(totalDuration / 60);
+    const totalMinutes = totalDuration % 60;
+
+    // Update display elements
+    const studyTodayElement = document.getElementById('study-today');
+    const studyWeekElement = document.getElementById('study-week');
+    const studyTotalElement = document.getElementById('study-total');
+    const studyTodayQuickElement = document.getElementById('study-today-quick');
+    const studyWeekQuickElement = document.getElementById('study-week-quick');
+
+    if (studyTodayElement) studyTodayElement.textContent = `${todayHours}h ${todayMinutes}m`;
+    if (studyWeekElement) studyWeekElement.textContent = `${weekHours}h ${weekMinutes}m`;
+    if (studyTotalElement) studyTotalElement.textContent = `${totalHours}h ${totalMinutes}m`;
+    if (studyTodayQuickElement) studyTodayQuickElement.textContent = `Today: ${todayHours}h ${todayMinutes}m`;
+    if (studyWeekQuickElement) studyWeekQuickElement.textContent = `Week: ${weekHours}h ${weekMinutes}m`;
+
+    // Update study history table
+    if (studySessionsBody) {
+        let studyHTML = '';
+        
+        studySessions.sort((a, b) => new Date(b.startTime) - new Date(a.startTime)).forEach(session => {
+            const date = new Date(session.startTime).toLocaleDateString();
+            const time = new Date(session.startTime).toLocaleTimeString();
+            const hours = Math.floor(session.duration / 60);
+            const minutes = session.duration % 60;
+            
+            studyHTML += `
+                <tr>
+                    <td>${session.subject}</td>
+                    <td>${session.topic || '-'}</td>
+                    <td>${hours}h ${minutes}m</td>
+                    <td>${date}<br><small>${time}</small></td>
+                    <td>${session.goal || '-'}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteStudySession(${session.id})">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        studySessionsBody.innerHTML = studyHTML || `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                    No study sessions recorded yet.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function deleteStudySession(id) {
+    let studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+    studySessions = studySessions.filter(s => s.id !== id);
+    localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
+    updateStudyTrackerDisplay();
+    showNotification('Study Session Deleted', 'Study session has been removed.');
+}
+// Homework Tracker Functions
+function initializeHomeworkTracker() {
+    const homeworkForm = document.getElementById('homework-form');
+
+    if (homeworkForm) {
+        homeworkForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const homework = {
+                id: Date.now(),
+                subject: document.getElementById('hw-subject').value,
+                task: document.getElementById('hw-task').value,
+                due: document.getElementById('hw-due').value,
+                priority: document.getElementById('hw-priority').value,
+                estimate: parseInt(document.getElementById('hw-estimate').value),
+                completed: false,
+                created: new Date().toISOString()
+            };
+            
+            saveHomework(homework);
+            this.reset();
+        });
+    }
+}
+
+function saveHomework(homework) {
+    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    homeworks.push(homework);
+    localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
+    
+    updateHomeworkDisplay();
+    showNotification('📝 Homework Added', `${homework.subject} homework has been added!`);
+}
+
+function updateHomeworkDisplay() {
+    const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    const homeworkList = document.getElementById('homework-list');
+    const pendingHomeworkElement = document.getElementById('pending-homework');
+    const dueSoonElement = document.getElementById('due-soon');
+
+    const pendingHomeworks = homeworks.filter(h => !h.completed);
+    const now = new Date();
+    const dueSoon = pendingHomeworks.filter(h => {
+        const dueDate = new Date(h.due);
+        const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+        return daysUntil <= 3 && daysUntil >= 0;
+    });
+
+    if (pendingHomeworkElement) pendingHomeworkElement.textContent = `${pendingHomeworks.length} pending`;
+    if (dueSoonElement) dueSoonElement.textContent = `${dueSoon.length} due soon`;
+
+    if (homeworkList) {
+        let homeworkHTML = '';
+        
+        pendingHomeworks.sort((a, b) => new Date(a.due) - new Date(b.due)).forEach(homework => {
+            const dueDate = new Date(homework.due);
+            const now = new Date();
+            const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+            let dueText = '';
+            let priorityClass = '';
+            
+            if (daysUntil === 0) {
+                dueText = 'Today';
+                priorityClass = 'high';
+            } else if (daysUntil === 1) {
+                dueText = 'Tomorrow';
+                priorityClass = 'high';
+            } else if (daysUntil <= 3) {
+                dueText = `${daysUntil} days`;
+                priorityClass = 'medium';
+            } else {
+                dueText = `${daysUntil} days`;
+                priorityClass = 'low';
+            }
+            
+            homeworkHTML += `
+                <div class="task-item ${priorityClass}">
+                    <div class="task-info">
+                        <div class="task-main">
+                            <span class="task-text">${homework.subject}: ${homework.task}</span>
+                            <span class="todo-priority priority-${homework.priority}">${homework.priority}</span>
+                        </div>
+                        <div class="task-due">Due: ${dueDate.toLocaleDateString()} (${dueText})</div>
+                        <div class="task-estimate">Estimate: ${homework.estimate} minutes</div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-complete" onclick="completeHomework(${homework.id})">✓</button>
+                        <button class="delete-btn" onclick="deleteHomework(${homework.id})">✕</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        homeworkList.innerHTML = homeworkHTML || `
+            <div class="empty-state">
+                <p>No pending homework</p>
+                <small>All caught up! Add new assignments when you get them.</small>
+            </div>
+        `;
+    }
+}
+
+function completeHomework(id) {
+    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    const homeworkIndex = homeworks.findIndex(h => h.id === id);
+    
+    if (homeworkIndex !== -1) {
+        homeworks[homeworkIndex].completed = true;
+        homeworks[homeworkIndex].completedAt = new Date().toISOString();
+        localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
+        updateHomeworkDisplay();
+        showNotification('Homework Completed', 'Homework marked as completed! Great job!');
+    }
+}
+
+function deleteHomework(id) {
+    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    homeworks = homeworks.filter(h => h.id !== id);
+    localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
+    updateHomeworkDisplay();
+    showNotification('Homework Deleted', 'Homework has been removed from your list.');
+}
+// Exams Tracker Functions
+function initializeExamsTracker() {
+    const examForm = document.getElementById('exam-form');
+
+    if (examForm) {
+        examForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const exam = {
+                id: Date.now(),
+                subject: document.getElementById('exam-subject').value,
+                type: document.getElementById('exam-type').value,
+                date: document.getElementById('exam-date').value,
+                time: document.getElementById('exam-time').value,
+                location: document.getElementById('exam-location').value,
+                duration: parseInt(document.getElementById('exam-duration').value),
+                created: new Date().toISOString()
+            };
+            
+            saveExam(exam);
+            this.reset();
+        });
+    }
+}
+
+function saveExam(exam) {
+    let exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    exams.push(exam);
+    localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
+    
+    updateExamDisplay();
+    showNotification('📊 Exam Added', `${exam.subject} ${exam.type} has been scheduled!`);
+}
+
+function updateExamDisplay() {
+    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    const examsList = document.getElementById('exams-list');
+    const upcomingExamsElement = document.getElementById('upcoming-exams');
+    const examsThisMonthElement = document.getElementById('exams-this-month');
+
+    const now = new Date();
+    const upcomingExams = exams.filter(e => new Date(e.date) >= now);
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const examsThisMonth = exams.filter(e => {
+        const examDate = new Date(e.date);
+        return examDate >= thisMonth && examDate < nextMonth;
+    });
+
+    if (upcomingExamsElement) upcomingExamsElement.textContent = `${upcomingExams.length} upcoming`;
+    if (examsThisMonthElement) examsThisMonthElement.textContent = `${examsThisMonth.length} this month`;
+
+    if (examsList) {
+        let examHTML = '';
+        
+        upcomingExams.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(exam => {
+            const examDate = new Date(exam.date);
+            const daysUntil = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
+            let dueText = '';
+            
+            if (daysUntil === 0) {
+                dueText = 'Today';
+            } else if (daysUntil === 1) {
+                dueText = 'Tomorrow';
+            } else if (daysUntil <= 7) {
+                dueText = `${daysUntil} days`;
+            } else {
+                dueText = `${daysUntil} days`;
+            }
+            
+            examHTML += `
+                <div class="task-item high">
+                    <div class="task-info">
+                        <div class="task-main">
+                            <span class="task-text">${exam.subject} - ${exam.type}</span>
+                            <span class="todo-priority priority-high">Exam</span>
+                        </div>
+                        <div class="task-due">Date: ${examDate.toLocaleDateString()} at ${exam.time}</div>
+                        <div class="task-estimate">
+                            ${exam.duration} minutes | ${exam.location || 'Location TBA'}
+                            <br><small>${dueText} away</small>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="delete-btn" onclick="deleteExam(${exam.id})">✕</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        examsList.innerHTML = examHTML || `
+            <div class="empty-state">
+                <p>No upcoming exams</p>
+                <small>Add exams to track your schedule</small>
+            </div>
+        `;
+    }
+}
+
+function deleteExam(id) {
+    let exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    exams = exams.filter(e => e.id !== id);
+    localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
+    updateExamDisplay();
+    showNotification('Exam Deleted', 'Exam has been removed from your schedule.');
+}
+// Grades Tracker Functions
+function initializeGradesTracker() {
+    const gradeForm = document.getElementById('grade-form');
+
+    if (gradeForm) {
+        gradeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const grade = {
+                id: Date.now(),
+                subject: document.getElementById('grade-subject').value,
+                type: document.getElementById('grade-type').value,
+                score: parseFloat(document.getElementById('grade-score').value),
+                maxScore: parseFloat(document.getElementById('grade-max').value),
+                weight: parseFloat(document.getElementById('grade-weight').value),
+                date: document.getElementById('grade-date').value,
+                created: new Date().toISOString()
+            };
+            
+            saveGrade(grade);
+            this.reset();
+        });
+    }
+}
+
+function saveGrade(grade) {
+    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    grades.push(grade);
+    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
+    
+    updateGradeDisplay();
+    showNotification('🎯 Grade Added', `${grade.subject} ${grade.type} grade recorded!`);
+}
+
+function updateGradeDisplay() {
+    const grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    const gradesBody = document.getElementById('grades-body');
+    const currentGpaElement = document.getElementById('current-gpa');
+
+    if (gradesBody) {
+        let gradesHTML = '';
+        
+        grades.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(grade => {
+            const percentage = (grade.score / grade.maxScore) * 100;
+            let gradeLetter = '';
+            let gradeClass = '';
+            
+            if (percentage >= 90) {
+                gradeLetter = 'A';
+                gradeClass = 'excellent';
+            } else if (percentage >= 80) {
+                gradeLetter = 'B';
+                gradeClass = 'good';
+            } else if (percentage >= 70) {
+                gradeLetter = 'C';
+                gradeClass = 'average';
+            } else if (percentage >= 60) {
+                gradeLetter = 'D';
+                gradeClass = 'poor';
+            } else {
+                gradeLetter = 'F';
+                gradeClass = 'fail';
+            }
+            
+            gradesHTML += `
+                <tr>
+                    <td>${grade.subject}</td>
+                    <td>${grade.type}</td>
+                    <td>${grade.score}/${grade.maxScore}</td>
+                    <td>
+                        <span class="grade-percentage ${gradeClass}">
+                            ${percentage.toFixed(1)}% (${gradeLetter})
+                        </span>
+                    </td>
+                    <td>${grade.weight}%</td>
+                    <td>${new Date(grade.date).toLocaleDateString()}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteGrade(${grade.id})">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        gradesBody.innerHTML = gradesHTML || `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem; color: #666;">
+                    No grades recorded yet. Add your first grade above.
+                </td>
+            </tr>
+        `;
+    }
+
+    // Calculate GPA
+    if (grades.length > 0) {
+        let totalWeightedScore = 0;
+        let totalWeight = 0;
+        
+        grades.forEach(grade => {
+            const percentage = (grade.score / grade.maxScore) * 100;
+            totalWeightedScore += percentage * (grade.weight / 100);
+            totalWeight += grade.weight;
+        });
+        
+        const weightedAverage = totalWeightedScore / (totalWeight > 0 ? totalWeight / 100 : 1);
+        const gpa = (weightedAverage / 100) * 4.0;
+        
+        if (currentGpaElement) {
+            currentGpaElement.textContent = `GPA: ${gpa.toFixed(2)}/4.0`;
+            currentGpaElement.className = gpa >= 3.0 ? 'gpa-excellent' : gpa >= 2.0 ? 'gpa-good' : 'gpa-poor';
+        }
+    } else {
+        if (currentGpaElement) {
+            currentGpaElement.textContent = 'GPA: -';
+            currentGpaElement.className = '';
+        }
+    }
+}
+
+function deleteGrade(id) {
+    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    grades = grades.filter(g => g.id !== id);
+    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
+    updateGradeDisplay();
+    showNotification('Grade Deleted', 'Grade has been removed from your records.');
 }
 
