@@ -42,17 +42,17 @@ function initializeApp() {
     initializeEduPlan();
     initializeSleepSchedule();
     initializeCurrency();
-    initializeTimetableReset(); // Add this
+    initializeTimetableReset();
     
     loadAllData();
     initializeCharts();
     startBackgroundServices();
-    startBackgroundNotificationService(); // This starts the Duolingo-style notifications
+    startBackgroundNotificationService();
     
     console.log('LifeSphere initialized with background notifications');
-}}
+}
 
-// FIXED Tab Navigation - SIMPLIFIED AND WORKING
+// FIXED Tab Navigation - CORRECTED VERSION
 function initializeTabNavigation() {
     console.log('Initializing tab navigation...');
     
@@ -102,6 +102,7 @@ function initializeTabNavigation() {
         // Hide all tab contents first
         tabContents.forEach(content => {
             content.style.display = 'none';
+            content.classList.remove('active');
         });
         
         // Show first tab content
@@ -165,98 +166,31 @@ function startBackgroundNotificationService() {
     setTimeout(checkAllNotifications, 5000);
 }
 
-// Initialize todo notification service
-function startTodoNotificationService() {
-    // Check for todo notifications every 1.5 hours
-    todoNotificationInterval = setInterval(() => {
-        checkTodoNotifications();
-    }, 90 * 60 * 1000); // 1.5 hours in milliseconds
-}
-
-// Initialize homework notification service
-function startHomeworkNotificationService() {
-    // Check for homework notifications at bedtime
-    homeworkNotificationInterval = setInterval(() => {
-        checkHomeworkNotifications();
-    }, 60 * 1000); // Check every minute
-}
-
 // Check all types of notifications
 function checkAllNotifications() {
-    checkSleepScheduleNotifications();
     checkWaterNotifications();
-    checkWorkoutNotifications();
-    checkMedicationNotifications();
     checkMealNotifications();
     checkScreenTimeNotifications();
-    checkSleepTrackingNotifications();
     checkLifeLoopNotifications();
     checkTaskForgeNotifications();
     checkEduPlanNotifications();
-    checkClassReminders();
-    checkExamReminders();
-    checkSubscriptionReminders();
 }
 
-// Check todo notifications
-function checkTodoNotifications() {
-    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
-    const pendingTodos = todos.filter(t => !t.completed);
-    
-    if (pendingTodos.length > 0) {
-        const randomTodo = pendingTodos[Math.floor(Math.random() * pendingTodos.length)];
-        showNotification('📝 Task Reminder', `C'mon, it's time to do task: ${randomTodo.task}!`);
-    }
-}
-
-// Check homework notifications
-function checkHomeworkNotifications() {
-    const sleepSchedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
-    if (!sleepSchedule.bedtime) return;
-    
-    const now = new Date();
-    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-    
-    // Check if current time is within 30 minutes of bedtime
-    const bedtime = sleepSchedule.bedtime;
-    if (isTimeWithinRange(currentTime, bedtime, 30)) {
-        const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
-        const pendingHomeworks = homeworks.filter(h => !h.completed);
-        
-        if (pendingHomeworks.length > 0) {
-            showNotification('📝 Homework Reminder', 'Are you done with your homework for today?');
-            
-            // Clear the interval after showing notification to avoid duplicates
-            clearInterval(homeworkNotificationInterval);
-            
-            // Restart the interval after 24 hours
-            setTimeout(() => {
-                startHomeworkNotificationService();
-            }, 24 * 60 * 60 * 1000);
-        }
-    }
-}
-
-// Helper function to check if time is within range
-function isTimeWithinRange(currentTime, targetTime, minutesRange) {
-    const current = new Date(`2000-01-01T${currentTime}`);
-    const target = new Date(`2000-01-01T${targetTime}`);
-    const diff = Math.abs(current - target) / (1000 * 60); // difference in minutes
-    
-    return diff <= minutesRange;
-}
-
-// Check water notifications
+// Water Tracker Notifications
 function checkWaterNotifications() {
     const waterData = JSON.parse(localStorage.getItem('lifesphere_water')) || { goal: 8, consumed: 0 };
     const remaining = waterData.goal - waterData.consumed;
     
-    if (remaining > 0 && remaining <= 3) {
+    // Only notify if there's water left to drink and it's during active hours (8 AM - 10 PM)
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    if (remaining > 0 && remaining <= 3 && currentHour >= 8 && currentHour <= 22) {
         showNotification('💧 Water Reminder', `C'mon! Only ${remaining} glass${remaining > 1 ? 'es' : ''} of water left to reach your goal!`);
     }
 }
 
-// Check meal notifications
+// Meal Planner Notifications
 function checkMealNotifications() {
     const meals = JSON.parse(localStorage.getItem('lifesphere_meals')) || [];
     const now = new Date();
@@ -267,14 +201,15 @@ function checkMealNotifications() {
             const mealTime = new Date(`${today}T${meal.time}`);
             const oneHourBefore = new Date(mealTime.getTime() - 60 * 60 * 1000);
             
-            if (now >= oneHourBefore && now < mealTime) {
+            // Check if current time is exactly 1 hour before meal time
+            if (Math.abs(now - oneHourBefore) < 60000) { // Within 1 minute window
                 showNotification('🍽️ Meal Reminder', `Have you started to cook ${meal.name} yet? It's planned for ${meal.time}!`);
             }
         }
     });
 }
 
-// Check screen time notifications
+// Screen Time Notifications
 function checkScreenTimeNotifications() {
     const screenData = JSON.parse(localStorage.getItem('lifesphere_screen')) || { seconds: 0, goal: 4 };
     const goalSeconds = screenData.goal * 3600;
@@ -284,23 +219,61 @@ function checkScreenTimeNotifications() {
     }
 }
 
-// Check LifeLoop notifications
+// LifeLoop Notifications
 function checkLifeLoopNotifications() {
     const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
     const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const tomorrowDate = tomorrow.toISOString().split('T')[0];
     
     reminders.forEach(reminder => {
-        const reminderDate = new Date(reminder.date);
-        const oneDayBefore = new Date(reminderDate.getTime() - 24 * 60 * 60 * 1000);
+        const reminderDate = new Date(reminder.date).toISOString().split('T')[0];
         
-        if (now.toDateString() === oneDayBefore.toDateString()) {
+        if (reminderDate === tomorrowDate) {
             const eventType = reminder.type === 'birthday' ? 'birthday' : 'anniversary';
             showNotification('🔄 LifeLoop Reminder', `It's ${reminder.name}'s ${eventType} tomorrow! Time to buy a gift!`);
         }
     });
 }
 
-// Check class reminders
+// TaskForge Notifications
+function checkTaskForgeNotifications() {
+    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const pendingTodos = todos.filter(t => !t.completed);
+    
+    if (pendingTodos.length > 0) {
+        const now = Date.now();
+        const randomTodo = pendingTodos[Math.floor(Math.random() * pendingTodos.length)];
+        showNotification('📝 Task Reminder', `C'mon, it's time to do task: ${randomTodo.task}!`);
+    }
+    
+    // Subscription notifications
+    checkSubscriptionNotifications();
+}
+
+// Subscription Notifications
+function checkSubscriptionNotifications() {
+    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const tomorrowDate = tomorrow.toISOString().split('T')[0];
+    
+    subscriptions.forEach(sub => {
+        const renewalDate = new Date(sub.renewal).toISOString().split('T')[0];
+        
+        if (renewalDate === tomorrowDate) {
+            showNotification('💰 Subscription Reminder', `Your ${sub.name} subscription is ending tomorrow! Please renew!`);
+        }
+    });
+}
+
+// EduPlan Notifications
+function checkEduPlanNotifications() {
+    checkClassReminders();
+    checkExamReminders();
+}
+
+// Class Reminders
 function checkClassReminders() {
     const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
     const now = new Date();
@@ -309,69 +282,33 @@ function checkClassReminders() {
     courses.forEach(course => {
         if (course.day === today) {
             const courseTime = new Date(`2000-01-01T${course.time}`);
-            const thirtyMinutesBefore = new Date(courseTime.getTime() - 30 * 60 * 1000);
+            const thirtyMinutesBefore = new Date(`2000-01-01T${course.time}`);
+            thirtyMinutesBefore.setMinutes(thirtyMinutesBefore.getMinutes() - 30);
+            
             const currentTime = new Date(`2000-01-01T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
             
-            if (currentTime.getTime() === thirtyMinutesBefore.getTime()) {
+            // Check if current time is exactly 30 minutes before class
+            if (Math.abs(currentTime - thirtyMinutesBefore) < 60000) { // Within 1 minute window
                 showNotification('🎓 Class Reminder', `You have ${course.name} class in 30 minutes! Please get ready!`);
             }
         }
     });
 }
 
-// Check exam reminders
+// Exam Reminders
 function checkExamReminders() {
     const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
     const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const tomorrowDate = tomorrow.toISOString().split('T')[0];
     
     exams.forEach(exam => {
-        const examDate = new Date(exam.date);
-        const oneDayBefore = new Date(examDate.getTime() - 24 * 60 * 60 * 1000);
+        const examDate = new Date(exam.date).toISOString().split('T')[0];
         
-        if (now.toDateString() === oneDayBefore.toDateString()) {
+        if (examDate === tomorrowDate) {
             showNotification('📊 Exam Reminder', `You have an ${exam.subject} exam tomorrow! Prepare for it!`);
         }
     });
-}
-
-// Check subscription reminders
-function checkSubscriptionReminders() {
-    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
-    const now = new Date();
-    
-    subscriptions.forEach(sub => {
-        const renewalDate = new Date(sub.renewal);
-        const oneDayBefore = new Date(renewalDate.getTime() - 24 * 60 * 60 * 1000);
-        
-        if (now.toDateString() === oneDayBefore.toDateString()) {
-            showNotification('💰 Subscription Reminder', `Your ${sub.name} subscription is ending tomorrow! Please renew!`);
-        }
-    });
-}
-
-// Placeholder functions for other notification checks
-function checkSleepScheduleNotifications() {
-    // Implementation for sleep schedule notifications
-}
-
-function checkWorkoutNotifications() {
-    // Implementation for workout notifications
-}
-
-function checkMedicationNotifications() {
-    // Implementation for medication notifications
-}
-
-function checkSleepTrackingNotifications() {
-    // Implementation for sleep tracking notifications
-}
-
-function checkTaskForgeNotifications() {
-    // Implementation for task forge notifications
-}
-
-function checkEduPlanNotifications() {
-    // Implementation for edu plan notifications
 }
 
 // Initialize currency settings
@@ -1664,93 +1601,14 @@ function deleteSubscription(id) {
 // EduPlan - FIXED TIMETABLE
 function initializeEduPlan() {
     initializeTimetable();
-    initializeGradeForm();
-    
-    const studyForm = document.getElementById('study-form');
-    const homeworkForm = document.getElementById('homework-form');
-    const examForm = document.getElementById('exam-form');
-    
-    const showStudyHistoryBtn = document.getElementById('show-study-history');
-    const closeStudyHistoryBtn = document.getElementById('close-study-history');
-    const studyHistoryPopup = document.getElementById('study-history-popup');
-    
-    if (showStudyHistoryBtn) {
-        showStudyHistoryBtn.addEventListener('click', function() {
-            studyHistoryPopup.style.display = 'flex';
-            updateStudyTrackerDisplay();
-        });
-    }
-    
-    if (closeStudyHistoryBtn) {
-        closeStudyHistoryBtn.addEventListener('click', function() {
-            studyHistoryPopup.style.display = 'none';
-        });
-    }
-    
-    if (studyForm) {
-        studyForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const studySession = {
-                id: Date.now(),
-                subject: document.getElementById('study-subject').value,
-                topic: document.getElementById('study-topic').value,
-                duration: parseInt(document.getElementById('study-duration').value),
-                goal: document.getElementById('study-goal').value,
-                startTime: new Date().toISOString(),
-                endTime: new Date(Date.now() + parseInt(document.getElementById('study-duration').value) * 60 * 1000).toISOString()
-            };
-            
-            saveStudySession(studySession);
-            this.reset();
-        });
-    }
-    
-    if (homeworkForm) {
-        homeworkForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const homework = {
-                id: Date.now(),
-                subject: document.getElementById('hw-subject').value,
-                task: document.getElementById('hw-task').value,
-                due: document.getElementById('hw-due').value,
-                priority: document.getElementById('hw-priority').value,
-                estimate: parseInt(document.getElementById('hw-estimate').value),
-                completed: false,
-                created: new Date().toISOString()
-            };
-            
-            saveHomework(homework);
-            this.reset();
-        });
-    }
-    
-    if (examForm) {
-        examForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const exam = {
-                id: Date.now(),
-                subject: document.getElementById('exam-subject').value,
-                type: document.getElementById('exam-type').value,
-                date: document.getElementById('exam-date').value,
-                time: document.getElementById('exam-time').value,
-                location: document.getElementById('exam-location').value,
-                duration: parseInt(document.getElementById('exam-duration').value),
-                created: new Date().toISOString()
-            };
-            
-            saveExam(exam);
-            this.reset();
-        });
-    }
-    
-    // Update EduPlan display on initialization
+    initializeStudyTracker();
+    initializeHomeworkTracker();
+    initializeExamsTracker();
+    initializeGradesTracker();
     updateEduPlanDisplay();
 }
 
-// PERFECT Timetable functionality - EXACTLY AS REQUESTED
+// PERFECT Timetable functionality
 function initializeTimetable() {
     const timetableForm = document.getElementById('timetable-form');
     const addClassBtn = document.getElementById('add-class-btn');
@@ -1902,11 +1760,11 @@ function updateTimetableDisplay() {
             </div>
         `;
     } else {
-        // Days of the week - EXACTLY as shown in the ASCII art
-        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        // Days of the week
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         
-        // Time slots from 8 AM to 5 PM in 1-hour intervals - EXACTLY as shown
+        // Time slots from 8 AM to 5 PM in 1-hour intervals
         const timeSlots = [
             '08:00', '09:00', '10:00', '11:00', '12:00', 
             '13:00', '14:00', '15:00', '16:00', '17:00'
@@ -1961,7 +1819,7 @@ function updateTimetableDisplay() {
                                     ${courseAtThisTime.location ? `<div>${courseAtThisTime.location}</div>` : ''}
                                     ${courseAtThisTime.instructor ? `<div>${courseAtThisTime.instructor}</div>` : ''}
                                 </div>
-                                <button class="delete-course-btn" onclick="deleteCourse(${courseAtThisTime.id})">Delete</button>
+                                <button class="delete-course-btn" onclick="deleteCourse(${courseAtThisTime.id})">✕</button>
                             </div>
                         </td>
                     `;
@@ -2038,21 +1896,11 @@ function saveCourse(course) {
 function updateTimetableStats() {
     const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
     const totalClassesElement = document.getElementById('total-classes');
-    const weeklyHoursElement = document.getElementById('weekly-hours');
     const todayClassesElement = document.getElementById('today-classes');
     
     // Total classes
     if (totalClassesElement) {
         totalClassesElement.textContent = courses.length;
-    }
-    
-    // Weekly hours
-    const totalMinutes = courses.reduce((sum, course) => sum + course.duration, 0);
-    const weeklyHours = Math.floor(totalMinutes / 60);
-    const weeklyMinutes = totalMinutes % 60;
-    
-    if (weeklyHoursElement) {
-        weeklyHoursElement.textContent = `${weeklyHours}h ${weeklyMinutes}m`;
     }
     
     // Today's classes
@@ -2077,727 +1925,6 @@ function deleteCourse(id) {
 // Make deleteCourse function globally available
 window.deleteCourse = deleteCourse;
 
-// Study Tracker
-function saveStudySession(session) {
-    let studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
-    studySessions.push(session);
-    localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
-    
-    updateStudyTrackerDisplay();
-    showNotification('Study Session Added', `${session.subject} study session has been logged!`);
-}
-
-function updateStudyTrackerDisplay() {
-    const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
-    const studySessionsBody = document.getElementById('study-sessions-body');
-    
-    let studyHTML = '';
-    
-    studySessions.sort((a, b) => new Date(b.startTime) - new Date(a.startTime)).forEach(session => {
-        const date = new Date(session.startTime).toLocaleDateString();
-        const hours = Math.floor(session.duration / 60);
-        const minutes = session.duration % 60;
-        
-        studyHTML += `
-            <tr>
-                <td>${session.subject}</td>
-                <td>${session.topic || '-'}</td>
-                <td>${hours}h ${minutes}m</td>
-                <td>${date}</td>
-                <td>
-                    <button class="delete-btn" onclick="deleteStudySession(${session.id})">Delete</button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    if (studySessionsBody) {
-        studySessionsBody.innerHTML = studyHTML || `
-            <tr>
-                <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
-                    No study sessions yet. Start your first study session!
-                </td>
-            </tr>
-        `;
-    }
-    
-    // Update study stats
-    const today = new Date().toDateString();
-    const todaySessions = studySessions.filter(s => new Date(s.startTime).toDateString() === today);
-    const todayDuration = todaySessions.reduce((sum, s) => sum + s.duration, 0);
-    const todayHours = Math.floor(todayDuration / 60);
-    const todayMinutes = todayDuration % 60;
-    
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const weekSessions = studySessions.filter(s => new Date(s.startTime) >= weekAgo);
-    const weekDuration = weekSessions.reduce((sum, s) => sum + s.duration, 0);
-    const weekHours = Math.floor(weekDuration / 60);
-    const weekMinutes = weekDuration % 60;
-    
-    const totalDuration = studySessions.reduce((sum, s) => sum + s.duration, 0);
-    const totalHours = Math.floor(totalDuration / 60);
-    const totalMinutes = totalDuration % 60;
-    
-    const studyTodayElement = document.getElementById('study-today');
-    const studyWeekElement = document.getElementById('study-week');
-    const studyTotalElement = document.getElementById('study-total');
-    const studyTodayQuickElement = document.getElementById('study-today-quick');
-    const studyWeekQuickElement = document.getElementById('study-week-quick');
-    
-    if (studyTodayElement) studyTodayElement.textContent = `${todayHours}h ${todayMinutes}m`;
-    if (studyWeekElement) studyWeekElement.textContent = `${weekHours}h ${weekMinutes}m`;
-    if (studyTotalElement) studyTotalElement.textContent = `${totalHours}h ${totalMinutes}m`;
-    if (studyTodayQuickElement) studyTodayQuickElement.textContent = `Today: ${todayHours}h ${todayMinutes}m`;
-    if (studyWeekQuickElement) studyWeekQuickElement.textContent = `Week: ${weekHours}h ${weekMinutes}m`;
-}
-
-function deleteStudySession(id) {
-    let studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
-    studySessions = studySessions.filter(s => s.id !== id);
-    localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
-    updateStudyTrackerDisplay();
-    showNotification('Study Session Deleted', 'Study session has been removed.');
-}
-
-// Homework Tracker
-function saveHomework(homework) {
-    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
-    homeworks.push(homework);
-    localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
-    
-    updateHomeworkDisplay();
-    showNotification('Homework Added', `${homework.subject} homework has been added!`);
-}
-
-function updateHomeworkDisplay() {
-    const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
-    const homeworkList = document.getElementById('homework-list');
-    const pendingHomeworkElement = document.getElementById('pending-homework');
-    const dueSoonElement = document.getElementById('due-soon');
-    
-    const pendingHomeworks = homeworks.filter(h => !h.completed);
-    const now = new Date();
-    const dueSoon = pendingHomeworks.filter(h => {
-        const dueDate = new Date(h.due);
-        const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
-        return daysUntil <= 3;
-    });
-    
-    let homeworkHTML = '';
-    
-    pendingHomeworks.sort((a, b) => new Date(a.due) - new Date(b.due)).forEach(homework => {
-        const dueDate = new Date(homework.due);
-        const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
-        const dueText = daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days`;
-        
-        homeworkHTML += `
-            <div class="task-item ${homework.priority}">
-                <div class="task-info">
-                    <div class="task-main">
-                        <span class="task-text">${homework.subject}: ${homework.task}</span>
-                        <span class="todo-priority priority-${homework.priority}">${homework.priority}</span>
-                    </div>
-                    <div class="task-due">Due: ${dueDate.toLocaleDateString()} (${dueText})</div>
-                    <div class="task-estimate">Estimate: ${homework.estimate} min</div>
-                </div>
-                <div class="task-actions">
-                    <button class="btn-complete" onclick="completeHomework(${homework.id})">✓</button>
-                    <button class="delete-btn" onclick="deleteHomework(${homework.id})">✕</button>
-                </div>
-            </div>
-        `;
-    });
-    
-    if (homeworkList) {
-        homeworkList.innerHTML = homeworkHTML || `
-            <div class="empty-state">
-                <p>No pending homework</p>
-                <small>Add homework assignments to see them here</small>
-            </div>
-        `;
-    }
-    
-    if (pendingHomeworkElement) pendingHomeworkElement.textContent = `${pendingHomeworks.length} pending`;
-    if (dueSoonElement) dueSoonElement.textContent = `${dueSoon.length} due soon`;
-}
-
-function completeHomework(id) {
-    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
-    const homeworkIndex = homeworks.findIndex(h => h.id === id);
-    
-    if (homeworkIndex !== -1) {
-        homeworks[homeworkIndex].completed = true;
-        localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
-        updateHomeworkDisplay();
-        showNotification('Homework Completed', 'Homework marked as completed! Great job!');
-    }
-}
-
-function deleteHomework(id) {
-    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
-    homeworks = homeworks.filter(h => h.id !== id);
-    localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
-    updateHomeworkDisplay();
-    showNotification('Homework Deleted', 'Homework has been removed from your list.');
-}
-
-// Exam Tracker
-function saveExam(exam) {
-    let exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
-    exams.push(exam);
-    localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
-    
-    updateExamDisplay();
-    showNotification('Exam Added', `${exam.subject} ${exam.type} has been added to your schedule!`);
-}
-
-function updateExamDisplay() {
-    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
-    const examsList = document.getElementById('exams-list');
-    const upcomingExamsElement = document.getElementById('upcoming-exams');
-    const examsThisMonthElement = document.getElementById('exams-this-month');
-    
-    const now = new Date();
-    const upcomingExams = exams.filter(e => new Date(e.date) >= now);
-    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const examsThisMonth = exams.filter(e => {
-        const examDate = new Date(e.date);
-        return examDate >= thisMonth && examDate < nextMonth;
-    });
-    
-    let examHTML = '';
-    
-    upcomingExams.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(exam => {
-        const examDate = new Date(exam.date);
-        const daysUntil = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
-        const dueText = daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days`;
-        
-        examHTML += `
-            <div class="task-item high">
-                <div class="task-info">
-                    <div class="task-main">
-                        <span class="task-text">${exam.subject} - ${exam.type}</span>
-                        <span class="todo-priority priority-high">Exam</span>
-                    </div>
-                    <div class="task-due">Date: ${examDate.toLocaleDateString()} at ${exam.time} (${dueText})</div>
-                    <div class="task-estimate">Duration: ${exam.duration} min | Location: ${exam.location || 'TBA'}</div>
-                </div>
-                <div class="task-actions">
-                    <button class="delete-btn" onclick="deleteExam(${exam.id})">✕</button>
-                </div>
-            </div>
-        `;
-    });
-    
-    if (examsList) {
-        examsList.innerHTML = examHTML || `
-            <div class="empty-state">
-                <p>No upcoming exams</p>
-                <small>Add exams to see them here</small>
-            </div>
-        `;
-    }
-    
-    if (upcomingExamsElement) upcomingExamsElement.textContent = `${upcomingExams.length} upcoming`;
-    if (examsThisMonthElement) examsThisMonthElement.textContent = `${examsThisMonth.length} this month`;
-}
-
-function deleteExam(id) {
-    let exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
-    exams = exams.filter(e => e.id !== id);
-    localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
-    updateExamDisplay();
-    showNotification('Exam Deleted', 'Exam has been removed from your schedule.');
-}
-
-// Grade Tracker
-function initializeGradeForm() {
-    const gradeForm = document.getElementById('grade-form');
-    if (gradeForm) {
-        gradeForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const grade = {
-                id: Date.now(),
-                subject: document.getElementById('grade-subject').value,
-                type: document.getElementById('grade-type').value,
-                score: parseFloat(document.getElementById('grade-score').value),
-                maxScore: parseFloat(document.getElementById('grade-max').value),
-                weight: parseFloat(document.getElementById('grade-weight').value),
-                date: document.getElementById('grade-date').value,
-                created: new Date().toISOString()
-            };
-            
-            saveGrade(grade);
-            this.reset();
-        });
-    }
-}
-
-function saveGrade(grade) {
-    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
-    grades.push(grade);
-    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
-    
-    updateGradeDisplay();
-    showNotification('Grade Added', `${grade.subject} ${grade.type} grade has been recorded!`);
-}
-
-function updateGradeDisplay() {
-    const grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
-    const gradesBody = document.getElementById('grades-body');
-    const currentGpaElement = document.getElementById('current-gpa');
-    
-    let gradesHTML = '';
-    
-    grades.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(grade => {
-        const percentage = (grade.score / grade.maxScore) * 100;
-        
-        gradesHTML += `
-            <tr>
-                <td>${grade.subject}</td>
-                <td>${grade.type}</td>
-                <td>${grade.score}/${grade.maxScore}</td>
-                <td>${percentage.toFixed(1)}%</td>
-                <td>${grade.weight}%</td>
-                <td>${new Date(grade.date).toLocaleDateString()}</td>
-                <td>
-                    <button class="delete-btn" onclick="deleteGrade(${grade.id})">Delete</button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    if (gradesBody) {
-        gradesBody.innerHTML = gradesHTML || `
-            <tr>
-                <td colspan="7" style="text-align: center; padding: 2rem; color: #666;">
-                    No grades recorded yet. Add your first grade using the form above.
-                </td>
-            </tr>
-        `;
-    }
-    
-    // Calculate GPA (simplified)
-    if (grades.length > 0) {
-        const totalPercentage = grades.reduce((sum, grade) => {
-            return sum + (grade.score / grade.maxScore) * 100;
-        }, 0);
-        const avgPercentage = totalPercentage / grades.length;
-        const gpa = (avgPercentage / 100) * 4.0; // Simple conversion
-        
-        if (currentGpaElement) currentGpaElement.textContent = `GPA: ${gpa.toFixed(2)}`;
-    } else {
-        if (currentGpaElement) currentGpaElement.textContent = 'GPA: -';
-    }
-}
-
-function deleteGrade(id) {
-    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
-    grades = grades.filter(g => g.id !== id);
-    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
-    updateGradeDisplay();
-    showNotification('Grade Deleted', 'Grade has been removed from your records.');
-}
-
-// Update EduPlan display
-function initializeEduPlan() {
-    initializeTimetable();
-    initializeStudyTracker();
-    initializeHomeworkTracker();
-    initializeExamsTracker();
-    initializeGradesTracker();
-    updateEduPlanDisplay();
-}
-
-// Load all data
-function loadAllData() {
-    updateDashboard();
-    updateWaterDisplay();
-    updateWorkoutDisplay();
-    updateMedicationDisplay();
-    updateMealDisplay();
-    updateScreenDisplay();
-    updateSleepDisplay();
-    updateLifeLoopDisplay();
-    updateTaskForgeDisplay();
-    updateEduPlanDisplay();
-}
-
-// Initialize charts
-function initializeCharts() {
-    // Chart initialization would go here
-    console.log('Charts initialized');
-}
-
-// Start background services
-function startBackgroundServices() {
-    console.log('Background services started');
-}
-
-// Notification functions
-function showNotification(title, message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <div class="notification-title">${title}</div>
-            <div class="notification-message">${message}</div>
-        </div>
-        <button class="notification-close">✕</button>
-    `;
-    
-    // Add to notification container
-    const container = document.getElementById('notification-container');
-    if (container) {
-        container.appendChild(notification);
-        
-        // Show notification
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 100);
-        
-        // Close button functionality
-        const closeBtn = notification.querySelector('.notification-close');
-        closeBtn.addEventListener('click', () => {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        });
-        
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }
-        }, 5000);
-    }
-}
-
-// Make functions globally available
-window.deleteWaterHistory = deleteWaterHistory;
-window.deleteWorkout = deleteWorkout;
-window.deleteMedication = deleteMedication;
-window.deleteMeal = deleteMeal;
-window.deleteScreenHistory = deleteScreenHistory;
-window.deleteSleep = deleteSleep;
-window.deleteReminder = deleteReminder;
-window.completeTodo = completeTodo;
-window.deleteTodo = deleteTodo;
-window.deleteSubscription = deleteSubscription;
-window.deleteStudySession = deleteStudySession;
-window.completeHomework = completeHomework;
-window.deleteHomework = deleteHomework;
-window.deleteExam = deleteExam;
-window.deleteGrade = deleteGrade;
-
-// Update dashboard
-function updateDashboard() {
-    // Update dashboard with latest data from all trackers
-    console.log('Dashboard updated');
-    
-    // Update today's tasks
-    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
-    const todayTasks = todos.filter(t => !t.completed);
-    const todayTasksList = document.getElementById('today-tasks-list');
-    
-    if (todayTasksList) {
-        let tasksHTML = '';
-        todayTasks.slice(0, 5).forEach(task => {
-            tasksHTML += `
-                <div class="upcoming-item">
-                    <div class="item-title">${task.task}</div>
-                    <div class="item-details">Priority: ${task.priority}</div>
-                </div>
-            `;
-        });
-        
-        todayTasksList.innerHTML = tasksHTML || `
-            <div class="empty-state">
-                <p>No tasks for today</p>
-            </div>
-        `;
-    }
-    
-    // Update today's classes
-    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
-    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    const todayClasses = courses.filter(course => course.day === today);
-    const todayClassesList = document.getElementById('today-classes-list');
-    
-    if (todayClassesList) {
-        let classesHTML = '';
-        todayClasses.forEach(course => {
-            classesHTML += `
-                <div class="upcoming-item">
-                    <div class="item-title">${course.name}</div>
-                    <div class="item-details">${course.time} | ${course.location || 'TBA'}</div>
-                </div>
-            `;
-        });
-        
-        todayClassesList.innerHTML = classesHTML || `
-            <div class="empty-state">
-                <p>No classes today</p>
-            </div>
-        `;
-    }
-    
-    // Update upcoming exams
-    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
-    const now = new Date();
-    const upcomingExams = exams.filter(e => new Date(e.date) >= now).slice(0, 3);
-    const upcomingExamsList = document.getElementById('upcoming-exams-list');
-    
-    if (upcomingExamsList) {
-        let examsHTML = '';
-        upcomingExams.forEach(exam => {
-            const examDate = new Date(exam.date);
-            const daysUntil = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
-            examsHTML += `
-                <div class="upcoming-item">
-                    <div class="item-title">${exam.subject} - ${exam.type}</div>
-                    <div class="item-details">${examDate.toLocaleDateString()} (${daysUntil} days)</div>
-                </div>
-            `;
-        });
-        
-        upcomingExamsList.innerHTML = examsHTML || `
-            <div class="empty-state">
-                <p>No upcoming exams</p>
-            </div>
-        `;
-    }
-    
-    // Update pending tasks
-    const pendingTasksList = document.getElementById('pending-tasks-list');
-    if (pendingTasksList) {
-        let pendingHTML = '';
-        todayTasks.slice(0, 3).forEach(task => {
-            pendingHTML += `
-                <div class="upcoming-item">
-                    <div class="item-title">${task.task}</div>
-                    <div class="item-details">Priority: ${task.priority}</div>
-                </div>
-            `;
-        });
-        
-        pendingTasksList.innerHTML = pendingHTML || `
-            <div class="empty-state">
-                <p>No pending tasks</p>
-            </div>
-        `;
-    }
-}
-function updateTimetableDisplay() {
-    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
-    const timetableView = document.getElementById('timetable-view');
-    
-    if (!timetableView) return;
-    
-    let timetableHTML = '';
-    
-    if (courses.length === 0) {
-        timetableHTML = `
-            <div class="empty-state">
-                <p>No classes added yet</p>
-                <small>Add your first class using the form above</small>
-            </div>
-        `;
-    } else {
-        // Days of the week
-        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        
-        // Extended time slots from 8 AM to 12 AM (midnight)
-        const timeSlots = [
-            '08:00', '09:00', '10:00', '11:00', '12:00', 
-            '13:00', '14:00', '15:00', '16:00', '17:00',
-            '18:00', '19:00', '20:00', '21:00', '22:00',
-            '23:00', '00:00'
-        ];
-        
-        timetableHTML = `
-            <div class="timetable-container">
-                <table class="timetable-table">
-                    <thead>
-                        <tr>
-                            <th class="time-column">Time</th>
-                            ${dayNames.map(day => `<th>${day}</th>`).join('')}
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-        
-        // Create rows for each time slot
-        timeSlots.forEach(timeSlot => {
-            const [hours, minutes] = timeSlot.split(':').map(Number);
-            let displayTime;
-            
-            if (hours === 0) {
-                displayTime = '12:00 AM';
-            } else if (hours < 12) {
-                displayTime = `${hours}:${minutes.toString().padStart(2, '0')} AM`;
-            } else if (hours === 12) {
-                displayTime = `12:${minutes.toString().padStart(2, '0')} PM`;
-            } else {
-                displayTime = `${hours - 12}:${minutes.toString().padStart(2, '0')} PM`;
-            }
-            
-            timetableHTML += `
-                <tr>
-                    <td class="time-column">${displayTime}</td>
-            `;
-            
-            // For each day, check if there's a course at this time
-            days.forEach(day => {
-                const courseAtThisTime = courses.find(course => {
-                    if (course.day !== day) return false;
-                    
-                    const courseStartMinutes = timeToMinutes(course.time);
-                    const slotMinutes = timeToMinutes(timeSlot);
-                    const courseEndMinutes = courseStartMinutes + course.duration;
-                    
-                    // Check if this time slot overlaps with the course
-                    return slotMinutes >= courseStartMinutes && slotMinutes < courseEndMinutes;
-                });
-                
-                if (courseAtThisTime) {
-                    const endTime = calculateEndTime(courseAtThisTime.time, courseAtThisTime.duration);
-                    timetableHTML += `
-                        <td class="course-cell">
-                            <div class="course-block">
-                                <div class="course-info">
-                                    <strong>${courseAtThisTime.name}</strong>
-                                    <div>${formatTimeDisplay(courseAtThisTime.time)} - ${formatTimeDisplay(endTime)}</div>
-                                    ${courseAtThisTime.location ? `<div>${courseAtThisTime.location}</div>` : ''}
-                                    ${courseAtThisTime.instructor ? `<div>${courseAtThisTime.instructor}</div>` : ''}
-                                </div>
-                                <button class="delete-course-btn" onclick="deleteCourse(${courseAtThisTime.id})">✕</button>
-                            </div>
-                        </td>
-                    `;
-                } else {
-                    timetableHTML += `<td class="empty-cell"></td>`;
-                }
-            });
-            
-            timetableHTML += `</tr>`;
-        });
-        
-        timetableHTML += `
-                    </tbody>
-                </table>
-            </div>
-        `;
-    }
-    
-    timetableView.innerHTML = timetableHTML;
-    updateTimetableStats();
-}
-
-// Helper function to convert time to minutes
-function timeToMinutes(time) {
-    if (!time) return 0;
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours * 60 + minutes;
-}
-
-// Helper function to calculate end time
-function calculateEndTime(startTime, duration) {
-    const startMinutes = timeToMinutes(startTime);
-    const endMinutes = startMinutes + duration;
-    
-    const endHour = Math.floor(endMinutes / 60) % 24;
-    const endMinute = endMinutes % 60;
-    
-    return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
-}
-
-// Helper function to format time display
-function formatTimeDisplay(time) {
-    if (!time) return '';
-    const [hours, minutes] = time.split(':').map(Number);
-    const displayHours = hours % 12 || 12;
-    const period = hours >= 12 ? 'PM' : 'AM';
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-}
-
-// Update timetable statistics
-function updateTimetableStats() {
-    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
-    const totalClassesElement = document.getElementById('total-classes');
-    const todayClassesElement = document.getElementById('today-classes');
-    
-    // Total classes
-    if (totalClassesElement) {
-        totalClassesElement.textContent = courses.length;
-    }
-    
-    // Today's classes
-    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    const todayCourses = courses.filter(course => course.day === today);
-    
-    if (todayClassesElement) {
-        todayClassesElement.textContent = todayCourses.length;
-    }
-}
-
-function saveCourse(course) {
-    let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
-    courses.push(course);
-    localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
-    
-    updateTimetableStats();
-    updateTimetableDisplay();
-}
-
-function resetTimetableDatabase() {
-    if (confirm('Are you sure you want to reset the entire timetable? This will delete ALL your classes and cannot be undone.')) {
-        localStorage.removeItem('lifesphere_courses');
-        
-        // Reset the display
-        updateTimetableDisplay();
-        
-        // Show add class section
-        const addClassSection = document.getElementById('add-class-section');
-        const timetableDisplaySection = document.getElementById('timetable-display-section');
-        
-        if (addClassSection) addClassSection.style.display = 'block';
-        if (timetableDisplaySection) timetableDisplaySection.style.display = 'none';
-        
-        showNotification('Timetable Reset', 'All classes have been removed from your timetable.');
-    }
-}
-
-// Make deleteCourse function globally available
-function deleteCourse(id) {
-    if (confirm('Are you sure you want to delete this course from your timetable?')) {
-        let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
-        courses = courses.filter(c => c.id !== id);
-        localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
-        updateTimetableDisplay();
-        showNotification('Course Deleted', 'Course has been removed from your timetable.');
-    }
-}
-
-// Initialize reset button in your main initialization function
-function initializeTimetableReset() {
-    const resetTimetableBtn = document.getElementById('reset-timetable-db');
-    if (resetTimetableBtn) {
-        resetTimetableBtn.addEventListener('click', resetTimetableDatabase);
-    }
-}
 // Study Tracker Functions
 function initializeStudyTracker() {
     const studyForm = document.getElementById('study-form');
@@ -2923,6 +2050,7 @@ function deleteStudySession(id) {
     updateStudyTrackerDisplay();
     showNotification('Study Session Deleted', 'Study session has been removed.');
 }
+
 // Homework Tracker Functions
 function initializeHomeworkTracker() {
     const homeworkForm = document.getElementById('homework-form');
@@ -3045,6 +2173,7 @@ function deleteHomework(id) {
     updateHomeworkDisplay();
     showNotification('Homework Deleted', 'Homework has been removed from your list.');
 }
+
 // Exams Tracker Functions
 function initializeExamsTracker() {
     const examForm = document.getElementById('exam-form');
@@ -3151,6 +2280,7 @@ function deleteExam(id) {
     updateExamDisplay();
     showNotification('Exam Deleted', 'Exam has been removed from your schedule.');
 }
+
 // Grades Tracker Functions
 function initializeGradesTracker() {
     const gradeForm = document.getElementById('grade-form');
@@ -3276,241 +2406,238 @@ function deleteGrade(id) {
     updateGradeDisplay();
     showNotification('Grade Deleted', 'Grade has been removed from your records.');
 }
-// Universal date formatting function for dd/mm/yyyy
-function formatDateDDMMYYYY(date) {
-    if (!date) return '';
-    
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    
-    return `${day}/${month}/${year}`;
-}
-// Global variables for notification tracking
-let lastTodoNotificationTime = 0;
-let homeworkNotifiedToday = false;
 
-// Initialize background notification service
-function startBackgroundNotificationService() {
-    // Check for notifications every minute
-    backgroundNotificationInterval = setInterval(() => {
-        checkAllNotifications();
-    }, 60000); // Check every minute
-    
-    // Reset daily flags at midnight
-    setInterval(() => {
-        const now = new Date();
-        if (now.getHours() === 0 && now.getMinutes() === 0) {
-            homeworkNotifiedToday = false;
-            lastTodoNotificationTime = 0;
-        }
-    }, 60000);
-    
-    // Also check immediately on load
-    setTimeout(checkAllNotifications, 5000);
-}
-
-// Check all types of notifications
-function checkAllNotifications() {
-    checkWaterNotifications();
-    checkMealNotifications();
-    checkScreenTimeNotifications();
-    checkLifeLoopNotifications();
-    checkTaskForgeNotifications();
-    checkEduPlanNotifications();
-}
-
-// Water Tracker Notifications
-function checkWaterNotifications() {
-    const waterData = JSON.parse(localStorage.getItem('lifesphere_water')) || { goal: 8, consumed: 0 };
-    const remaining = waterData.goal - waterData.consumed;
-    
-    // Only notify if there's water left to drink and it's during active hours (8 AM - 10 PM)
-    const now = new Date();
-    const currentHour = now.getHours();
-    
-    if (remaining > 0 && remaining <= 3 && currentHour >= 8 && currentHour <= 22) {
-        showNotification('💧 Water Reminder', `C'mon! Only ${remaining} glass${remaining > 1 ? 'es' : ''} of water left to reach your goal!`);
+// Initialize timetable reset button
+function initializeTimetableReset() {
+    const resetTimetableBtn = document.getElementById('reset-timetable-db');
+    if (resetTimetableBtn) {
+        resetTimetableBtn.addEventListener('click', resetTimetableDatabase);
     }
 }
 
-// Meal Planner Notifications
-function checkMealNotifications() {
-    const meals = JSON.parse(localStorage.getItem('lifesphere_meals')) || [];
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    
-    meals.forEach(meal => {
-        if (meal.date === today) {
-            const mealTime = new Date(`${today}T${meal.time}`);
-            const oneHourBefore = new Date(mealTime.getTime() - 60 * 60 * 1000);
-            
-            // Check if current time is exactly 1 hour before meal time
-            if (Math.abs(now - oneHourBefore) < 60000) { // Within 1 minute window
-                showNotification('🍽️ Meal Reminder', `Have you started to cook ${meal.name} yet? It's planned for ${meal.time}!`);
-            }
-        }
-    });
-}
-
-// Screen Time Notifications
-function checkScreenTimeNotifications() {
-    const screenData = JSON.parse(localStorage.getItem('lifesphere_screen')) || { seconds: 0, goal: 4 };
-    const goalSeconds = screenData.goal * 3600;
-    
-    if (screenData.seconds > goalSeconds) {
-        showNotification('📱 Screen Time Alert', "It's enough screen time for today! Consider taking a break.");
-    }
-}
-
-// LifeLoop Notifications
-function checkLifeLoopNotifications() {
-    const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
-    const now = new Date();
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const tomorrowDate = tomorrow.toISOString().split('T')[0];
-    
-    reminders.forEach(reminder => {
-        const reminderDate = new Date(reminder.date).toISOString().split('T')[0];
+function resetTimetableDatabase() {
+    if (confirm('Are you sure you want to reset the entire timetable? This will delete ALL your classes and cannot be undone.')) {
+        localStorage.removeItem('lifesphere_courses');
         
-        if (reminderDate === tomorrowDate) {
-            const eventType = reminder.type === 'birthday' ? 'birthday' : 'anniversary';
-            showNotification('🔄 LifeLoop Reminder', `It's ${reminder.name}'s ${eventType} tomorrow! Time to buy a gift!`);
-        }
-    });
+        // Reset the display
+        updateTimetableDisplay();
+        
+        // Show add class section
+        const addClassSection = document.getElementById('add-class-section');
+        const timetableDisplaySection = document.getElementById('timetable-display-section');
+        
+        if (addClassSection) addClassSection.style.display = 'block';
+        if (timetableDisplaySection) timetableDisplaySection.style.display = 'none';
+        
+        showNotification('Timetable Reset', 'All classes have been removed from your timetable.');
+    }
 }
 
-// TaskForge Notifications
-function checkTaskForgeNotifications() {
+// Load all data
+function loadAllData() {
+    updateDashboard();
+    updateWaterDisplay();
+    updateWorkoutDisplay();
+    updateMedicationDisplay();
+    updateMealDisplay();
+    updateScreenDisplay();
+    updateSleepDisplay();
+    updateLifeLoopDisplay();
+    updateTaskForgeDisplay();
+    updateEduPlanDisplay();
+}
+
+// Update dashboard
+function updateDashboard() {
+    // Update dashboard with latest data from all trackers
+    console.log('Dashboard updated');
+    
+    // Update today's tasks
     const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
-    const pendingTodos = todos.filter(t => !t.completed);
+    const todayTasks = todos.filter(t => !t.completed);
+    const todayTasksList = document.getElementById('today-tasks-list');
     
-    if (pendingTodos.length > 0) {
-        const now = Date.now();
-        // Check if 1.5 hours have passed since last todo notification
-        if (now - lastTodoNotificationTime > 90 * 60 * 1000) {
-            const randomTodo = pendingTodos[Math.floor(Math.random() * pendingTodos.length)];
-            showNotification('📝 Task Reminder', `C'mon, it's time to do task: ${randomTodo.task}!`);
-            lastTodoNotificationTime = now;
-        }
+    if (todayTasksList) {
+        let tasksHTML = '';
+        todayTasks.slice(0, 5).forEach(task => {
+            tasksHTML += `
+                <div class="upcoming-item">
+                    <div class="item-title">${task.task}</div>
+                    <div class="item-details">Priority: ${task.priority}</div>
+                </div>
+            `;
+        });
+        
+        todayTasksList.innerHTML = tasksHTML || `
+            <div class="empty-state">
+                <p>No tasks for today</p>
+            </div>
+        `;
     }
     
-    // Subscription notifications
-    checkSubscriptionNotifications();
-}
-
-// Subscription Notifications
-function checkSubscriptionNotifications() {
-    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
-    const now = new Date();
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const tomorrowDate = tomorrow.toISOString().split('T')[0];
-    
-    subscriptions.forEach(sub => {
-        const renewalDate = new Date(sub.renewal).toISOString().split('T')[0];
-        
-        if (renewalDate === tomorrowDate) {
-            showNotification('💰 Subscription Reminder', `Your ${sub.name} subscription is ending tomorrow! Please renew!`);
-        }
-    });
-}
-
-// EduPlan Notifications
-function checkEduPlanNotifications() {
-    checkClassReminders();
-    checkExamReminders();
-    checkStudyTrackerNotifications();
-    checkHomeworkNotifications();
-}
-
-// Class Reminders
-function checkClassReminders() {
+    // Update today's classes
     const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
-    const now = new Date();
-    const today = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const todayClasses = courses.filter(course => course.day === today);
+    const todayClassesList = document.getElementById('today-classes-list');
     
-    courses.forEach(course => {
-        if (course.day === today) {
-            const courseTime = new Date(`2000-01-01T${course.time}`);
-            const thirtyMinutesBefore = new Date(`2000-01-01T${course.time}`);
-            thirtyMinutesBefore.setMinutes(thirtyMinutesBefore.getMinutes() - 30);
-            
-            const currentTime = new Date(`2000-01-01T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
-            
-            // Check if current time is exactly 30 minutes before class
-            if (Math.abs(currentTime - thirtyMinutesBefore) < 60000) { // Within 1 minute window
-                showNotification('🎓 Class Reminder', `You have ${course.name} class in 30 minutes! Please get ready!`);
-            }
-        }
-    });
-}
-
-// Exam Reminders
-function checkExamReminders() {
+    if (todayClassesList) {
+        let classesHTML = '';
+        todayClasses.forEach(course => {
+            classesHTML += `
+                <div class="upcoming-item">
+                    <div class="item-title">${course.name}</div>
+                    <div class="item-details">${course.time} | ${course.location || 'TBA'}</div>
+                </div>
+            `;
+        });
+        
+        todayClassesList.innerHTML = classesHTML || `
+            <div class="empty-state">
+                <p>No classes today</p>
+            </div>
+        `;
+    }
+    
+    // Update upcoming exams
     const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
     const now = new Date();
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const tomorrowDate = tomorrow.toISOString().split('T')[0];
+    const upcomingExams = exams.filter(e => new Date(e.date) >= now).slice(0, 3);
+    const upcomingExamsList = document.getElementById('upcoming-exams-list');
     
-    exams.forEach(exam => {
-        const examDate = new Date(exam.date).toISOString().split('T')[0];
-        
-        if (examDate === tomorrowDate) {
-            showNotification('📊 Exam Reminder', `You have an ${exam.subject} exam tomorrow! Prepare for it!`);
-        }
-    });
-}
-
-// Study Tracker Notifications (at bedtime)
-function checkStudyTrackerNotifications() {
-    const sleepSchedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
-    if (!sleepSchedule.bedtime) return;
-    
-    const now = new Date();
-    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-    
-    // Check if current time is bedtime
-    if (currentTime === sleepSchedule.bedtime) {
-        const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
-        const today = now.toDateString();
-        const todaySessions = studySessions.filter(s => new Date(s.startTime).toDateString() === today);
-        const todayDuration = todaySessions.reduce((sum, s) => sum + s.duration, 0);
-        const todayHours = Math.floor(todayDuration / 60);
-        const todayMinutes = todayDuration % 60;
-        
-        showNotification('📚 Study Summary', `Today you studied ${todayHours}h ${todayMinutes}m. Great work!`);
-    }
-}
-
-// Homework Notifications (at bedtime, once per day)
-function checkHomeworkNotifications() {
-    if (homeworkNotifiedToday) return;
-    
-    const sleepSchedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
-    if (!sleepSchedule.bedtime) return;
-    
-    const now = new Date();
-    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-    
-    // Check if current time is bedtime
-    if (currentTime === sleepSchedule.bedtime) {
-        const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
-        const pendingHomeworks = homeworks.filter(h => !h.completed);
-        
-        if (pendingHomeworks.length > 0) {
-            showNotification('📝 Homework Reminder', 'Are you done with your homework for today?');
-            homeworkNotifiedToday = true;
-        }
-    }
-}
-// Register service worker for background notifications
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(function(registration) {
-            console.log('Service Worker registered with scope:', registration.scope);
-        })
-        .catch(function(error) {
-            console.log('Service Worker registration failed:', error);
+    if (upcomingExamsList) {
+        let examsHTML = '';
+        upcomingExams.forEach(exam => {
+            const examDate = new Date(exam.date);
+            const daysUntil = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
+            examsHTML += `
+                <div class="upcoming-item">
+                    <div class="item-title">${exam.subject} - ${exam.type}</div>
+                    <div class="item-details">${examDate.toLocaleDateString()} (${daysUntil} days)</div>
+                </div>
+            `;
         });
+        
+        upcomingExamsList.innerHTML = examsHTML || `
+            <div class="empty-state">
+                <p>No upcoming exams</p>
+            </div>
+        `;
+    }
+    
+    // Update pending tasks
+    const pendingTasksList = document.getElementById('pending-tasks-list');
+    if (pendingTasksList) {
+        let pendingHTML = '';
+        todayTasks.slice(0, 3).forEach(task => {
+            pendingHTML += `
+                <div class="upcoming-item">
+                    <div class="item-title">${task.task}</div>
+                    <div class="item-details">Priority: ${task.priority}</div>
+                </div>
+            `;
+        });
+        
+        pendingTasksList.innerHTML = pendingHTML || `
+            <div class="empty-state">
+                <p>No pending tasks</p>
+            </div>
+        `;
+    }
 }
 
+// Update EduPlan display
+function updateEduPlanDisplay() {
+    updateTimetableDisplay();
+    updateStudyTrackerDisplay();
+    updateHomeworkDisplay();
+    updateExamDisplay();
+    updateGradeDisplay();
+}
+
+// Update TaskForge display
+function updateTaskForgeDisplay() {
+    updateTodoDisplay();
+    updateSubscriptionsDisplay();
+}
+
+// Update LifeLoop display
+function updateLifeLoopDisplay() {
+    // Implementation for LifeLoop display updates
+}
+
+// Initialize charts
+function initializeCharts() {
+    // Chart initialization would go here
+    console.log('Charts initialized');
+}
+
+// Start background services
+function startBackgroundServices() {
+    console.log('Background services started');
+}
+
+// Notification functions
+function showNotification(title, message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-title">${title}</div>
+            <div class="notification-message">${message}</div>
+        </div>
+        <button class="notification-close">✕</button>
+    `;
+    
+    // Add to notification container
+    const container = document.getElementById('notification-container');
+    if (container) {
+        container.appendChild(notification);
+        
+        // Show notification
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        // Close button functionality
+        const closeBtn = notification.querySelector('.notification-close');
+        closeBtn.addEventListener('click', () => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        });
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }
+        }, 5000);
+    }
+}
+
+// Make functions globally available
+window.deleteWaterHistory = deleteWaterHistory;
+window.deleteWorkout = deleteWorkout;
+window.deleteMedication = deleteMedication;
+window.deleteMeal = deleteMeal;
+window.deleteScreenHistory = deleteScreenHistory;
+window.deleteSleep = deleteSleep;
+window.deleteReminder = deleteReminder;
+window.completeTodo = completeTodo;
+window.deleteTodo = deleteTodo;
+window.deleteSubscription = deleteSubscription;
+window.deleteStudySession = deleteStudySession;
+window.completeHomework = completeHomework;
+window.deleteHomework = deleteHomework;
+window.deleteExam = deleteExam;
+window.deleteGrade = deleteGrade;
