@@ -2650,9 +2650,16 @@ function updateTimetableDisplay() {
             
             // For each day, check if there's a course at this time
             days.forEach(day => {
-                const courseAtThisTime = courses.find(course => 
-                    course.day === day && isCourseAtTime(course, timeSlot)
-                );
+                const courseAtThisTime = courses.find(course => {
+                    if (course.day !== day) return false;
+                    
+                    const courseStartMinutes = timeToMinutes(course.time);
+                    const slotMinutes = timeToMinutes(timeSlot);
+                    const courseEndMinutes = courseStartMinutes + course.duration;
+                    
+                    // Check if this time slot overlaps with the course
+                    return slotMinutes >= courseStartMinutes && slotMinutes < courseEndMinutes;
+                });
                 
                 if (courseAtThisTime) {
                     const endTime = calculateEndTime(courseAtThisTime.time, courseAtThisTime.duration);
@@ -2665,7 +2672,7 @@ function updateTimetableDisplay() {
                                     ${courseAtThisTime.location ? `<div>${courseAtThisTime.location}</div>` : ''}
                                     ${courseAtThisTime.instructor ? `<div>${courseAtThisTime.instructor}</div>` : ''}
                                 </div>
-                                <button class="delete-course-btn" onclick="deleteCourse(${courseAtThisTime.id})">Delete</button>
+                                <button class="delete-course-btn" onclick="deleteCourse(${courseAtThisTime.id})">✕</button>
                             </div>
                         </td>
                     `;
@@ -2687,6 +2694,63 @@ function updateTimetableDisplay() {
     timetableView.innerHTML = timetableHTML;
     updateTimetableStats();
 }
+
+// Helper function to convert time to minutes
+function timeToMinutes(time) {
+    if (!time) return 0;
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+// Helper function to calculate end time
+function calculateEndTime(startTime, duration) {
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = startMinutes + duration;
+    
+    const endHour = Math.floor(endMinutes / 60) % 24;
+    const endMinute = endMinutes % 60;
+    
+    return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+}
+
+// Helper function to format time display
+function formatTimeDisplay(time) {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':').map(Number);
+    const displayHours = hours % 12 || 12;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
+// Update timetable statistics
+function updateTimetableStats() {
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const totalClassesElement = document.getElementById('total-classes');
+    const todayClassesElement = document.getElementById('today-classes');
+    
+    // Total classes
+    if (totalClassesElement) {
+        totalClassesElement.textContent = courses.length;
+    }
+    
+    // Today's classes
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const todayCourses = courses.filter(course => course.day === today);
+    
+    if (todayClassesElement) {
+        todayClassesElement.textContent = todayCourses.length;
+    }
+}
+
+function saveCourse(course) {
+    let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    courses.push(course);
+    localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
+    
+    updateTimetableStats();
+    updateTimetableDisplay();
+}
+
 function resetTimetableDatabase() {
     if (confirm('Are you sure you want to reset the entire timetable? This will delete ALL your classes and cannot be undone.')) {
         localStorage.removeItem('lifesphere_courses');
@@ -2704,8 +2768,22 @@ function resetTimetableDatabase() {
         showNotification('Timetable Reset', 'All classes have been removed from your timetable.');
     }
 }
-// Reset timetable database button
-const resetTimetableBtn = document.getElementById('reset-timetable-db');
-if (resetTimetableBtn) {
-    resetTimetableBtn.addEventListener('click', resetTimetableDatabase);
+
+// Make deleteCourse function globally available
+function deleteCourse(id) {
+    if (confirm('Are you sure you want to delete this course from your timetable?')) {
+        let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+        courses = courses.filter(c => c.id !== id);
+        localStorage.setItem('lifesphere_courses', JSON.stringify(courses));
+        updateTimetableDisplay();
+        showNotification('Course Deleted', 'Course has been removed from your timetable.');
+    }
+}
+
+// Initialize reset button in your main initialization function
+function initializeTimetableReset() {
+    const resetTimetableBtn = document.getElementById('reset-timetable-db');
+    if (resetTimetableBtn) {
+        resetTimetableBtn.addEventListener('click', resetTimetableDatabase);
+    }
 }
