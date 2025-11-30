@@ -3267,4 +3267,14 @@ function deleteGrade(id) {
     updateGradeDisplay();
     showNotification('Grade Deleted', 'Grade has been removed from your records.');
 }
+// Universal date formatting function for dd/mm/yyyy
+function formatDateDDMMYYYY(date) {
+    if (!date) return '';
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+}
 
