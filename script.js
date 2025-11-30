@@ -2588,3 +2588,124 @@ function updateDashboard() {
         `;
     }
 }
+function updateTimetableDisplay() {
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const timetableView = document.getElementById('timetable-view');
+    
+    if (!timetableView) return;
+    
+    let timetableHTML = '';
+    
+    if (courses.length === 0) {
+        timetableHTML = `
+            <div class="empty-state">
+                <p>No classes added yet</p>
+                <small>Add your first class using the form above</small>
+            </div>
+        `;
+    } else {
+        // Days of the week
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        // Extended time slots from 8 AM to 12 AM (midnight)
+        const timeSlots = [
+            '08:00', '09:00', '10:00', '11:00', '12:00', 
+            '13:00', '14:00', '15:00', '16:00', '17:00',
+            '18:00', '19:00', '20:00', '21:00', '22:00',
+            '23:00', '00:00'
+        ];
+        
+        timetableHTML = `
+            <div class="timetable-container">
+                <table class="timetable-table">
+                    <thead>
+                        <tr>
+                            <th class="time-column">Time</th>
+                            ${dayNames.map(day => `<th>${day}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        // Create rows for each time slot
+        timeSlots.forEach(timeSlot => {
+            const [hours, minutes] = timeSlot.split(':').map(Number);
+            let displayTime;
+            
+            if (hours === 0) {
+                displayTime = '12:00 AM';
+            } else if (hours < 12) {
+                displayTime = `${hours}:${minutes.toString().padStart(2, '0')} AM`;
+            } else if (hours === 12) {
+                displayTime = `12:${minutes.toString().padStart(2, '0')} PM`;
+            } else {
+                displayTime = `${hours - 12}:${minutes.toString().padStart(2, '0')} PM`;
+            }
+            
+            timetableHTML += `
+                <tr>
+                    <td class="time-column">${displayTime}</td>
+            `;
+            
+            // For each day, check if there's a course at this time
+            days.forEach(day => {
+                const courseAtThisTime = courses.find(course => 
+                    course.day === day && isCourseAtTime(course, timeSlot)
+                );
+                
+                if (courseAtThisTime) {
+                    const endTime = calculateEndTime(courseAtThisTime.time, courseAtThisTime.duration);
+                    timetableHTML += `
+                        <td class="course-cell">
+                            <div class="course-block">
+                                <div class="course-info">
+                                    <strong>${courseAtThisTime.name}</strong>
+                                    <div>${formatTimeDisplay(courseAtThisTime.time)} - ${formatTimeDisplay(endTime)}</div>
+                                    ${courseAtThisTime.location ? `<div>${courseAtThisTime.location}</div>` : ''}
+                                    ${courseAtThisTime.instructor ? `<div>${courseAtThisTime.instructor}</div>` : ''}
+                                </div>
+                                <button class="delete-course-btn" onclick="deleteCourse(${courseAtThisTime.id})">Delete</button>
+                            </div>
+                        </td>
+                    `;
+                } else {
+                    timetableHTML += `<td class="empty-cell"></td>`;
+                }
+            });
+            
+            timetableHTML += `</tr>`;
+        });
+        
+        timetableHTML += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    timetableView.innerHTML = timetableHTML;
+    updateTimetableStats();
+}
+function resetTimetableDatabase() {
+    if (confirm('Are you sure you want to reset the entire timetable? This will delete ALL your classes and cannot be undone.')) {
+        localStorage.removeItem('lifesphere_courses');
+        
+        // Reset the display
+        updateTimetableDisplay();
+        
+        // Show add class section
+        const addClassSection = document.getElementById('add-class-section');
+        const timetableDisplaySection = document.getElementById('timetable-display-section');
+        
+        if (addClassSection) addClassSection.style.display = 'block';
+        if (timetableDisplaySection) timetableDisplaySection.style.display = 'none';
+        
+        showNotification('Timetable Reset', 'All classes have been removed from your timetable.');
+    }
+}
+// Reset timetable database button
+const resetTimetableBtn = document.getElementById('reset-timetable-db');
+if (resetTimetableBtn) {
+    resetTimetableBtn.addEventListener('click', resetTimetableDatabase);
+}
