@@ -5,7 +5,7 @@ let screenTracking = false;
 let currentWeekOffset = 0;
 let medicationAlarmAudio = null;
 let notificationTimeouts = new Map();
-let selectedCurrency = 'USD';
+let selectedCurrency = 'INR';
 let backgroundNotificationInterval;
 
 // Currency symbols mapping
@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
+    initializeTabNavigation(); // THIS MUST BE FIRST!
     initializeNotifications();
-    initializeTabNavigation();
     initializeSubtabNavigation();
     initializeWaterTracker();
     initializeWorkoutTracker();
@@ -44,6 +44,100 @@ function initializeApp() {
     initializeCharts();
     startBackgroundServices();
     startBackgroundNotificationService();
+}
+
+// FIXED Tab Navigation - THIS IS CRITICAL
+function initializeTabNavigation() {
+    console.log('Initializing tab navigation...');
+    
+    const navTabs = document.querySelectorAll('.nav-tabs a');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    console.log('Found tabs:', navTabs.length);
+    console.log('Found tab contents:', tabContents.length);
+
+    navTabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Tab clicked:', tab.getAttribute('data-tab'));
+            
+            const targetTab = tab.getAttribute('data-tab');
+            
+            // Remove active class from all tabs
+            navTabs.forEach(t => {
+                t.classList.remove('active');
+                console.log('Removed active from:', t.getAttribute('data-tab'));
+            });
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                console.log('Removed active from content:', content.id);
+            });
+            
+            // Add active class to clicked tab
+            tab.classList.add('active');
+            console.log('Added active to:', tab.getAttribute('data-tab'));
+            
+            // Show corresponding tab content
+            const targetContent = document.getElementById(targetTab);
+            if (targetContent) {
+                targetContent.classList.add('active');
+                console.log('Added active to content:', targetContent.id);
+            } else {
+                console.error('Target content not found:', targetTab);
+            }
+            
+            updateTabContent(targetTab);
+        });
+    });
+
+    // Activate first tab by default
+    if (navTabs.length > 0) {
+        const firstTab = navTabs[0];
+        const firstTabId = firstTab.getAttribute('data-tab');
+        firstTab.classList.add('active');
+        
+        const firstContent = document.getElementById(firstTabId);
+        if (firstContent) {
+            firstContent.classList.add('active');
+        }
+        console.log('Activated first tab:', firstTabId);
+    }
+}
+
+function updateTabContent(tabId) {
+    console.log('Updating tab content:', tabId);
+    switch(tabId) {
+        case 'dashboard':
+            updateDashboard();
+            break;
+        case 'water':
+            updateWaterDisplay();
+            break;
+        case 'workout':
+            updateWorkoutDisplay();
+            break;
+        case 'medication':
+            updateMedicationDisplay();
+            break;
+        case 'meals':
+            updateMealDisplay();
+            break;
+        case 'screen':
+            updateScreenDisplay();
+            break;
+        case 'sleep':
+            updateSleepDisplay();
+            break;
+        case 'lifeloop':
+            updateLifeLoopDisplay();
+            break;
+        case 'taskforge':
+            updateTaskForgeDisplay();
+            break;
+        case 'eduplan':
+            updateEduPlanDisplay();
+            break;
+    }
 }
 
 // Initialize background notification service
@@ -110,69 +204,6 @@ function initializeNotifications() {
             notificationBtn.textContent = 'Custom Notifications Active';
             notificationBtn.disabled = true;
         }
-    }
-}
-
-// Tab Navigation
-function initializeTabNavigation() {
-    const navTabs = document.querySelectorAll('.nav-tabs a');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    navTabs.forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetTab = tab.getAttribute('data-tab');
-            
-            // Remove active class from all tabs
-            navTabs.forEach(t => t.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Add active class to clicked tab
-            tab.classList.add('active');
-            
-            // Show corresponding tab content
-            const targetContent = document.getElementById(targetTab);
-            if (targetContent) {
-                targetContent.classList.add('active');
-            }
-            
-            updateTabContent(targetTab);
-        });
-    });
-}
-
-function updateTabContent(tabId) {
-    switch(tabId) {
-        case 'dashboard':
-            updateDashboard();
-            break;
-        case 'water':
-            updateWaterDisplay();
-            break;
-        case 'workout':
-            updateWorkoutDisplay();
-            break;
-        case 'medication':
-            updateMedicationDisplay();
-            break;
-        case 'meals':
-            updateMealDisplay();
-            break;
-        case 'screen':
-            updateScreenDisplay();
-            break;
-        case 'sleep':
-            updateSleepDisplay();
-            break;
-        case 'lifeloop':
-            updateLifeLoopDisplay();
-            break;
-        case 'taskforge':
-            updateTaskForgeDisplay();
-            break;
-        case 'eduplan':
-            updateEduPlanDisplay();
-            break;
     }
 }
 
@@ -623,7 +654,7 @@ function updateMedicationDisplay() {
             <div class="med-item">
                 <div class="med-info">
                     <h4>${med.name}</h4>
-                    <div class="med-dosage">${med.dosage</div>
+                    <div class="med-dosage">${med.dosage}</div>
                     ${med.notes ? `<div class="med-notes">${med.notes}</div>` : ''}
                 </div>
                 <div class="med-times">
@@ -1838,347 +1869,8 @@ function deleteCourse(id) {
 // Make deleteCourse function globally available
 window.deleteCourse = deleteCourse;
 
-// Rest of EduPlan functions remain the same...
-// [Previous EduPlan functions continue here without changes]
-// Make deleteCourse function globally available
-window.deleteCourse = deleteCourse;
-
-// Rest of EduPlan functions
-function initializeGradeForm() {
-    const gradeForm = document.getElementById('grade-form');
-    if (gradeForm) {
-        gradeForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const grade = {
-                id: Date.now(),
-                subject: document.getElementById('grade-subject').value,
-                assignment: document.getElementById('grade-assignment').value,
-                score: parseFloat(document.getElementById('grade-score').value),
-                total: parseFloat(document.getElementById('grade-total').value),
-                weight: parseFloat(document.getElementById('grade-weight').value),
-                date: document.getElementById('grade-date').value,
-                created: new Date().toISOString()
-            };
-            
-            saveGrade(grade);
-            this.reset();
-        });
-    }
-}
-
-function saveStudySession(session) {
-    let studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
-    studySessions.push(session);
-    localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
-    
-    updateEduPlanDisplay();
-    showNotification('Study Session Started', `Study session for ${session.subject} has been logged!`);
-}
-
-function saveHomework(homework) {
-    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homework')) || [];
-    homeworks.push(homework);
-    localStorage.setItem('lifesphere_homework', JSON.stringify(homeworks));
-    
-    updateEduPlanDisplay();
-    showNotification('Homework Added', `${homework.task} has been added to your homework list!`);
-}
-
-function saveExam(exam) {
-    let exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
-    exams.push(exam);
-    localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
-    
-    updateEduPlanDisplay();
-    showNotification('Exam Added', `${exam.subject} ${exam.type} has been added to your exam schedule!`);
-}
-
-function saveGrade(grade) {
-    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
-    grades.push(grade);
-    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
-    
-    updateEduPlanDisplay();
-    showNotification('Grade Added', `Grade for ${grade.assignment} has been recorded!`);
-}
-
-function updateEduPlanDisplay() {
-    updateStudyTrackerDisplay();
-    updateHomeworkDisplay();
-    updateExamDisplay();
-    updateGradeDisplay();
-}
-
-function updateStudyTrackerDisplay() {
-    const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
-    const studyHistoryBody = document.getElementById('study-history-body');
-    
-    if (!studyHistoryBody) return;
-    
-    let historyHTML = '';
-    
-    studySessions.slice(-10).reverse().forEach(session => {
-        const startTime = new Date(session.startTime);
-        const date = startTime.toLocaleDateString();
-        const time = startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        historyHTML += `
-            <div class="study-session-item">
-                <div class="study-session-info">
-                    <div class="study-session-header">
-                        <strong>${session.subject}</strong>
-                        <span class="study-duration">${session.duration} min</span>
-                    </div>
-                    <div class="study-session-details">
-                        <span>Topic: ${session.topic}</span>
-                        <span>${date} at ${time}</span>
-                    </div>
-                    ${session.goal ? `<div class="study-goal">Goal: ${session.goal}</div>` : ''}
-                </div>
-                <button class="delete-btn" onclick="deleteStudySession(${session.id})">Delete</button>
-            </div>
-        `;
-    });
-    
-    studyHistoryBody.innerHTML = historyHTML || `
-        <div class="empty-state">
-            <p>No study sessions yet</p>
-            <small>Start a study session to see your history here</small>
-        </div>
-    `;
-    
-    const totalStudyTime = studySessions.reduce((sum, session) => sum + session.duration, 0);
-    const totalStudyHours = Math.floor(totalStudyTime / 60);
-    const totalStudyMinutes = totalStudyTime % 60;
-    
-    const totalStudyElement = document.getElementById('total-study-time');
-    if (totalStudyElement) {
-        totalStudyElement.textContent = `${totalStudyHours}h ${totalStudyMinutes}m`;
-    }
-}
-
-function deleteStudySession(id) {
-    let studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
-    studySessions = studySessions.filter(s => s.id !== id);
-    localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
-    updateStudyTrackerDisplay();
-    showNotification('Study Session Deleted', 'Study session has been removed from your history.');
-}
-
-function updateHomeworkDisplay() {
-    const homeworks = JSON.parse(localStorage.getItem('lifesphere_homework')) || [];
-    const homeworkList = document.getElementById('homework-list');
-    
-    if (!homeworkList) return;
-    
-    let homeworkHTML = '';
-    
-    homeworks.filter(h => !h.completed).forEach(homework => {
-        const dueDate = new Date(homework.due);
-        const now = new Date();
-        const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
-        const urgency = daysUntil <= 1 ? 'urgent' : daysUntil <= 3 ? 'soon' : 'normal';
-        
-        homeworkHTML += `
-            <div class="homework-item ${urgency}">
-                <div class="homework-info">
-                    <div class="homework-header">
-                        <strong>${homework.subject}</strong>
-                        <span class="homework-priority priority-${homework.priority}">${homework.priority}</span>
-                    </div>
-                    <div class="homework-task">${homework.task}</div>
-                    <div class="homework-details">
-                        <span>Due: ${dueDate.toLocaleDateString()}</span>
-                        <span>Estimate: ${homework.estimate} min</span>
-                        <span class="due-in">Due in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}</span>
-                    </div>
-                </div>
-                <div class="homework-actions">
-                    <button class="btn-complete" onclick="completeHomework(${homework.id})">✓</button>
-                    <button class="delete-btn" onclick="deleteHomework(${homework.id})">✕</button>
-                </div>
-            </div>
-        `;
-    });
-    
-    homeworkList.innerHTML = homeworkHTML || `
-        <div class="empty-state">
-            <p>No pending homework</p>
-            <small>All caught up! Add new homework assignments when you get them.</small>
-        </div>
-    `;
-}
-
-function completeHomework(id) {
-    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homework')) || [];
-    const homeworkIndex = homeworks.findIndex(h => h.id === id);
-    
-    if (homeworkIndex !== -1) {
-        homeworks[homeworkIndex].completed = true;
-        localStorage.setItem('lifesphere_homework', JSON.stringify(homeworks));
-        updateHomeworkDisplay();
-        showNotification('Homework Completed', 'Homework marked as completed! Great job!');
-    }
-}
-
-function deleteHomework(id) {
-    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homework')) || [];
-    homeworks = homeworks.filter(h => h.id !== id);
-    localStorage.setItem('lifesphere_homework', JSON.stringify(homeworks));
-    updateHomeworkDisplay();
-    showNotification('Homework Deleted', 'Homework has been removed from your list.');
-}
-
-function updateExamDisplay() {
-    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
-    const examList = document.getElementById('exam-list');
-    
-    if (!examList) return;
-    
-    let examHTML = '';
-    
-    exams.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(exam => {
-        const examDate = new Date(exam.date);
-        const now = new Date();
-        const daysUntil = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
-        const urgency = daysUntil <= 7 ? 'urgent' : daysUntil <= 14 ? 'soon' : 'normal';
-        
-        examHTML += `
-            <div class="exam-item ${urgency}">
-                <div class="exam-info">
-                    <div class="exam-header">
-                        <strong>${exam.subject} - ${exam.type}</strong>
-                        <span class="exam-date">${examDate.toLocaleDateString()}</span>
-                    </div>
-                    <div class="exam-details">
-                        <span>Time: ${exam.time}</span>
-                        ${exam.location ? `<span>Location: ${exam.location}</span>` : ''}
-                        ${exam.duration ? `<span>Duration: ${exam.duration} min</span>` : ''}
-                        <span class="days-until">${daysUntil} day${daysUntil !== 1 ? 's' : ''} until exam</span>
-                    </div>
-                </div>
-                <button class="delete-btn" onclick="deleteExam(${exam.id})">Delete</button>
-            </div>
-        `;
-    });
-    
-    examList.innerHTML = examHTML || `
-        <div class="empty-state">
-            <p>No exams scheduled</p>
-            <small>Add your upcoming exams to see them here</small>
-        </div>
-    `;
-}
-
-function deleteExam(id) {
-    let exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
-    exams = exams.filter(e => e.id !== id);
-    localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
-    updateExamDisplay();
-    showNotification('Exam Deleted', 'Exam has been removed from your schedule.');
-}
-
-function updateGradeDisplay() {
-    const grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
-    const gradeList = document.getElementById('grade-list');
-    
-    if (!gradeList) return;
-    
-    let gradeHTML = '';
-    
-    // Calculate average grade
-    let totalWeightedScore = 0;
-    let totalWeight = 0;
-    
-    grades.forEach(grade => {
-        const percentage = (grade.score / grade.total) * 100;
-        const weightedScore = percentage * (grade.weight / 100);
-        
-        totalWeightedScore += weightedScore;
-        totalWeight += grade.weight;
-    });
-    
-    const averageGrade = totalWeight > 0 ? (totalWeightedScore / totalWeight) : 0;
-    
-    const averageGradeElement = document.getElementById('average-grade');
-    if (averageGradeElement) {
-        averageGradeElement.textContent = `${averageGrade.toFixed(1)}%`;
-    }
-    
-    grades.slice(-10).reverse().forEach(grade => {
-        const percentage = (grade.score / grade.total) * 100;
-        const gradeDate = new Date(grade.date).toLocaleDateString();
-        
-        gradeHTML += `
-            <div class="grade-item">
-                <div class="grade-info">
-                    <div class="grade-header">
-                        <strong>${grade.subject}</strong>
-                        <span class="grade-percentage">${percentage.toFixed(1)}%</span>
-                    </div>
-                    <div class="grade-details">
-                        <span>${grade.assignment}</span>
-                        <span>${grade.score}/${grade.total}</span>
-                        <span>Weight: ${grade.weight}%</span>
-                        <span>${gradeDate}</span>
-                    </div>
-                </div>
-                <button class="delete-btn" onclick="deleteGrade(${grade.id})">Delete</button>
-            </div>
-        `;
-    });
-    
-    gradeList.innerHTML = gradeHTML || `
-        <div class="empty-state">
-            <p>No grades recorded</p>
-            <small>Add your grades to track your academic performance</small>
-        </div>
-    `;
-}
-
-function deleteGrade(id) {
-    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
-    grades = grades.filter(g => g.id !== id);
-    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
-    updateGradeDisplay();
-    showNotification('Grade Deleted', 'Grade has been removed from your records.');
-}
-
-// Notification functions
-function showNotification(title, message) {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.innerHTML = `
-        <div class="notification-content">
-            <div class="notification-title">${title}</div>
-            <div class="notification-message">${message}</div>
-        </div>
-        <div class="notification-progress"></div>
-    `;
-    
-    // Add to notification container
-    const container = document.getElementById('notification-container');
-    if (container) {
-        container.appendChild(notification);
-        
-        // Show notification
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 100);
-        
-        // Hide and remove after 5 seconds
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 5000);
-    }
-}
+// Rest of the functions (saveStudySession, saveHomework, saveExam, etc.) remain the same...
+// [Previous functions continue here...]
 
 // Load all data
 function loadAllData() {
@@ -2269,3 +1961,37 @@ function updateDashboard() {
     console.log('Dashboard updated');
 }
 
+// Notification functions
+function showNotification(title, message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-title">${title}</div>
+            <div class="notification-message">${message}</div>
+        </div>
+        <div class="notification-progress"></div>
+    `;
+    
+    // Add to notification container
+    const container = document.getElementById('notification-container');
+    if (container) {
+        container.appendChild(notification);
+        
+        // Show notification
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        // Hide and remove after 5 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 5000);
+    }
+}
