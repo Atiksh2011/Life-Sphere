@@ -5,8 +5,10 @@ let screenTracking = false;
 let currentWeekOffset = 0;
 let medicationAlarmAudio = null;
 let notificationTimeouts = new Map();
-let selectedCurrency = 'INR';
+let selectedCurrency = 'USD';
 let backgroundNotificationInterval;
+let todoNotificationInterval;
+let homeworkNotificationInterval;
 
 // Currency symbols mapping
 const currencySymbols = {
@@ -44,6 +46,8 @@ function initializeApp() {
     initializeCharts();
     startBackgroundServices();
     startBackgroundNotificationService();
+    startTodoNotificationService();
+    startHomeworkNotificationService();
 }
 
 // FIXED Tab Navigation - THIS IS CRITICAL
@@ -151,6 +155,22 @@ function startBackgroundNotificationService() {
     setTimeout(checkAllNotifications, 5000);
 }
 
+// Initialize todo notification service
+function startTodoNotificationService() {
+    // Check for todo notifications every 1.5 hours
+    todoNotificationInterval = setInterval(() => {
+        checkTodoNotifications();
+    }, 90 * 60 * 1000); // 1.5 hours in milliseconds
+}
+
+// Initialize homework notification service
+function startHomeworkNotificationService() {
+    // Check for homework notifications at bedtime
+    homeworkNotificationInterval = setInterval(() => {
+        checkHomeworkNotifications();
+    }, 60 * 1000); // Check every minute
+}
+
 // Check all types of notifications
 function checkAllNotifications() {
     checkSleepScheduleNotifications();
@@ -164,6 +184,184 @@ function checkAllNotifications() {
     checkTaskForgeNotifications();
     checkEduPlanNotifications();
     checkClassReminders();
+    checkExamReminders();
+    checkSubscriptionReminders();
+}
+
+// Check todo notifications
+function checkTodoNotifications() {
+    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const pendingTodos = todos.filter(t => !t.completed);
+    
+    if (pendingTodos.length > 0) {
+        const randomTodo = pendingTodos[Math.floor(Math.random() * pendingTodos.length)];
+        showNotification('📝 Task Reminder', `C'mon, it's time to do task: ${randomTodo.task}!`);
+    }
+}
+
+// Check homework notifications
+function checkHomeworkNotifications() {
+    const sleepSchedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
+    if (!sleepSchedule.bedtime) return;
+    
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    
+    // Check if current time is within 30 minutes of bedtime
+    const bedtime = sleepSchedule.bedtime;
+    if (isTimeWithinRange(currentTime, bedtime, 30)) {
+        const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+        const pendingHomeworks = homeworks.filter(h => !h.completed);
+        
+        if (pendingHomeworks.length > 0) {
+            showNotification('📝 Homework Reminder', 'Are you done with your homework for today?');
+            
+            // Clear the interval after showing notification to avoid duplicates
+            clearInterval(homeworkNotificationInterval);
+            
+            // Restart the interval after 24 hours
+            setTimeout(() => {
+                startHomeworkNotificationService();
+            }, 24 * 60 * 60 * 1000);
+        }
+    }
+}
+
+// Helper function to check if time is within range
+function isTimeWithinRange(currentTime, targetTime, minutesRange) {
+    const current = new Date(`2000-01-01T${currentTime}`);
+    const target = new Date(`2000-01-01T${targetTime}`);
+    const diff = Math.abs(current - target) / (1000 * 60); // difference in minutes
+    
+    return diff <= minutesRange;
+}
+
+// Check water notifications
+function checkWaterNotifications() {
+    const waterData = JSON.parse(localStorage.getItem('lifesphere_water')) || { goal: 8, consumed: 0 };
+    const remaining = waterData.goal - waterData.consumed;
+    
+    if (remaining > 0 && remaining <= 3) {
+        showNotification('💧 Water Reminder', `C'mon! Only ${remaining} glass${remaining > 1 ? 'es' : ''} of water left to reach your goal!`);
+    }
+}
+
+// Check meal notifications
+function checkMealNotifications() {
+    const meals = JSON.parse(localStorage.getItem('lifesphere_meals')) || [];
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
+    meals.forEach(meal => {
+        if (meal.date === today) {
+            const mealTime = new Date(`${today}T${meal.time}`);
+            const oneHourBefore = new Date(mealTime.getTime() - 60 * 60 * 1000);
+            
+            if (now >= oneHourBefore && now < mealTime) {
+                showNotification('🍽️ Meal Reminder', `Have you started to cook ${meal.name} yet? It's planned for ${meal.time}!`);
+            }
+        }
+    });
+}
+
+// Check screen time notifications
+function checkScreenTimeNotifications() {
+    const screenData = JSON.parse(localStorage.getItem('lifesphere_screen')) || { seconds: 0, goal: 4 };
+    const goalSeconds = screenData.goal * 3600;
+    
+    if (screenData.seconds > goalSeconds) {
+        showNotification('📱 Screen Time Alert', "It's enough screen time for today! Consider taking a break.");
+    }
+}
+
+// Check LifeLoop notifications
+function checkLifeLoopNotifications() {
+    const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
+    const now = new Date();
+    
+    reminders.forEach(reminder => {
+        const reminderDate = new Date(reminder.date);
+        const oneDayBefore = new Date(reminderDate.getTime() - 24 * 60 * 60 * 1000);
+        
+        if (now.toDateString() === oneDayBefore.toDateString()) {
+            const eventType = reminder.type === 'birthday' ? 'birthday' : 'anniversary';
+            showNotification('🔄 LifeLoop Reminder', `It's ${reminder.name}'s ${eventType} tomorrow! Time to buy a gift!`);
+        }
+    });
+}
+
+// Check class reminders
+function checkClassReminders() {
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const now = new Date();
+    const today = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    courses.forEach(course => {
+        if (course.day === today) {
+            const courseTime = new Date(`2000-01-01T${course.time}`);
+            const thirtyMinutesBefore = new Date(courseTime.getTime() - 30 * 60 * 1000);
+            const currentTime = new Date(`2000-01-01T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
+            
+            if (currentTime.getTime() === thirtyMinutesBefore.getTime()) {
+                showNotification('🎓 Class Reminder', `You have ${course.name} class in 30 minutes! Please get ready!`);
+            }
+        }
+    });
+}
+
+// Check exam reminders
+function checkExamReminders() {
+    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    const now = new Date();
+    
+    exams.forEach(exam => {
+        const examDate = new Date(exam.date);
+        const oneDayBefore = new Date(examDate.getTime() - 24 * 60 * 60 * 1000);
+        
+        if (now.toDateString() === oneDayBefore.toDateString()) {
+            showNotification('📊 Exam Reminder', `You have an ${exam.subject} exam tomorrow! Prepare for it!`);
+        }
+    });
+}
+
+// Check subscription reminders
+function checkSubscriptionReminders() {
+    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    const now = new Date();
+    
+    subscriptions.forEach(sub => {
+        const renewalDate = new Date(sub.renewal);
+        const oneDayBefore = new Date(renewalDate.getTime() - 24 * 60 * 60 * 1000);
+        
+        if (now.toDateString() === oneDayBefore.toDateString()) {
+            showNotification('💰 Subscription Reminder', `Your ${sub.name} subscription is ending tomorrow! Please renew!`);
+        }
+    });
+}
+
+// Placeholder functions for other notification checks
+function checkSleepScheduleNotifications() {
+    // Implementation for sleep schedule notifications
+}
+
+function checkWorkoutNotifications() {
+    // Implementation for workout notifications
+}
+
+function checkMedicationNotifications() {
+    // Implementation for medication notifications
+}
+
+function checkSleepTrackingNotifications() {
+    // Implementation for sleep tracking notifications
+}
+
+function checkTaskForgeNotifications() {
+    // Implementation for task forge notifications
+}
+
+function checkEduPlanNotifications() {
+    // Implementation for edu plan notifications
 }
 
 // Initialize currency settings
@@ -1869,8 +2067,338 @@ function deleteCourse(id) {
 // Make deleteCourse function globally available
 window.deleteCourse = deleteCourse;
 
-// Rest of the functions (saveStudySession, saveHomework, saveExam, etc.) remain the same...
-// [Previous functions continue here...]
+// Study Tracker
+function saveStudySession(session) {
+    let studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+    studySessions.push(session);
+    localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
+    
+    updateStudyTrackerDisplay();
+    showNotification('Study Session Added', `${session.subject} study session has been logged!`);
+}
+
+function updateStudyTrackerDisplay() {
+    const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+    const studySessionsBody = document.getElementById('study-sessions-body');
+    
+    let studyHTML = '';
+    
+    studySessions.sort((a, b) => new Date(b.startTime) - new Date(a.startTime)).forEach(session => {
+        const date = new Date(session.startTime).toLocaleDateString();
+        const hours = Math.floor(session.duration / 60);
+        const minutes = session.duration % 60;
+        
+        studyHTML += `
+            <tr>
+                <td>${session.subject}</td>
+                <td>${session.topic || '-'}</td>
+                <td>${hours}h ${minutes}m</td>
+                <td>${date}</td>
+                <td>
+                    <button class="delete-btn" onclick="deleteStudySession(${session.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (studySessionsBody) {
+        studySessionsBody.innerHTML = studyHTML || `
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
+                    No study sessions yet. Start your first study session!
+                </td>
+            </tr>
+        `;
+    }
+    
+    // Update study stats
+    const today = new Date().toDateString();
+    const todaySessions = studySessions.filter(s => new Date(s.startTime).toDateString() === today);
+    const todayDuration = todaySessions.reduce((sum, s) => sum + s.duration, 0);
+    const todayHours = Math.floor(todayDuration / 60);
+    const todayMinutes = todayDuration % 60;
+    
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const weekSessions = studySessions.filter(s => new Date(s.startTime) >= weekAgo);
+    const weekDuration = weekSessions.reduce((sum, s) => sum + s.duration, 0);
+    const weekHours = Math.floor(weekDuration / 60);
+    const weekMinutes = weekDuration % 60;
+    
+    const totalDuration = studySessions.reduce((sum, s) => sum + s.duration, 0);
+    const totalHours = Math.floor(totalDuration / 60);
+    const totalMinutes = totalDuration % 60;
+    
+    const studyTodayElement = document.getElementById('study-today');
+    const studyWeekElement = document.getElementById('study-week');
+    const studyTotalElement = document.getElementById('study-total');
+    const studyTodayQuickElement = document.getElementById('study-today-quick');
+    const studyWeekQuickElement = document.getElementById('study-week-quick');
+    
+    if (studyTodayElement) studyTodayElement.textContent = `${todayHours}h ${todayMinutes}m`;
+    if (studyWeekElement) studyWeekElement.textContent = `${weekHours}h ${weekMinutes}m`;
+    if (studyTotalElement) studyTotalElement.textContent = `${totalHours}h ${totalMinutes}m`;
+    if (studyTodayQuickElement) studyTodayQuickElement.textContent = `Today: ${todayHours}h ${todayMinutes}m`;
+    if (studyWeekQuickElement) studyWeekQuickElement.textContent = `Week: ${weekHours}h ${weekMinutes}m`;
+}
+
+function deleteStudySession(id) {
+    let studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+    studySessions = studySessions.filter(s => s.id !== id);
+    localStorage.setItem('lifesphere_study_sessions', JSON.stringify(studySessions));
+    updateStudyTrackerDisplay();
+    showNotification('Study Session Deleted', 'Study session has been removed.');
+}
+
+// Homework Tracker
+function saveHomework(homework) {
+    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    homeworks.push(homework);
+    localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
+    
+    updateHomeworkDisplay();
+    showNotification('Homework Added', `${homework.subject} homework has been added!`);
+}
+
+function updateHomeworkDisplay() {
+    const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    const homeworkList = document.getElementById('homework-list');
+    const pendingHomeworkElement = document.getElementById('pending-homework');
+    const dueSoonElement = document.getElementById('due-soon');
+    
+    const pendingHomeworks = homeworks.filter(h => !h.completed);
+    const now = new Date();
+    const dueSoon = pendingHomeworks.filter(h => {
+        const dueDate = new Date(h.due);
+        const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+        return daysUntil <= 3;
+    });
+    
+    let homeworkHTML = '';
+    
+    pendingHomeworks.sort((a, b) => new Date(a.due) - new Date(b.due)).forEach(homework => {
+        const dueDate = new Date(homework.due);
+        const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+        const dueText = daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days`;
+        
+        homeworkHTML += `
+            <div class="task-item ${homework.priority}">
+                <div class="task-info">
+                    <div class="task-main">
+                        <span class="task-text">${homework.subject}: ${homework.task}</span>
+                        <span class="todo-priority priority-${homework.priority}">${homework.priority}</span>
+                    </div>
+                    <div class="task-due">Due: ${dueDate.toLocaleDateString()} (${dueText})</div>
+                    <div class="task-estimate">Estimate: ${homework.estimate} min</div>
+                </div>
+                <div class="task-actions">
+                    <button class="btn-complete" onclick="completeHomework(${homework.id})">✓</button>
+                    <button class="delete-btn" onclick="deleteHomework(${homework.id})">✕</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    if (homeworkList) {
+        homeworkList.innerHTML = homeworkHTML || `
+            <div class="empty-state">
+                <p>No pending homework</p>
+                <small>Add homework assignments to see them here</small>
+            </div>
+        `;
+    }
+    
+    if (pendingHomeworkElement) pendingHomeworkElement.textContent = `${pendingHomeworks.length} pending`;
+    if (dueSoonElement) dueSoonElement.textContent = `${dueSoon.length} due soon`;
+}
+
+function completeHomework(id) {
+    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    const homeworkIndex = homeworks.findIndex(h => h.id === id);
+    
+    if (homeworkIndex !== -1) {
+        homeworks[homeworkIndex].completed = true;
+        localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
+        updateHomeworkDisplay();
+        showNotification('Homework Completed', 'Homework marked as completed! Great job!');
+    }
+}
+
+function deleteHomework(id) {
+    let homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+    homeworks = homeworks.filter(h => h.id !== id);
+    localStorage.setItem('lifesphere_homeworks', JSON.stringify(homeworks));
+    updateHomeworkDisplay();
+    showNotification('Homework Deleted', 'Homework has been removed from your list.');
+}
+
+// Exam Tracker
+function saveExam(exam) {
+    let exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    exams.push(exam);
+    localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
+    
+    updateExamDisplay();
+    showNotification('Exam Added', `${exam.subject} ${exam.type} has been added to your schedule!`);
+}
+
+function updateExamDisplay() {
+    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    const examsList = document.getElementById('exams-list');
+    const upcomingExamsElement = document.getElementById('upcoming-exams');
+    const examsThisMonthElement = document.getElementById('exams-this-month');
+    
+    const now = new Date();
+    const upcomingExams = exams.filter(e => new Date(e.date) >= now);
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const examsThisMonth = exams.filter(e => {
+        const examDate = new Date(e.date);
+        return examDate >= thisMonth && examDate < nextMonth;
+    });
+    
+    let examHTML = '';
+    
+    upcomingExams.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(exam => {
+        const examDate = new Date(exam.date);
+        const daysUntil = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
+        const dueText = daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days`;
+        
+        examHTML += `
+            <div class="task-item high">
+                <div class="task-info">
+                    <div class="task-main">
+                        <span class="task-text">${exam.subject} - ${exam.type}</span>
+                        <span class="todo-priority priority-high">Exam</span>
+                    </div>
+                    <div class="task-due">Date: ${examDate.toLocaleDateString()} at ${exam.time} (${dueText})</div>
+                    <div class="task-estimate">Duration: ${exam.duration} min | Location: ${exam.location || 'TBA'}</div>
+                </div>
+                <div class="task-actions">
+                    <button class="delete-btn" onclick="deleteExam(${exam.id})">✕</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    if (examsList) {
+        examsList.innerHTML = examHTML || `
+            <div class="empty-state">
+                <p>No upcoming exams</p>
+                <small>Add exams to see them here</small>
+            </div>
+        `;
+    }
+    
+    if (upcomingExamsElement) upcomingExamsElement.textContent = `${upcomingExams.length} upcoming`;
+    if (examsThisMonthElement) examsThisMonthElement.textContent = `${examsThisMonth.length} this month`;
+}
+
+function deleteExam(id) {
+    let exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    exams = exams.filter(e => e.id !== id);
+    localStorage.setItem('lifesphere_exams', JSON.stringify(exams));
+    updateExamDisplay();
+    showNotification('Exam Deleted', 'Exam has been removed from your schedule.');
+}
+
+// Grade Tracker
+function initializeGradeForm() {
+    const gradeForm = document.getElementById('grade-form');
+    if (gradeForm) {
+        gradeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const grade = {
+                id: Date.now(),
+                subject: document.getElementById('grade-subject').value,
+                type: document.getElementById('grade-type').value,
+                score: parseFloat(document.getElementById('grade-score').value),
+                maxScore: parseFloat(document.getElementById('grade-max').value),
+                weight: parseFloat(document.getElementById('grade-weight').value),
+                date: document.getElementById('grade-date').value,
+                created: new Date().toISOString()
+            };
+            
+            saveGrade(grade);
+            this.reset();
+        });
+    }
+}
+
+function saveGrade(grade) {
+    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    grades.push(grade);
+    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
+    
+    updateGradeDisplay();
+    showNotification('Grade Added', `${grade.subject} ${grade.type} grade has been recorded!`);
+}
+
+function updateGradeDisplay() {
+    const grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    const gradesBody = document.getElementById('grades-body');
+    const currentGpaElement = document.getElementById('current-gpa');
+    
+    let gradesHTML = '';
+    
+    grades.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(grade => {
+        const percentage = (grade.score / grade.maxScore) * 100;
+        
+        gradesHTML += `
+            <tr>
+                <td>${grade.subject}</td>
+                <td>${grade.type}</td>
+                <td>${grade.score}/${grade.maxScore}</td>
+                <td>${percentage.toFixed(1)}%</td>
+                <td>${grade.weight}%</td>
+                <td>${new Date(grade.date).toLocaleDateString()}</td>
+                <td>
+                    <button class="delete-btn" onclick="deleteGrade(${grade.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (gradesBody) {
+        gradesBody.innerHTML = gradesHTML || `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem; color: #666;">
+                    No grades recorded yet. Add your first grade using the form above.
+                </td>
+            </tr>
+        `;
+    }
+    
+    // Calculate GPA (simplified)
+    if (grades.length > 0) {
+        const totalPercentage = grades.reduce((sum, grade) => {
+            return sum + (grade.score / grade.maxScore) * 100;
+        }, 0);
+        const avgPercentage = totalPercentage / grades.length;
+        const gpa = (avgPercentage / 100) * 4.0; // Simple conversion
+        
+        if (currentGpaElement) currentGpaElement.textContent = `GPA: ${gpa.toFixed(2)}`;
+    } else {
+        if (currentGpaElement) currentGpaElement.textContent = 'GPA: -';
+    }
+}
+
+function deleteGrade(id) {
+    let grades = JSON.parse(localStorage.getItem('lifesphere_grades')) || [];
+    grades = grades.filter(g => g.id !== id);
+    localStorage.setItem('lifesphere_grades', JSON.stringify(grades));
+    updateGradeDisplay();
+    showNotification('Grade Deleted', 'Grade has been removed from your records.');
+}
+
+// Update EduPlan display
+function updateEduPlanDisplay() {
+    updateTimetableStats();
+    updateStudyTrackerDisplay();
+    updateHomeworkDisplay();
+    updateExamDisplay();
+    updateGradeDisplay();
+}
 
 // Load all data
 function loadAllData() {
@@ -1897,6 +2425,54 @@ function startBackgroundServices() {
     console.log('Background services started');
 }
 
+// Notification functions
+function showNotification(title, message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-title">${title}</div>
+            <div class="notification-message">${message}</div>
+        </div>
+        <button class="notification-close">✕</button>
+    `;
+    
+    // Add to notification container
+    const container = document.getElementById('notification-container');
+    if (container) {
+        container.appendChild(notification);
+        
+        // Show notification
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+        
+        // Close button functionality
+        const closeBtn = notification.querySelector('.notification-close');
+        closeBtn.addEventListener('click', () => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        });
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }
+        }, 5000);
+    }
+}
+
 // Make functions globally available
 window.deleteWaterHistory = deleteWaterHistory;
 window.deleteWorkout = deleteWorkout;
@@ -1914,84 +2490,101 @@ window.deleteHomework = deleteHomework;
 window.deleteExam = deleteExam;
 window.deleteGrade = deleteGrade;
 
-// Placeholder functions for notification checks
-function checkSleepScheduleNotifications() {
-    // Implementation for sleep schedule notifications
-}
-
-function checkWaterNotifications() {
-    // Implementation for water notifications
-}
-
-function checkWorkoutNotifications() {
-    // Implementation for workout notifications
-}
-
-function checkMedicationNotifications() {
-    // Implementation for medication notifications
-}
-
-function checkMealNotifications() {
-    // Implementation for meal notifications
-}
-
-function checkScreenTimeNotifications() {
-    // Implementation for screen time notifications
-}
-
-function checkSleepTrackingNotifications() {
-    // Implementation for sleep tracking notifications
-}
-
-function checkLifeLoopNotifications() {
-    // Implementation for life loop notifications
-}
-
-function checkTaskForgeNotifications() {
-    // Implementation for task forge notifications
-}
-
-function checkEduPlanNotifications() {
-    // Implementation for edu plan notifications
-}
-
 // Update dashboard
 function updateDashboard() {
     // Update dashboard with latest data from all trackers
     console.log('Dashboard updated');
-}
-
-// Notification functions
-function showNotification(title, message) {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.innerHTML = `
-        <div class="notification-content">
-            <div class="notification-title">${title}</div>
-            <div class="notification-message">${message}</div>
-        </div>
-        <div class="notification-progress"></div>
-    `;
     
-    // Add to notification container
-    const container = document.getElementById('notification-container');
-    if (container) {
-        container.appendChild(notification);
+    // Update today's tasks
+    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const todayTasks = todos.filter(t => !t.completed);
+    const todayTasksList = document.getElementById('today-tasks-list');
+    
+    if (todayTasksList) {
+        let tasksHTML = '';
+        todayTasks.slice(0, 5).forEach(task => {
+            tasksHTML += `
+                <div class="upcoming-item">
+                    <div class="item-title">${task.task}</div>
+                    <div class="item-details">Priority: ${task.priority}</div>
+                </div>
+            `;
+        });
         
-        // Show notification
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 100);
+        todayTasksList.innerHTML = tasksHTML || `
+            <div class="empty-state">
+                <p>No tasks for today</p>
+            </div>
+        `;
+    }
+    
+    // Update today's classes
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const todayClasses = courses.filter(course => course.day === today);
+    const todayClassesList = document.getElementById('today-classes-list');
+    
+    if (todayClassesList) {
+        let classesHTML = '';
+        todayClasses.forEach(course => {
+            classesHTML += `
+                <div class="upcoming-item">
+                    <div class="item-title">${course.name}</div>
+                    <div class="item-details">${course.time} | ${course.location || 'TBA'}</div>
+                </div>
+            `;
+        });
         
-        // Hide and remove after 5 seconds
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 5000);
+        todayClassesList.innerHTML = classesHTML || `
+            <div class="empty-state">
+                <p>No classes today</p>
+            </div>
+        `;
+    }
+    
+    // Update upcoming exams
+    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    const now = new Date();
+    const upcomingExams = exams.filter(e => new Date(e.date) >= now).slice(0, 3);
+    const upcomingExamsList = document.getElementById('upcoming-exams-list');
+    
+    if (upcomingExamsList) {
+        let examsHTML = '';
+        upcomingExams.forEach(exam => {
+            const examDate = new Date(exam.date);
+            const daysUntil = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
+            examsHTML += `
+                <div class="upcoming-item">
+                    <div class="item-title">${exam.subject} - ${exam.type}</div>
+                    <div class="item-details">${examDate.toLocaleDateString()} (${daysUntil} days)</div>
+                </div>
+            `;
+        });
+        
+        upcomingExamsList.innerHTML = examsHTML || `
+            <div class="empty-state">
+                <p>No upcoming exams</p>
+            </div>
+        `;
+    }
+    
+    // Update pending tasks
+    const pendingTasksList = document.getElementById('pending-tasks-list');
+    if (pendingTasksList) {
+        let pendingHTML = '';
+        todayTasks.slice(0, 3).forEach(task => {
+            pendingHTML += `
+                <div class="upcoming-item">
+                    <div class="item-title">${task.task}</div>
+                    <div class="item-details">Priority: ${task.priority}</div>
+                </div>
+            `;
+        });
+        
+        pendingTasksList.innerHTML = pendingHTML || `
+            <div class="empty-state">
+                <p>No pending tasks</p>
+            </div>
+        `;
     }
 }
