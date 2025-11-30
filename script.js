@@ -42,6 +42,7 @@ function initializeApp() {
     initializeEduPlan();
     initializeSleepSchedule();
     initializeCurrency();
+    initializeTimetableReset();
     loadAllData();
     initializeCharts();
     startBackgroundServices();
@@ -2787,3 +2788,4 @@ function initializeTimetableReset() {
         resetTimetableBtn.addEventListener('click', resetTimetableDatabase);
     }
 }
+
