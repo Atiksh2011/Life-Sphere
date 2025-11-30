@@ -52,7 +52,7 @@ function initializeApp() {
     console.log('LifeSphere initialized with background notifications');
 }}
 
-// FIXED Tab Navigation - THIS IS CRITICAL
+// FIXED Tab Navigation - SIMPLIFIED AND WORKING
 function initializeTabNavigation() {
     console.log('Initializing tab navigation...');
     
@@ -63,36 +63,34 @@ function initializeTabNavigation() {
     console.log('Found tab contents:', tabContents.length);
 
     navTabs.forEach(tab => {
-        tab.addEventListener('click', (e) => {
+        tab.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('Tab clicked:', tab.getAttribute('data-tab'));
+            console.log('Tab clicked:', this.getAttribute('data-tab'));
             
-            const targetTab = tab.getAttribute('data-tab');
+            const targetTab = this.getAttribute('data-tab');
             
-            // Remove active class from all tabs
-            navTabs.forEach(t => {
-                t.classList.remove('active');
-                console.log('Removed active from:', t.getAttribute('data-tab'));
-            });
+            // Remove active class from all tabs and contents
+            navTabs.forEach(t => t.classList.remove('active'));
             tabContents.forEach(content => {
                 content.classList.remove('active');
-                console.log('Removed active from content:', content.id);
+                content.style.display = 'none';
             });
             
             // Add active class to clicked tab
-            tab.classList.add('active');
-            console.log('Added active to:', tab.getAttribute('data-tab'));
+            this.classList.add('active');
             
             // Show corresponding tab content
             const targetContent = document.getElementById(targetTab);
             if (targetContent) {
                 targetContent.classList.add('active');
-                console.log('Added active to content:', targetContent.id);
+                targetContent.style.display = 'block';
+                console.log('Showing content:', targetTab);
+                
+                // Update the specific tab content
+                updateTabContent(targetTab);
             } else {
                 console.error('Target content not found:', targetTab);
             }
-            
-            updateTabContent(targetTab);
         });
     });
 
@@ -100,12 +98,20 @@ function initializeTabNavigation() {
     if (navTabs.length > 0) {
         const firstTab = navTabs[0];
         const firstTabId = firstTab.getAttribute('data-tab');
-        firstTab.classList.add('active');
         
+        // Hide all tab contents first
+        tabContents.forEach(content => {
+            content.style.display = 'none';
+        });
+        
+        // Show first tab content
         const firstContent = document.getElementById(firstTabId);
         if (firstContent) {
+            firstContent.style.display = 'block';
             firstContent.classList.add('active');
         }
+        
+        firstTab.classList.add('active');
         console.log('Activated first tab:', firstTabId);
     }
 }
@@ -143,6 +149,8 @@ function updateTabContent(tabId) {
         case 'eduplan':
             updateEduPlanDisplay();
             break;
+        default:
+            console.log('No specific update for tab:', tabId);
     }
 }
 
@@ -3505,3 +3513,4 @@ if ('serviceWorker' in navigator) {
             console.log('Service Worker registration failed:', error);
         });
 }
+
