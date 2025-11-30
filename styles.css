@@ -2049,3 +2049,23 @@ footer {
 .gpa-excellent { color: #4CAF50; font-weight: 700; }
 .gpa-good { color: #8BC34A; font-weight: 700; }
 .gpa-poor { color: #F44336; font-weight: 700; }
+/* Ensure tab contents are properly hidden/shown */
+.tab-content {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Remove any conflicting display properties */
+.content-area > div {
+    display: none;
+}
+
+.content-area > div.active {
+    display: block;
+}
