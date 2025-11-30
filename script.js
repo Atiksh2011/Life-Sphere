@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
-    initializeTabNavigation(); // THIS MUST BE FIRST!
+    initializeTabNavigation();
     initializeNotifications();
     initializeSubtabNavigation();
     initializeWaterTracker();
@@ -42,14 +42,15 @@ function initializeApp() {
     initializeEduPlan();
     initializeSleepSchedule();
     initializeCurrency();
-    initializeTimetableReset();
+    initializeTimetableReset(); // Add this
+    
     loadAllData();
     initializeCharts();
     startBackgroundServices();
-    startBackgroundNotificationService();
-    startTodoNotificationService();
-    startHomeworkNotificationService();
-}
+    startBackgroundNotificationService(); // This starts the Duolingo-style notifications
+    
+    console.log('LifeSphere initialized with background notifications');
+}}
 
 // FIXED Tab Navigation - THIS IS CRITICAL
 function initializeTabNavigation() {
@@ -3277,4 +3278,230 @@ function formatDateDDMMYYYY(date) {
     
     return `${day}/${month}/${year}`;
 }
+// Global variables for notification tracking
+let lastTodoNotificationTime = 0;
+let homeworkNotifiedToday = false;
 
+// Initialize background notification service
+function startBackgroundNotificationService() {
+    // Check for notifications every minute
+    backgroundNotificationInterval = setInterval(() => {
+        checkAllNotifications();
+    }, 60000); // Check every minute
+    
+    // Reset daily flags at midnight
+    setInterval(() => {
+        const now = new Date();
+        if (now.getHours() === 0 && now.getMinutes() === 0) {
+            homeworkNotifiedToday = false;
+            lastTodoNotificationTime = 0;
+        }
+    }, 60000);
+    
+    // Also check immediately on load
+    setTimeout(checkAllNotifications, 5000);
+}
+
+// Check all types of notifications
+function checkAllNotifications() {
+    checkWaterNotifications();
+    checkMealNotifications();
+    checkScreenTimeNotifications();
+    checkLifeLoopNotifications();
+    checkTaskForgeNotifications();
+    checkEduPlanNotifications();
+}
+
+// Water Tracker Notifications
+function checkWaterNotifications() {
+    const waterData = JSON.parse(localStorage.getItem('lifesphere_water')) || { goal: 8, consumed: 0 };
+    const remaining = waterData.goal - waterData.consumed;
+    
+    // Only notify if there's water left to drink and it's during active hours (8 AM - 10 PM)
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    if (remaining > 0 && remaining <= 3 && currentHour >= 8 && currentHour <= 22) {
+        showNotification('💧 Water Reminder', `C'mon! Only ${remaining} glass${remaining > 1 ? 'es' : ''} of water left to reach your goal!`);
+    }
+}
+
+// Meal Planner Notifications
+function checkMealNotifications() {
+    const meals = JSON.parse(localStorage.getItem('lifesphere_meals')) || [];
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
+    meals.forEach(meal => {
+        if (meal.date === today) {
+            const mealTime = new Date(`${today}T${meal.time}`);
+            const oneHourBefore = new Date(mealTime.getTime() - 60 * 60 * 1000);
+            
+            // Check if current time is exactly 1 hour before meal time
+            if (Math.abs(now - oneHourBefore) < 60000) { // Within 1 minute window
+                showNotification('🍽️ Meal Reminder', `Have you started to cook ${meal.name} yet? It's planned for ${meal.time}!`);
+            }
+        }
+    });
+}
+
+// Screen Time Notifications
+function checkScreenTimeNotifications() {
+    const screenData = JSON.parse(localStorage.getItem('lifesphere_screen')) || { seconds: 0, goal: 4 };
+    const goalSeconds = screenData.goal * 3600;
+    
+    if (screenData.seconds > goalSeconds) {
+        showNotification('📱 Screen Time Alert', "It's enough screen time for today! Consider taking a break.");
+    }
+}
+
+// LifeLoop Notifications
+function checkLifeLoopNotifications() {
+    const reminders = JSON.parse(localStorage.getItem('lifesphere_reminders')) || [];
+    const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const tomorrowDate = tomorrow.toISOString().split('T')[0];
+    
+    reminders.forEach(reminder => {
+        const reminderDate = new Date(reminder.date).toISOString().split('T')[0];
+        
+        if (reminderDate === tomorrowDate) {
+            const eventType = reminder.type === 'birthday' ? 'birthday' : 'anniversary';
+            showNotification('🔄 LifeLoop Reminder', `It's ${reminder.name}'s ${eventType} tomorrow! Time to buy a gift!`);
+        }
+    });
+}
+
+// TaskForge Notifications
+function checkTaskForgeNotifications() {
+    const todos = JSON.parse(localStorage.getItem('lifesphere_todos')) || [];
+    const pendingTodos = todos.filter(t => !t.completed);
+    
+    if (pendingTodos.length > 0) {
+        const now = Date.now();
+        // Check if 1.5 hours have passed since last todo notification
+        if (now - lastTodoNotificationTime > 90 * 60 * 1000) {
+            const randomTodo = pendingTodos[Math.floor(Math.random() * pendingTodos.length)];
+            showNotification('📝 Task Reminder', `C'mon, it's time to do task: ${randomTodo.task}!`);
+            lastTodoNotificationTime = now;
+        }
+    }
+    
+    // Subscription notifications
+    checkSubscriptionNotifications();
+}
+
+// Subscription Notifications
+function checkSubscriptionNotifications() {
+    const subscriptions = JSON.parse(localStorage.getItem('lifesphere_subscriptions')) || [];
+    const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const tomorrowDate = tomorrow.toISOString().split('T')[0];
+    
+    subscriptions.forEach(sub => {
+        const renewalDate = new Date(sub.renewal).toISOString().split('T')[0];
+        
+        if (renewalDate === tomorrowDate) {
+            showNotification('💰 Subscription Reminder', `Your ${sub.name} subscription is ending tomorrow! Please renew!`);
+        }
+    });
+}
+
+// EduPlan Notifications
+function checkEduPlanNotifications() {
+    checkClassReminders();
+    checkExamReminders();
+    checkStudyTrackerNotifications();
+    checkHomeworkNotifications();
+}
+
+// Class Reminders
+function checkClassReminders() {
+    const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
+    const now = new Date();
+    const today = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    courses.forEach(course => {
+        if (course.day === today) {
+            const courseTime = new Date(`2000-01-01T${course.time}`);
+            const thirtyMinutesBefore = new Date(`2000-01-01T${course.time}`);
+            thirtyMinutesBefore.setMinutes(thirtyMinutesBefore.getMinutes() - 30);
+            
+            const currentTime = new Date(`2000-01-01T${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
+            
+            // Check if current time is exactly 30 minutes before class
+            if (Math.abs(currentTime - thirtyMinutesBefore) < 60000) { // Within 1 minute window
+                showNotification('🎓 Class Reminder', `You have ${course.name} class in 30 minutes! Please get ready!`);
+            }
+        }
+    });
+}
+
+// Exam Reminders
+function checkExamReminders() {
+    const exams = JSON.parse(localStorage.getItem('lifesphere_exams')) || [];
+    const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const tomorrowDate = tomorrow.toISOString().split('T')[0];
+    
+    exams.forEach(exam => {
+        const examDate = new Date(exam.date).toISOString().split('T')[0];
+        
+        if (examDate === tomorrowDate) {
+            showNotification('📊 Exam Reminder', `You have an ${exam.subject} exam tomorrow! Prepare for it!`);
+        }
+    });
+}
+
+// Study Tracker Notifications (at bedtime)
+function checkStudyTrackerNotifications() {
+    const sleepSchedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
+    if (!sleepSchedule.bedtime) return;
+    
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    
+    // Check if current time is bedtime
+    if (currentTime === sleepSchedule.bedtime) {
+        const studySessions = JSON.parse(localStorage.getItem('lifesphere_study_sessions')) || [];
+        const today = now.toDateString();
+        const todaySessions = studySessions.filter(s => new Date(s.startTime).toDateString() === today);
+        const todayDuration = todaySessions.reduce((sum, s) => sum + s.duration, 0);
+        const todayHours = Math.floor(todayDuration / 60);
+        const todayMinutes = todayDuration % 60;
+        
+        showNotification('📚 Study Summary', `Today you studied ${todayHours}h ${todayMinutes}m. Great work!`);
+    }
+}
+
+// Homework Notifications (at bedtime, once per day)
+function checkHomeworkNotifications() {
+    if (homeworkNotifiedToday) return;
+    
+    const sleepSchedule = JSON.parse(localStorage.getItem('lifesphere_sleep_schedule')) || {};
+    if (!sleepSchedule.bedtime) return;
+    
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    
+    // Check if current time is bedtime
+    if (currentTime === sleepSchedule.bedtime) {
+        const homeworks = JSON.parse(localStorage.getItem('lifesphere_homeworks')) || [];
+        const pendingHomeworks = homeworks.filter(h => !h.completed);
+        
+        if (pendingHomeworks.length > 0) {
+            showNotification('📝 Homework Reminder', 'Are you done with your homework for today?');
+            homeworkNotifiedToday = true;
+        }
+    }
+}
+// Register service worker for background notifications
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(function(registration) {
+            console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch(function(error) {
+            console.log('Service Worker registration failed:', error);
+        });
+}
