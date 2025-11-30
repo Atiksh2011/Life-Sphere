@@ -5,7 +5,7 @@ let screenTracking = false;
 let currentWeekOffset = 0;
 let medicationAlarmAudio = null;
 let notificationTimeouts = new Map();
-let selectedCurrency = 'USD';
+let selectedCurrency = 'INR';
 let backgroundNotificationInterval;
 let todoNotificationInterval;
 let homeworkNotificationInterval;
