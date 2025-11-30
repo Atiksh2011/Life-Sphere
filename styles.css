@@ -2033,3 +2033,19 @@ footer {
         transform: translateY(0);
     }
 }
+.grade-percentage {
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.grade-percentage.excellent { background: #4CAF50; color: white; }
+.grade-percentage.good { background: #8BC34A; color: white; }
+.grade-percentage.average { background: #FFC107; color: black; }
+.grade-percentage.poor { background: #FF9800; color: white; }
+.grade-percentage.fail { background: #F44336; color: white; }
+
+.gpa-excellent { color: #4CAF50; font-weight: 700; }
+.gpa-good { color: #8BC34A; font-weight: 700; }
+.gpa-poor { color: #F44336; font-weight: 700; }
