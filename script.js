@@ -1771,17 +1771,7 @@ function updateTimetableDisplay() {
         ];
         
         timetableHTML = `
-            <div class="timetable-header-box">
-                <div class="timetable-header-row">
-                    <div class="timetable-stat">TOTAL CLASSES: ${courses.length}</div>
-                    <div class="timetable-stat">WEEKLY HOURS: ${calculateWeeklyHours(courses)}</div>
-                </div>
-                <div class="timetable-header-row">
-                    <div class="timetable-stat-full">TODAY'S CLASSES: ${calculateTodaysClasses(courses)}</div>
-                </div>
-            </div>
-            
-            <div class="timetable-container">
+            <div class="timetable-view-container">
                 <table class="timetable-table">
                     <thead>
                         <tr>
@@ -1842,26 +1832,6 @@ function updateTimetableDisplay() {
     updateTimetableStats();
 }
 
-function calculateWeeklyHours(courses) {
-    const totalMinutes = courses.reduce((sum, course) => sum + course.duration, 0);
-    const weeklyHours = Math.floor(totalMinutes / 60);
-    const weeklyMinutes = totalMinutes % 60;
-    return `${weeklyHours}h ${weeklyMinutes}m`;
-}
-
-function calculateTodaysClasses(courses) {
-    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    const todayCourses = courses.filter(course => course.day === today);
-    return todayCourses.length;
-}
-
-function formatTimeDisplay(time) {
-    const [hours, minutes] = time.split(':').map(Number);
-    const displayHours = hours % 12 || 12;
-    const period = hours >= 12 ? 'PM' : 'AM';
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-}
-
 function isCourseAtTime(course, timeSlot) {
     const courseStartMinutes = timeToMinutes(course.time);
     const slotMinutes = timeToMinutes(timeSlot);
@@ -1885,6 +1855,13 @@ function calculateEndTime(startTime, duration) {
     return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
 }
 
+function formatTimeDisplay(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+    const displayHours = hours % 12 || 12;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
 function saveCourse(course) {
     let courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
     courses.push(course);
@@ -1896,19 +1873,10 @@ function saveCourse(course) {
 function updateTimetableStats() {
     const courses = JSON.parse(localStorage.getItem('lifesphere_courses')) || [];
     const totalClassesElement = document.getElementById('total-classes');
-    const todayClassesElement = document.getElementById('today-classes');
     
     // Total classes
     if (totalClassesElement) {
         totalClassesElement.textContent = courses.length;
-    }
-    
-    // Today's classes
-    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    const todayCourses = courses.filter(course => course.day === today);
-    
-    if (todayClassesElement) {
-        todayClassesElement.textContent = todayCourses.length;
     }
 }
 
