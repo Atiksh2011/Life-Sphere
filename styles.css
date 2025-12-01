@@ -8,6 +8,7 @@
 html {
     font-size: 16px;
     line-height: 1.6;
+    overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 body {
@@ -15,7 +16,9 @@ body {
     background-color: #f5f7fa;
     color: #333;
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    width: 100vw;
+    max-width: 100%;
 }
 
 /* Container */
@@ -24,7 +27,247 @@ body {
     margin: 0 auto;
     padding: 0 20px;
     width: 100%;
+    overflow-x: hidden; /* Prevent horizontal scroll */
 }
+
+/* Main Content Layout */
+.main-content {
+    display: flex;
+    margin: 2rem 0;
+    gap: 2rem;
+    min-height: 80vh;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+/* Content Area */
+.content-area {
+    flex: 1;
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    min-height: 600px;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    overflow-y: auto; /* Keep vertical scroll */
+}
+
+/* History Tables - REMOVE fixed min-width */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    /* REMOVED: min-width: 600px; */
+}
+
+/* Weekly Meal Plan - FIX horizontal overflow */
+.weekly-meal-plan-popup {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive grid */
+    gap: 1rem;
+    /* REMOVED: min-width: 800px; */
+    width: 100%;
+}
+
+/* Timetable View - FIX horizontal overflow */
+.timetable-view-container {
+    background: white;
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow-x: auto; /* Allow horizontal scroll only inside timetable */
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.timetable-view {
+    /* REMOVED: min-width: 800px; */
+    width: max-content; /* Let it expand as needed */
+    min-width: 100%; /* Minimum full width */
+}
+
+/* Tables - FIX horizontal overflow */
+.subscriptions-table, .study-sessions-table, .grades-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    /* REMOVED: min-width: 700px; */
+}
+
+/* Water Tracker - FIX layout */
+.water-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 2rem;
+    overflow: hidden;
+}
+
+/* Workout Logger - FIX layout */
+.workout-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 2rem;
+    overflow: hidden;
+}
+
+/* Medication - FIX layout */
+.medication-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 2rem;
+    overflow: hidden;
+}
+
+/* Meal Planner - FIX layout */
+.meals-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 2rem;
+    overflow: hidden;
+}
+
+/* Screen Time - FIX layout */
+.screen-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 2rem;
+    overflow: hidden;
+}
+
+/* Sleep Tracker - FIX layout */
+.sleep-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 2rem;
+    overflow: hidden;
+}
+
+/* Reminders - FIX layout */
+.reminders-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 2rem;
+    overflow: hidden;
+}
+
+/* Responsive Design Updates */
+@media (max-width: 768px) {
+    /* Ensure no horizontal overflow on mobile */
+    .container {
+        padding: 0 15px;
+        overflow-x: hidden;
+    }
+    
+    .main-content {
+        flex-direction: column;
+        margin: 1rem 0;
+        gap: 1rem;
+        overflow-x: hidden;
+    }
+    
+    .content-area {
+        padding: 1rem;
+        overflow-x: hidden;
+    }
+    
+    /* Fix table containers on mobile */
+    .subscriptions-table-container,
+    .history-container,
+    .timetable-view-container {
+        margin: 0 -15px;
+        padding: 0 15px;
+        width: calc(100% + 30px);
+    }
+    
+    /* Make tables scrollable inside their containers */
+    .history-table,
+    .subscriptions-table,
+    .study-sessions-table,
+    .grades-table,
+    .timetable-table {
+        min-width: 100%;
+        font-size: 0.9rem;
+    }
+    
+    /* Weekly meal plan adjustments */
+    .weekly-meal-plan-popup {
+        grid-template-columns: repeat(2, 1fr);
+        min-width: auto;
+        width: 100%;
+    }
+    
+    /* Timetable adjustments */
+    .timetable-view {
+        min-width: 600px;
+    }
+    
+    .timetable-table th,
+    .timetable-table td {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .course-block {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+        min-height: 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Further mobile optimizations */
+    .weekly-meal-plan-popup {
+        grid-template-columns: 1fr;
+        min-width: auto;
+    }
+    
+    .timetable-view {
+        min-width: 500px;
+    }
+    
+    .timetable-table {
+        font-size: 0.7rem;
+    }
+    
+    .timetable-table th,
+    .timetable-table td {
+        padding: 0.3rem;
+    }
+    
+    .course-block {
+        padding: 0.3rem;
+        font-size: 0.7rem;
+        min-height: 50px;
+    }
+}
+
+/* Ensure scroll bars are only vertical */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* The rest of your CSS remains the same... */
+/* Continue with all your existing CSS below this point */
 
 /* Header Styles */
 header {
@@ -72,14 +315,6 @@ header {
 .btn-notification:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: translateY(-1px);
-}
-
-/* Main Content Layout */
-.main-content {
-    display: flex;
-    margin: 2rem 0;
-    gap: 2rem;
-    min-height: 80vh;
 }
 
 /* Sidebar */
@@ -169,17 +404,7 @@ header {
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-/* Content Area */
-.content-area {
-    flex: 1;
-    background: white;
-    border-radius: 10px;
-    padding: 2rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    min-height: 600px;
-    overflow: hidden;
-}
-
+/* Tab Content */
 .tab-content {
     display: none;
     animation: fadeIn 0.5s ease-in;
@@ -468,14 +693,7 @@ header {
     overflow: hidden;
 }
 
-/* Water Tracker Styles */
-.water-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    overflow: hidden;
-}
-
+/* Water Goal */
 .water-goal {
     grid-column: 1 / -1;
     text-align: center;
@@ -574,37 +792,6 @@ header {
     overflow: hidden;
 }
 
-.history-container {
-    overflow-x: auto;
-}
-
-.history-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    min-width: 600px;
-}
-
-.history-table th,
-.history-table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-.history-table th {
-    font-weight: 600;
-    color: #555;
-    background: #f8f9fa;
-}
-
-.history-table tr:last-child td {
-    border-bottom: none;
-}
-
 /* Enhanced delete button styles for water tracker */
 .delete-btn {
     background: #ff6b6b;
@@ -625,13 +812,6 @@ header {
 }
 
 /* Workout Logger Styles */
-.workout-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    overflow: hidden;
-}
-
 .workout-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -697,13 +877,6 @@ header {
 }
 
 /* Medication Styles */
-.medication-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    overflow: hidden;
-}
-
 .med-time {
     margin-bottom: 0.5rem;
 }
@@ -756,14 +929,6 @@ header {
     color: white;
 }
 
-/* Meal Planner Styles */
-.meals-container {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 2rem;
-    overflow: hidden;
-}
-
 .week-navigation {
     display: flex;
     justify-content: space-between;
@@ -779,13 +944,7 @@ header {
     padding: 1rem;
     background: #f8f9fa;
     margin-bottom: 1.5rem;
-}
-
-.weekly-meal-plan-popup {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 1rem;
-    min-width: 800px;
+    overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 .day-meals {
@@ -842,13 +1001,6 @@ header {
 }
 
 /* Screen Time Styles - FIXED MOBILE DISPLAY */
-.screen-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    overflow: hidden;
-}
-
 .mobile-screen-time {
     display: flex;
     justify-content: center;
@@ -903,22 +1055,7 @@ header {
     text-align: center;
 }
 
-.goal-setter {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    margin: 1rem 0;
-}
-
 /* Sleep Tracker Styles */
-.sleep-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    overflow: hidden;
-}
-
 .quality-rating {
     display: flex;
     justify-content: space-between;
@@ -990,13 +1127,6 @@ header {
 }
 
 /* LifeLoop Styles */
-.reminders-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    overflow: hidden;
-}
-
 .reminder-item {
     background: #f8f9fa;
     border-radius: 8px;
@@ -1144,148 +1274,23 @@ header {
     margin-bottom: 1rem;
 }
 
-.subscriptions-table, .study-sessions-table, .grades-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    min-width: 700px;
-}
-
-.subscriptions-table th, .study-sessions-table th, .grades-table th {
-    background: #f8f9fa;
-    padding: 1rem;
-    text-align: left;
-    font-weight: 600;
-    color: #555;
-}
-
-.subscriptions-table td, .study-sessions-table td, .grades-table td {
-    padding: 1rem;
-    border-bottom: 1px solid #eee;
-}
-
-.subscriptions-table tr:last-child td, 
-.study-sessions-table tr:last-child td,
-.grades-table tr:last-child td {
-    border-bottom: none;
-}
-
-/* Enhanced Timetable Styles */
-.timetable-container {
-    background: white;
-    border-radius: 10px;
-    padding: 0;
-    overflow: hidden;
-}
-
-.timetable-setup {
-    padding: 2rem;
-    background: #f8f9fa;
-    border-radius: 10px;
-    margin-bottom: 1rem;
-}
-
-.setup-header {
+/* Empty State */
+.timetable-empty {
     text-align: center;
-    margin-bottom: 2rem;
-}
-
-.setup-header h4 {
-    color: #333;
-    margin-bottom: 0.5rem;
-}
-
-.setup-header p {
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.timetable-form {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.form-actions {
+    color: #999;
+    font-style: italic;
+    padding: 1rem 0.5rem;
+    background: #f8f9fa;
+    border-radius: 4px;
     display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-top: 2rem;
-}
-
-.form-actions button {
-    min-width: 120px;
-}
-
-.timetable-display {
-    padding: 1.5rem;
-}
-
-.timetable-header {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #f0f2f5;
-}
-
-.timetable-header h4 {
-    color: #333;
-    margin: 0;
-}
-
-.timetable-actions {
-    display: flex;
-    gap: 1rem;
-}
-
-.timetable-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.timetable-stat {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 1rem;
-    text-align: center;
-    border-left: 4px solid #667eea;
-}
-
-.stat-value {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 0.3rem;
-}
-
-.stat-label {
+    justify-content: center;
+    height: 100%;
+    min-height: 60px;
     font-size: 0.8rem;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
-.timetable-view-container {
-    background: white;
-    border-radius: 10px;
-    padding: 1rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    overflow-x: auto;
-    margin-bottom: 1.5rem;
-}
-
-.timetable-view {
-    min-width: 800px;
-    width: 100%;
-}
-
+/* Timetable Table */
 .timetable-table {
     width: 100%;
     border-collapse: collapse;
@@ -1396,22 +1401,6 @@ header {
     color: white;
     transform: scale(1.1);
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* Empty State */
-.timetable-empty {
-    text-align: center;
-    color: #999;
-    font-style: italic;
-    padding: 1rem 0.5rem;
-    background: #f8f9fa;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    min-height: 60px;
-    font-size: 0.8rem;
 }
 
 /* Modal Styles */
@@ -1650,325 +1639,42 @@ footer {
 .notification.error { border-left-color: #f44336; }
 .notification.error::before { background: #f44336; }
 
-/* Portrait Mode Optimizations */
-@media (max-width: 768px) and (orientation: portrait) {
-    .container {
-        padding: 0 10px;
-    }
-    
-    .main-content {
-        flex-direction: column;
-        margin: 1rem 0;
-        gap: 1rem;
-    }
-    
-    .sidebar {
-        flex: none;
-        position: static;
-        width: 100%;
-        max-height: 50vh;
-        order: 2;
-    }
-    
-    .nav-tabs {
-        max-height: 40vh;
-        flex-direction: row;
-        overflow-x: auto;
-        padding-bottom: 0.5rem;
-    }
-    
-    .nav-tabs a {
-        white-space: nowrap;
-        padding: 0.6rem 0.8rem;
-        font-size: 0.9rem;
-        min-width: max-content;
-    }
-    
-    .content-area {
-        padding: 1rem;
-        order: 1;
-    }
-    
-    .stats-container {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .today-overview {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .upcoming-columns {
-        grid-template-columns: 1fr;
-    }
-    
-    .water-container,
-    .workout-container,
-    .medication-container,
-    .meals-container,
-    .screen-container,
-    .sleep-container,
-    .reminders-container,
-    .todo-container,
-    .subscriptions-container,
-    .timetable-container,
-    .study-container,
-    .homework-container,
-    .exams-container {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .header-content {
-        flex-direction: column;
-        text-align: center;
-        gap: 1rem;
-    }
-    
-    .water-cups {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    .weekly-meal-plan-popup {
-        grid-template-columns: repeat(2, 1fr);
-        min-width: 400px;
-    }
-    
-    .workout-stats,
-    .sleep-overview,
-    .study-overview {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .history-table {
-        font-size: 0.8rem;
-    }
-    
-    .history-table th,
-    .history-table td {
-        padding: 0.5rem;
-    }
-    
-    .timetable-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-    
-    .taskforge-container, .eduplan-container {
-        flex-direction: column;
-    }
-    
-    .taskforge-sidebar, .eduplan-sidebar {
-        flex: none;
-    }
-    
-    .taskforge-nav, .eduplan-nav {
-        flex-direction: row;
-        overflow-x: auto;
-        padding-bottom: 1rem;
-    }
-    
-    .taskforge-nav a, .eduplan-nav a {
-        white-space: nowrap;
-        padding: 0.8rem 1rem;
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-    
-    .timetable-view-container {
-        padding: 0.5rem;
-    }
-    
-    .timetable-view {
-        min-width: 600px;
-    }
-    
-    .timetable-table {
-        font-size: 0.7rem;
-    }
-    
-    .timetable-table th,
-    .timetable-table td {
-        padding: 0.5rem;
-    }
-    
-    .course-block {
-        padding: 0.5rem;
-        font-size: 0.7rem;
-    }
-    
-    .currency-input-container {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .currency-select {
-        flex: none;
-        width: 100%;
-    }
-    
-    #notification-container {
-        right: 10px;
-        left: 10px;
-        max-width: none;
-    }
-    
-    .notification {
-        max-width: none;
-    }
-    
-    /* Screen Time Mobile Optimizations */
-    .mobile-screen-time {
-        padding: 0.5rem 0;
-    }
-    
-    .time-display-mobile {
-        gap: 0.3rem;
-    }
-    
-    .time-value {
-        font-size: 1.5rem;
-    }
-    
-    .time-label {
-        font-size: 0.6rem;
-    }
-    
-    .time-separator {
-        font-size: 1.2rem;
-        margin: 0 0.1rem;
-    }
-    
-    .time-unit-mobile {
-        min-width: 50px;
-    }
-    
-    .subscriptions-table-container {
-        margin: 0 -1rem;
-        padding: 0 1rem;
-    }
-    
-    .screen-controls {
-        flex-direction: column;
-    }
-    
-    .screen-controls button {
-        width: 100%;
-    }
+.grade-percentage {
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
 }
 
-@media (max-width: 480px) and (orientation: portrait) {
-    .sidebar {
-        padding: 1rem;
-    }
-    
-    .content-area {
-        padding: 1rem;
-    }
-    
-    .section-title {
-        font-size: 1.3rem;
-    }
-    
-    .stat-card {
-        padding: 1rem;
-    }
-    
-    .water-cups {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .btn-primary, .btn-secondary {
-        width: 100%;
-        padding: 1rem;
-    }
-    
-    .weekly-meal-plan-popup {
-        grid-template-columns: 1fr;
-        min-width: 300px;
-    }
-    
-    .workout-stats,
-    .sleep-overview,
-    .study-overview {
-        grid-template-columns: 1fr;
-    }
-    
-    .time-value {
-        font-size: 1.2rem;
-    }
-    
-    .time-unit-mobile {
-        min-width: 45px;
-    }
-    
-    .time-label {
-        font-size: 0.55rem;
-    }
-    
-    .notification-controls {
-        flex-direction: column;
-    }
-    
-    .timetable-view-container {
-        padding: 0.5rem;
-    }
-    
-    .timetable-view {
-        min-width: 500px;
-    }
-    
-    .timetable-table {
-        font-size: 0.6rem;
-    }
-    
-    .timetable-table th,
-    .timetable-table td {
-        padding: 0.3rem;
-    }
-    
-    .course-block {
-        padding: 0.3rem;
-        font-size: 0.6rem;
-        min-height: 60px;
-    }
-    
-    .course-actions {
-        top: 0.1rem;
-        right: 0.1rem;
-    }
-    
-    .delete-course-btn {
-        width: 16px;
-        height: 16px;
-        font-size: 0.6rem;
-    }
-    
-    .delete-btn {
-        padding: 0.3rem 0.6rem;
-        font-size: 0.7rem;
-    }
+.grade-percentage.excellent { background: #4CAF50; color: white; }
+.grade-percentage.good { background: #8BC34A; color: white; }
+.grade-percentage.average { background: #FFC107; color: black; }
+.grade-percentage.poor { background: #FF9800; color: white; }
+.grade-percentage.fail { background: #F44336; color: white; }
+
+.gpa-excellent { color: #4CAF50; font-weight: 700; }
+.gpa-good { color: #8BC34A; font-weight: 700; }
+.gpa-poor { color: #F44336; font-weight: 700; }
+
+/* Ensure tab contents are properly hidden/shown */
+.tab-content {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-/* Landscape Mode Optimizations */
-@media (max-width: 768px) and (orientation: landscape) {
-    .sidebar {
-        max-height: 70vh;
-    }
-    
-    .nav-tabs {
-        max-height: 60vh;
-    }
+.tab-content.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Remove any conflicting display properties */
+.content-area > div {
+    display: none;
+}
+
+.content-area > div.active {
+    display: block;
 }
 
 /* Notification Animations */
@@ -2012,40 +1718,4 @@ footer {
         opacity: 1;
         transform: translateY(0);
     }
-}
-.grade-percentage {
-    padding: 0.3rem 0.6rem;
-    border-radius: 4px;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.grade-percentage.excellent { background: #4CAF50; color: white; }
-.grade-percentage.good { background: #8BC34A; color: white; }
-.grade-percentage.average { background: #FFC107; color: black; }
-.grade-percentage.poor { background: #FF9800; color: white; }
-.grade-percentage.fail { background: #F44336; color: white; }
-
-.gpa-excellent { color: #4CAF50; font-weight: 700; }
-.gpa-good { color: #8BC34A; font-weight: 700; }
-.gpa-poor { color: #F44336; font-weight: 700; }
-/* Ensure tab contents are properly hidden/shown */
-.tab-content {
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.tab-content.active {
-    display: block;
-    opacity: 1;
-}
-
-/* Remove any conflicting display properties */
-.content-area > div {
-    display: none;
-}
-
-.content-area > div.active {
-    display: block;
 }
