@@ -1764,11 +1764,13 @@ function updateTimetableDisplay() {
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         
-        // Time slots from 8 AM to 5 PM in 1-hour intervals
-        const timeSlots = [
-            '08:00', '09:00', '10:00', '11:00', '12:00', 
-            '13:00', '14:00', '15:00', '16:00', '17:00'
-        ];
+        // Time slots from 5 AM to 12 AM (midnight) in 1-hour intervals
+        const timeSlots = [];
+        for (let hour = 5; hour <= 23; hour++) {
+            timeSlots.push(`${hour.toString().padStart(2, '0')}:00`);
+        }
+        // Add midnight (00:00)
+        timeSlots.push('00:00');
         
         timetableHTML = `
             <div class="timetable-view-container">
@@ -1785,7 +1787,8 @@ function updateTimetableDisplay() {
         // Create rows for each time slot
         timeSlots.forEach(timeSlot => {
             const [hours, minutes] = timeSlot.split(':').map(Number);
-            const displayTime = `${hours % 12 || 12}:${minutes.toString().padStart(2, '0')} ${hours >= 12 ? 'PM' : 'AM'}`;
+            const displayHours = hours % 12 || 12;
+            const displayTime = `${displayHours}:${minutes.toString().padStart(2, '0')} ${hours >= 12 ? (hours === 12 ? 'PM' : hours < 24 ? 'PM' : 'AM') : 'AM'}`;
             
             timetableHTML += `
                 <tr>
@@ -1832,6 +1835,15 @@ function updateTimetableDisplay() {
     updateTimetableStats();
 }
 
+// Helper function to format time for display
+function formatTimeDisplay(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+    const displayHours = hours % 12 || 12;
+    const period = hours >= 12 ? (hours === 12 ? 'PM' : hours < 24 ? 'PM' : 'AM') : 'AM';
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
+// Helper function to check if a course is at a specific time slot
 function isCourseAtTime(course, timeSlot) {
     const courseStartMinutes = timeToMinutes(course.time);
     const slotMinutes = timeToMinutes(timeSlot);
@@ -1840,26 +1852,21 @@ function isCourseAtTime(course, timeSlot) {
     return slotMinutes >= courseStartMinutes && slotMinutes < courseEndMinutes;
 }
 
+// Helper function to convert time string to minutes
 function timeToMinutes(time) {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
 }
 
+// Helper function to calculate end time
 function calculateEndTime(startTime, duration) {
     const startMinutes = timeToMinutes(startTime);
     const endMinutes = startMinutes + duration;
     
-    const endHour = Math.floor(endMinutes / 60);
+    const endHour = Math.floor(endMinutes / 60) % 24;
     const endMinute = endMinutes % 60;
     
     return `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
-}
-
-function formatTimeDisplay(time) {
-    const [hours, minutes] = time.split(':').map(Number);
-    const displayHours = hours % 12 || 12;
-    const period = hours >= 12 ? 'PM' : 'AM';
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
 
 function saveCourse(course) {
