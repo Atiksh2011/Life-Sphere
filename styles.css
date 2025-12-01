@@ -1286,26 +1286,6 @@ header {
     width: 100%;
 }
 
-.timetable-header-box {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    margin-bottom: 1.5rem;
-}
-
-.timetable-header-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
-
-.timetable-stat-full {
-    text-align: center;
-    font-weight: 600;
-    font-size: 1.1rem;
-}
-
 .timetable-table {
     width: 100%;
     border-collapse: collapse;
