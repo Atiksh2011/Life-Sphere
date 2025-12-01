@@ -1719,3 +1719,60 @@ footer {
         transform: translateY(0);
     }
 }
+/* Sidebar - ADJUST POSITIONING */
+.sidebar {
+    flex: 0 0 250px;
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    height: fit-content;
+    position: sticky;
+    top: 80px; /* CHANGED from 100px to 80px */
+    overflow: hidden;
+    margin-top: 20px; /* ADDED to move it up */
+}
+
+/* Main Content Layout - ADJUST MARGIN */
+.main-content {
+    display: flex;
+    margin: 1.5rem 0; /* CHANGED from 2rem 0 to 1.5rem 0 */
+    gap: 2rem;
+    min-height: 80vh;
+    overflow-x: hidden;
+}
+
+/* Content Area - ADJUST PADDING */
+.content-area {
+    flex: 1;
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    min-height: 600px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin-top: 20px; /* ADDED to move it up */
+}
+
+/* Header - OPTIONAL: Reduce padding if needed */
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.8rem 0; /* CHANGED from 1rem 0 to 0.8rem 0 */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* OR Alternative: Adjust the entire layout */
+@media (min-width: 769px) {
+    .main-content {
+        align-items: flex-start; /* ADDED to align items at the top */
+    }
+    
+    .sidebar {
+        align-self: flex-start; /* ADDED to ensure sidebar stays at top */
+    }
+}
