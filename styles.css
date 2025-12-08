@@ -3344,3 +3344,124 @@ header {
         font-size: 16px; /* Prevents zoom on iOS */
     }
 }
+/* Update Notification */
+.update-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+    border-left: 4px solid var(--primary);
+    max-width: 400px;
+    width: 90%;
+}
+
+[data-theme="dark"] .update-notification {
+    background: var(--light);
+}
+
+.update-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+.update-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.update-text {
+    flex: 1;
+}
+
+.update-text strong {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--dark);
+}
+
+.update-text p {
+    color: var(--gray);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.update-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.update-actions button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Offline Indicator */
+.offline-indicator {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--warning);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Offline Mode Styles */
+[data-theme].offline {
+    opacity: 0.9;
+}
+
+[data-theme].offline .btn-primary:not(:disabled) {
+    background: var(--gray);
+    cursor: not-allowed;
+}
+
+[data-theme].offline .btn-primary:not(:disabled):hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Service Worker Debug Panel (for development) */
+.sw-debug-panel {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    z-index: 9999;
+    display: none;
+}
+
+.sw-debug-panel.show {
+    display: block;
+}
