@@ -2616,3 +2616,1463 @@ window.completeHomework = completeHomework;
 window.deleteHomework = deleteHomework;
 window.deleteExam = deleteExam;
 window.deleteGrade = deleteGrade;
+// Enhanced LifeSphere Application
+class LifeSphere {
+    constructor() {
+        this.initializeApp();
+    }
+
+    async initializeApp() {
+        console.log('🚀 LifeSphere Enhanced v2.0 Initializing...');
+        
+        try {
+            // Initialize core systems
+            await this.initializeCore();
+            
+            // Initialize UI components
+            this.initializeUI();
+            
+            // Initialize all modules
+            this.initializeModules();
+            
+            // Load data
+            this.loadAllData();
+            
+            // Start background services
+            this.startBackgroundServices();
+            
+            console.log('✅ LifeSphere initialized successfully');
+            this.showToast('LifeSphere Enhanced v2.0 ready!', 'success');
+        } catch (error) {
+            console.error('❌ Initialization error:', error);
+            this.showToast('Failed to initialize app', 'error');
+        }
+    }
+
+    // Core initialization
+    async initializeCore() {
+        // Check for service worker support
+        if ('serviceWorker' in navigator) {
+            try {
+                const registration = await navigator.register('/sw.js');
+                console.log('Service Worker registered:', registration);
+            } catch (error) {
+                console.warn('Service Worker registration failed:', error);
+            }
+        }
+
+        // Initialize storage with fallback
+        this.storage = this.initializeStorage();
+        
+        // Set default theme
+        this.setTheme(localStorage.getItem('theme') || 'light');
+        
+        // Initialize time
+        this.updateCurrentTime();
+        setInterval(() => this.updateCurrentTime(), 1000);
+    }
+
+    // Enhanced storage with fallback
+    initializeStorage() {
+        const storage = {
+            set: (key, value) => {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (error) {
+                    console.warn('LocalStorage set failed:', error);
+                    // Fallback to sessionStorage
+                    try {
+                        sessionStorage.setItem(key, JSON.stringify(value));
+                        return true;
+                    } catch (e) {
+                        console.error('All storage failed:', e);
+                        return false;
+                    }
+                }
+            },
+            
+            get: (key) => {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : null;
+                } catch (error) {
+                    console.warn('LocalStorage get failed:', error);
+                    try {
+                        const item = sessionStorage.getItem(key);
+                        return item ? JSON.parse(item) : null;
+                    } catch (e) {
+                        console.error('All storage get failed:', e);
+                        return null;
+                    }
+                }
+            },
+            
+            remove: (key) => {
+                localStorage.removeItem(key);
+                sessionStorage.removeItem(key);
+            },
+            
+            clear: () => {
+                localStorage.clear();
+                sessionStorage.clear();
+            }
+        };
+        
+        return storage;
+    }
+
+    // Theme management
+    setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        
+        const toggleBtn = document.getElementById('dark-mode-toggle');
+        if (toggleBtn) {
+            toggleBtn.innerHTML = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+        }
+    }
+
+    toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        this.setTheme(newTheme);
+        this.showToast(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode activated`, 'info');
+    }
+
+    // UI Initialization
+    initializeUI() {
+        // Theme toggle
+        const themeToggle = document.getElementById('dark-mode-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => this.toggleTheme());
+        }
+
+        // Export/Import buttons
+        const exportBtn = document.getElementById('export-data');
+        const importBtn = document.getElementById('import-data');
+        const exportAllBtn = document.getElementById('export-all-data');
+        
+        if (exportBtn) exportBtn.addEventListener('click', () => this.exportData());
+        if (importBtn) importBtn.addEventListener('click', () => this.importData());
+        if (exportAllBtn) exportAllBtn.addEventListener('click', () => this.exportAllData());
+
+        // Enhanced tab navigation
+        this.initializeTabNavigation();
+
+        // Mobile navigation
+        this.initializeMobileNavigation();
+
+        // Quick actions
+        this.initializeQuickActions();
+
+        // Loading states
+        this.initializeLoadingStates();
+    }
+
+    // Enhanced tab navigation with swipe support
+    initializeTabNavigation() {
+        const navTabs = document.querySelectorAll('.nav-tabs a');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const mobileNavBtns = document.querySelectorAll('.mobile-nav-btn:not(.menu-toggle)');
+
+        // Desktop navigation
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetTab = tab.getAttribute('data-tab');
+                this.switchTab(targetTab);
+            });
+        });
+
+        // Mobile navigation
+        mobileNavBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetTab = btn.getAttribute('data-tab');
+                this.switchTab(targetTab);
+                
+                // Update active states
+                mobileNavBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Close sidebar on mobile
+                document.querySelector('.sidebar').classList.remove('show');
+            });
+        });
+
+        // Menu toggle
+        const menuToggle = document.querySelector('.menu-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarClose = document.querySelector('.sidebar-close');
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('show');
+            });
+        }
+
+        if (sidebarClose) {
+            sidebarClose.addEventListener('click', () => {
+                sidebar.classList.remove('show');
+            });
+        }
+
+        // Touch swipe for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            this.handleSwipe(touchStartX, touchEndX);
+        });
+    }
+
+    switchTab(tabId) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        document.querySelectorAll('.nav-tabs a').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show selected tab
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) {
+            targetTab.classList.add('active');
+            
+            // Update active nav
+            const activeNav = document.querySelector(`.nav-tabs a[data-tab="${tabId}"]`);
+            if (activeNav) activeNav.classList.add('active');
+            
+            // Update mobile nav
+            const mobileBtn = document.querySelector(`.mobile-nav-btn[data-tab="${tabId}"]`);
+            if (mobileBtn) {
+                document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+                mobileBtn.classList.add('active');
+            }
+            
+            // Load tab-specific data
+            this.loadTabData(tabId);
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    handleSwipe(startX, endX) {
+        const swipeThreshold = 50;
+        const diff = startX - endX;
+
+        if (Math.abs(diff) > swipeThreshold) {
+            const currentTab = document.querySelector('.tab-content.active').id;
+            const tabs = ['dashboard', 'water', 'workout', 'medication', 'meals', 'screen', 'sleep', 'lifeloop', 'taskforge', 'eduplan'];
+            const currentIndex = tabs.indexOf(currentTab);
+            
+            if (diff > 0 && currentIndex < tabs.length - 1) {
+                // Swipe left - next tab
+                this.switchTab(tabs[currentIndex + 1]);
+            } else if (diff < 0 && currentIndex > 0) {
+                // Swipe right - previous tab
+                this.switchTab(tabs[currentIndex - 1]);
+            }
+        }
+    }
+
+    // Mobile navigation
+    initializeMobileNavigation() {
+        // Handle mobile menu
+        const sidebar = document.querySelector('.sidebar');
+        
+        // Close sidebar when clicking outside
+        document.addEventListener('click', (e) => {
+            if (sidebar.classList.contains('show') && 
+                !sidebar.contains(e.target) && 
+                !e.target.closest('.menu-toggle')) {
+                sidebar.classList.remove('show');
+            }
+        });
+    }
+
+    // Quick actions
+    initializeQuickActions() {
+        const quickActions = document.querySelectorAll('.quick-action-btn');
+        
+        quickActions.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.getAttribute('data-action');
+                this.handleQuickAction(action);
+            });
+        });
+
+        // Quick add water buttons
+        const quickWaterBtns = document.querySelectorAll('.quick-add-water');
+        quickWaterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const amount = parseFloat(btn.getAttribute('data-amount'));
+                this.addWater(amount);
+            });
+        });
+
+        // Quick task add
+        const addQuickTaskBtn = document.getElementById('add-quick-task');
+        if (addQuickTaskBtn) {
+            addQuickTaskBtn.addEventListener('click', () => {
+                this.showQuickTaskModal();
+            });
+        }
+    }
+
+    handleQuickAction(action) {
+        switch(action) {
+            case 'water':
+                this.addWater(1);
+                break;
+            case 'task':
+                this.showQuickTaskModal();
+                break;
+            case 'workout':
+                this.switchTab('workout');
+                break;
+            case 'study':
+                this.switchTab('eduplan');
+                // Switch to study section
+                document.querySelector('.eduplan-nav a[data-section="study"]').click();
+                break;
+        }
+    }
+
+    // Loading states
+    initializeLoadingStates() {
+        // Show loading for async operations
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            LifeSphere.showLoading();
+            try {
+                const response = await originalFetch(...args);
+                return response;
+            } finally {
+                setTimeout(() => LifeSphere.hideLoading(), 500);
+            }
+        };
+    }
+
+    static showLoading() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) overlay.style.display = 'flex';
+    }
+
+    static hideLoading() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+
+    // Module initialization
+    initializeModules() {
+        // Water Tracker
+        this.initializeWaterTracker();
+        
+        // Workout Logger
+        this.initializeWorkoutLogger();
+        
+        // TaskForge
+        this.initializeTaskForge();
+        
+        // EduPlan
+        this.initializeEduPlan();
+        
+        // Other modules...
+        this.initializeMedicationTracker();
+        this.initializeMealPlanner();
+        this.initializeScreenTimeTracker();
+        this.initializeSleepTracker();
+        this.initializeLifeLoop();
+    }
+
+    // Enhanced Water Tracker
+    initializeWaterTracker() {
+        // Glass size selector
+        const glassSizeSelect = document.getElementById('glass-size');
+        if (glassSizeSelect) {
+            glassSizeSelect.addEventListener('change', () => {
+                const size = parseInt(glassSizeSelect.value);
+                this.updateGlassSize(size);
+            });
+        }
+
+        // Weight-based calculation
+        const weightInput = document.getElementById('weight-based');
+        if (weightInput) {
+            weightInput.addEventListener('change', () => {
+                const weight = parseFloat(weightInput.value);
+                if (weight >= 30 && weight <= 200) {
+                    this.calculateWaterGoalByWeight(weight);
+                }
+            });
+        }
+
+        // Quick water buttons
+        const waterQuickBtns = document.querySelectorAll('.water-quick-btn:not(.custom-amount)');
+        waterQuickBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const amount = parseFloat(btn.getAttribute('data-amount'));
+                this.addWater(amount);
+            });
+        });
+
+        // Custom amount button
+        const customAmountBtn = document.querySelector('.water-quick-btn.custom-amount');
+        if (customAmountBtn) {
+            customAmountBtn.addEventListener('click', () => {
+                this.showCustomWaterModal();
+            });
+        }
+
+        // Update water goal
+        const waterGoalInput = document.getElementById('water-custom-goal');
+        if (waterGoalInput) {
+            waterGoalInput.addEventListener('change', () => {
+                this.updateWaterGoal(parseInt(waterGoalInput.value));
+            });
+        }
+    }
+
+    updateGlassSize(size) {
+        const data = this.storage.get('water_settings') || {};
+        data.glassSize = size;
+        this.storage.set('water_settings', data);
+        
+        // Update display
+        this.updateWaterDisplay();
+        this.showToast(`Glass size set to ${size}ml`, 'success');
+    }
+
+    calculateWaterGoalByWeight(weight) {
+        // Standard calculation: 30-35 ml per kg of body weight
+        const liters = weight * 0.033;
+        const glasses = Math.round(liters * 1000 / 250); // Convert to 250ml glasses
+        
+        // Update goal
+        const goalInput = document.getElementById('water-custom-goal');
+        if (goalInput) {
+            goalInput.value = glasses;
+            this.updateWaterGoal(glasses);
+        }
+        
+        this.showToast(`Recommended daily intake: ${glasses} glasses (${liters.toFixed(1)}L)`, 'info');
+    }
+
+    addWater(amount) {
+        const today = new Date().toDateString();
+        const waterData = this.storage.get('water_data') || {};
+        const todayData = waterData[today] || { consumed: 0, goal: 8 };
+        
+        todayData.consumed += amount;
+        waterData[today] = todayData;
+        this.storage.set('water_data', waterData);
+        
+        // Update streak
+        this.updateWaterStreak();
+        
+        // Update display
+        this.updateWaterDisplay();
+        this.updateQuickStats();
+        
+        // Show notification
+        this.showToast(`Added ${amount} glass${amount !== 1 ? 'es' : ''} of water`, 'success');
+        
+        // Update chart
+        this.updateWaterChart();
+    }
+
+    updateWaterStreak() {
+        const waterData = this.storage.get('water_data') || {};
+        const dates = Object.keys(waterData).sort((a, b) => new Date(b) - new Date(a));
+        
+        let streak = 0;
+        let currentDate = new Date();
+        
+        for (let i = 0; i < dates.length; i++) {
+            const date = new Date(dates[i]);
+            const diffDays = Math.floor((currentDate - date) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays !== i) break;
+            
+            const dayData = waterData[dates[i]];
+            if (dayData.consumed >= dayData.goal * 0.8) { // 80% of goal counts
+                streak++;
+            } else {
+                break;
+            }
+        }
+        
+        // Update streak display
+        const streakElement = document.getElementById('water-streak');
+        if (streakElement) streakElement.textContent = streak;
+        
+        // Unlock achievements
+        this.checkWaterAchievements(streak);
+    }
+
+    checkWaterAchievements(streak) {
+        const achievements = this.storage.get('water_achievements') || {};
+        
+        if (streak >= 1 && !achievements.first_day) {
+            achievements.first_day = true;
+            this.showAchievement('🥤 First Day', 'Drank your first glass!');
+        }
+        
+        if (streak >= 3 && !achievements.three_days) {
+            achievements.three_days = true;
+            this.showAchievement('💧 3 Day Streak', 'Consistent hydration for 3 days!');
+        }
+        
+        if (streak >= 7 && !achievements.perfect_week) {
+            achievements.perfect_week = true;
+            this.showAchievement('🏆 Perfect Week', 'Perfect hydration for a week!');
+        }
+        
+        if (streak >= 30 && !achievements.monthly_master) {
+            achievements.monthly_master = true;
+            this.showAchievement('👑 Monthly Master', '30 days of perfect hydration!');
+        }
+        
+        this.storage.set('water_achievements', achievements);
+    }
+
+    // Enhanced Workout Logger
+    initializeWorkoutLogger() {
+        // Workout templates
+        const templateBtns = document.querySelectorAll('.workout-template-btn');
+        templateBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const template = btn.getAttribute('data-template');
+                this.loadWorkoutTemplate(template);
+            });
+        });
+
+        // Exercise library
+        this.initializeExerciseLibrary();
+
+        // Duration controls
+        const durationBtns = document.querySelectorAll('.duration-btn');
+        durationBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const change = parseInt(btn.getAttribute('data-change'));
+                const durationInput = document.getElementById('workout-duration-enhanced');
+                if (durationInput) {
+                    let value = parseInt(durationInput.value) + change;
+                    if (value < 1) value = 1;
+                    durationInput.value = value;
+                }
+            });
+        });
+
+        // Form submission
+        const workoutForm = document.getElementById('workout-form-enhanced');
+        if (workoutForm) {
+            workoutForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.logWorkout();
+            });
+        }
+    }
+
+    initializeExerciseLibrary() {
+        const exercises = {
+            cardio: [
+                { name: 'Running', icon: '🏃‍♂️', calories: 600 },
+                { name: 'Cycling', icon: '🚴‍♂️', calories: 500 },
+                { name: 'Jump Rope', icon: '🔄', calories: 700 },
+                { name: 'Swimming', icon: '🏊‍♂️', calories: 550 }
+            ],
+            strength: [
+                { name: 'Push-ups', icon: '💪', calories: 300 },
+                { name: 'Squats', icon: '🦵', calories: 400 },
+                { name: 'Deadlifts', icon: '🏋️‍♂️', calories: 500 },
+                { name: 'Pull-ups', icon: '⬆️', calories: 350 }
+            ],
+            flexibility: [
+                { name: 'Yoga', icon: '🧘‍♀️', calories: 250 },
+                { name: 'Stretching', icon: '🤸‍♂️', calories: 200 },
+                { name: 'Pilates', icon: '🌀', calories: 300 }
+            ]
+        };
+
+        const grid = document.getElementById('exercises-grid');
+        if (!grid) return;
+
+        // Populate with all exercises initially
+        this.populateExerciseGrid(exercises, 'all');
+
+        // Category buttons
+        const categoryBtns = document.querySelectorAll('.exercise-category-btn');
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active state
+                categoryBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Filter exercises
+                const category = btn.getAttribute('data-category');
+                this.populateExerciseGrid(exercises, category);
+            });
+        });
+    }
+
+    populateExerciseGrid(exercises, category) {
+        const grid = document.getElementById('exercises-grid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+
+        let exercisesToShow = [];
+        if (category === 'all') {
+            Object.values(exercises).forEach(cat => exercisesToShow.push(...cat));
+        } else {
+            exercisesToShow = exercises[category] || [];
+        }
+
+        exercisesToShow.forEach(exercise => {
+            const exerciseEl = document.createElement('div');
+            exerciseEl.className = 'exercise-item';
+            exerciseEl.innerHTML = `
+                <div class="exercise-icon">${exercise.icon}</div>
+                <div class="exercise-name">${exercise.name}</div>
+                <div class="exercise-calories">${exercise.calories} cal/hr</div>
+            `;
+            exerciseEl.addEventListener('click', () => {
+                this.selectExercise(exercise);
+            });
+            grid.appendChild(exerciseEl);
+        });
+    }
+
+    selectExercise(exercise) {
+        // Auto-fill form
+        const nameInput = document.getElementById('workout-name-enhanced');
+        const caloriesInput = document.getElementById('workout-calories-enhanced');
+        
+        if (nameInput) nameInput.value = exercise.name;
+        if (caloriesInput) {
+            const duration = parseInt(document.getElementById('workout-duration-enhanced').value) || 30;
+            const calories = Math.round((exercise.calories * duration) / 60);
+            caloriesInput.value = calories;
+        }
+        
+        this.showToast(`Selected ${exercise.name}`, 'info');
+    }
+
+    logWorkout() {
+        const workout = {
+            id: Date.now(),
+            type: document.getElementById('workout-type-enhanced').value,
+            name: document.getElementById('workout-name-enhanced').value,
+            duration: parseInt(document.getElementById('workout-duration-enhanced').value),
+            calories: parseInt(document.getElementById('workout-calories-enhanced').value) || 0,
+            intensity: document.getElementById('workout-intensity').value,
+            notes: document.getElementById('workout-notes-enhanced').value,
+            date: new Date().toISOString()
+        };
+
+        // Save workout
+        const workouts = this.storage.get('workouts') || [];
+        workouts.push(workout);
+        this.storage.set('workouts', workouts);
+
+        // Update display
+        this.updateWorkoutDisplay();
+        this.updateQuickStats();
+        
+        // Update streak
+        this.updateWorkoutStreak();
+        
+        // Show success message
+        this.showToast(`Logged workout: ${workout.name}`, 'success');
+        
+        // Reset form
+        document.getElementById('workout-form-enhanced').reset();
+    }
+
+    updateWorkoutStreak() {
+        const workouts = this.storage.get('workouts') || [];
+        const today = new Date().toDateString();
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        
+        let streak = this.storage.get('workout_streak') || { days: 0, lastDate: '' };
+        
+        if (streak.lastDate === today) {
+            // Already logged today
+            return;
+        }
+        
+        if (streak.lastDate === yesterday) {
+            // Consecutive day
+            streak.days++;
+        } else {
+            // New streak
+            streak.days = 1;
+        }
+        
+        streak.lastDate = today;
+        this.storage.set('workout_streak', streak);
+        
+        // Update display
+        const streakElement = document.getElementById('workout-streak-days');
+        if (streakElement) streakElement.textContent = streak.days;
+        
+        // Check achievements
+        this.checkWorkoutAchievements(streak.days);
+    }
+
+    // Enhanced TaskForge
+    initializeTaskForge() {
+        // View toggle
+        const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
+        viewToggleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const view = btn.getAttribute('data-view');
+                this.switchTaskView(view);
+                
+                // Update active state
+                viewToggleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Kanban drag and drop
+        this.initializeKanban();
+
+        // Eisenhower matrix
+        this.initializeEisenhowerMatrix();
+    }
+
+    switchTaskView(view) {
+        // Hide all views
+        document.querySelectorAll('.taskforge-view').forEach(v => {
+            v.classList.remove('active');
+        });
+        
+        // Show selected view
+        const targetView = document.getElementById(`${view}-view`);
+        if (targetView) {
+            targetView.classList.add('active');
+            this.loadTaskView(view);
+        }
+    }
+
+    initializeKanban() {
+        const kanbanColumns = document.querySelectorAll('.kanban-column');
+        
+        kanbanColumns.forEach(column => {
+            const content = column.querySelector('.kanban-content');
+            
+            // Make draggable
+            content.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                content.classList.add('drag-over');
+            });
+            
+            content.addEventListener('dragleave', () => {
+                content.classList.remove('drag-over');
+            });
+            
+            content.addEventListener('drop', (e) => {
+                e.preventDefault();
+                content.classList.remove('drag-over');
+                
+                const taskId = e.dataTransfer.getData('text/plain');
+                const newStatus = column.getAttribute('data-status');
+                
+                this.moveTaskToStatus(taskId, newStatus);
+            });
+        });
+    }
+
+    moveTaskToStatus(taskId, newStatus) {
+        const todos = this.storage.get('todos') || [];
+        const taskIndex = todos.findIndex(t => t.id == taskId);
+        
+        if (taskIndex !== -1) {
+            todos[taskIndex].status = newStatus;
+            this.storage.set('todos', todos);
+            this.updateTaskDisplay();
+            this.showToast('Task moved', 'success');
+        }
+    }
+
+    initializeEisenhowerMatrix() {
+        // Tasks will be automatically categorized based on priority and due date
+        this.updateEisenhowerMatrix();
+    }
+
+    updateEisenhowerMatrix() {
+        const todos = this.storage.get('todos') || [];
+        const now = new Date();
+        
+        const quadrants = {
+            urgentImportant: [],    // Do First
+            notUrgentImportant: [], // Schedule
+            urgentNotImportant: [], // Delegate
+            notUrgentNotImportant: [] // Eliminate
+        };
+        
+        todos.forEach(task => {
+            if (!task.completed) {
+                const isUrgent = task.priority === 'high' || 
+                    (task.due && new Date(task.due) - now < 86400000 * 2); // Due in 2 days
+                const isImportant = task.priority === 'high' || task.priority === 'medium';
+                
+                if (isUrgent && isImportant) {
+                    quadrants.urgentImportant.push(task);
+                } else if (!isUrgent && isImportant) {
+                    quadrants.notUrgentImportant.push(task);
+                } else if (isUrgent && !isImportant) {
+                    quadrants.urgentNotImportant.push(task);
+                } else {
+                    quadrants.notUrgentNotImportant.push(task);
+                }
+            }
+        });
+        
+        // Update each quadrant
+        ['urgentImportant', 'notUrgentImportant', 'urgentNotImportant', 'notUrgentNotImportant'].forEach((quadrant, index) => {
+            const container = document.getElementById(`quadrant-${index + 1}`);
+            if (container) {
+                container.innerHTML = quadrants[quadrant].map(task => `
+                    <div class="matrix-task" draggable="true" data-id="${task.id}">
+                        ${task.task}
+                        <small>${task.priority} priority</small>
+                    </div>
+                `).join('');
+            }
+        });
+    }
+
+    // Enhanced EduPlan
+    initializeEduPlan() {
+        // Color coding for timetable
+        this.initializeTimetableColors();
+        
+        // Pomodoro timer
+        this.initializePomodoro();
+        
+        // File attachments for homework
+        this.initializeFileAttachments();
+        
+        // Exam countdown
+        this.initializeExamCountdowns();
+        
+        // Grade trends
+        this.initializeGradeTrends();
+    }
+
+    initializeTimetableColors() {
+        const colorInput = document.getElementById('course-color');
+        if (colorInput) {
+            colorInput.addEventListener('change', (e) => {
+                this.storage.set('timetable_color', e.target.value);
+            });
+        }
+        
+        // Load saved color
+        const savedColor = this.storage.get('timetable_color') || '#667eea';
+        if (colorInput) colorInput.value = savedColor;
+    }
+
+    initializePomodoro() {
+        let pomodoroInterval;
+        let isRunning = false;
+        let timeLeft = 25 * 60; // 25 minutes in seconds
+        
+        const startBtn = document.getElementById('start-pomodoro');
+        const pauseBtn = document.getElementById('pause-pomodoro');
+        const resetBtn = document.getElementById('reset-pomodoro');
+        const timerDisplay = document.getElementById('pomodoro-timer');
+        
+        if (!startBtn || !timerDisplay) return;
+        
+        const updateDisplay = () => {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        };
+        
+        startBtn.addEventListener('click', () => {
+            if (!isRunning) {
+                isRunning = true;
+                pomodoroInterval = setInterval(() => {
+                    timeLeft--;
+                    updateDisplay();
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(pomodoroInterval);
+                        isRunning = false;
+                        this.showNotification('Pomodoro Complete!', 'Time for a break! 🎉', 'success');
+                        // Start break timer
+                        timeLeft = 5 * 60; // 5 minute break
+                        updateDisplay();
+                    }
+                }, 1000);
+            }
+        });
+        
+        pauseBtn?.addEventListener('click', () => {
+            if (isRunning) {
+                clearInterval(pomodoroInterval);
+                isRunning = false;
+            }
+        });
+        
+        resetBtn?.addEventListener('click', () => {
+            clearInterval(pomodoroInterval);
+            isRunning = false;
+            timeLeft = 25 * 60;
+            updateDisplay();
+        });
+        
+        updateDisplay();
+    }
+
+    // Data export/import
+    async exportData() {
+        const data = {
+            water: this.storage.get('water_data'),
+            workouts: this.storage.get('workouts'),
+            todos: this.storage.get('todos'),
+            courses: this.storage.get('courses'),
+            grades: this.storage.get('grades'),
+            settings: this.storage.get('settings'),
+            exportDate: new Date().toISOString(),
+            version: '2.0'
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `lifesphere-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        this.showToast('Data exported successfully', 'success');
+    }
+
+    async importData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                
+                // Validate data
+                if (!data.version) {
+                    throw new Error('Invalid backup file');
+                }
+                
+                // Import data
+                if (data.water) this.storage.set('water_data', data.water);
+                if (data.workouts) this.storage.set('workouts', data.workouts);
+                if (data.todos) this.storage.set('todos', data.todos);
+                if (data.courses) this.storage.set('courses', data.courses);
+                if (data.grades) this.storage.set('grades', data.grades);
+                if (data.settings) this.storage.set('settings', data.settings);
+                
+                // Reload all data
+                this.loadAllData();
+                this.showToast('Data imported successfully', 'success');
+            } catch (error) {
+                console.error('Import error:', error);
+                this.showToast('Failed to import data', 'error');
+            }
+        };
+        
+        input.click();
+    }
+
+    exportAllData() {
+        // Export everything including history
+        const allData = {};
+        const keys = Object.keys(localStorage);
+        
+        keys.forEach(key => {
+            try {
+                allData[key] = JSON.parse(localStorage.getItem(key));
+            } catch (e) {
+                allData[key] = localStorage.getItem(key);
+            }
+        });
+        
+        const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `lifesphere-full-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        this.showToast('Full backup exported', 'success');
+    }
+
+    // Time management
+    updateCurrentTime() {
+        const now = new Date();
+        const timeElement = document.getElementById('current-time');
+        if (timeElement) {
+            timeElement.textContent = now.toLocaleTimeString('en-US', {
+                hour12: true,
+                hour: 'numeric',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        // Update date if needed
+        const dateElement = document.getElementById('current-date');
+        if (dateElement) {
+            dateElement.textContent = now.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+    }
+
+    // Notification system
+    showNotification(title, message, type = 'info') {
+        const notification = document.getElementById('custom-notification');
+        if (!notification) return;
+        
+        document.getElementById('notification-title').textContent = title;
+        document.getElementById('notification-message').textContent = message;
+        
+        // Set icon based on type
+        const iconMap = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+        
+        const iconElement = notification.querySelector('.notification-icon');
+        if (iconElement) iconElement.textContent = iconMap[type] || '🔔';
+        
+        // Show notification
+        notification.style.display = 'flex';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 5000);
+        
+        // Close button
+        const closeBtn = notification.querySelector('.close-notification');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                notification.style.display = 'none';
+            };
+        }
+    }
+
+    showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <span class="toast-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+            <span class="toast-message">${message}</span>
+            <button class="toast-close">&times;</button>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Close button
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            toast.remove();
+        });
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 3000);
+    }
+
+    showAchievement(title, description) {
+        const achievement = document.createElement('div');
+        achievement.className = 'achievement-toast';
+        achievement.innerHTML = `
+            <div class="achievement-icon">🏆</div>
+            <div class="achievement-content">
+                <div class="achievement-title">${title}</div>
+                <div class="achievement-desc">${description}</div>
+            </div>
+        `;
+        
+        document.body.appendChild(achievement);
+        
+        // Animate in
+        setTimeout(() => achievement.classList.add('show'), 100);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+            achievement.classList.remove('show');
+            setTimeout(() => achievement.remove(), 300);
+        }, 5000);
+    }
+
+    // Background services
+    startBackgroundServices() {
+        // Update quick stats every minute
+        setInterval(() => this.updateQuickStats(), 60000);
+        
+        // Check for notifications
+        setInterval(() => this.checkNotifications(), 30000);
+        
+        // Save data periodically
+        setInterval(() => this.autoSave(), 300000); // Every 5 minutes
+        
+        // Update streaks daily
+        this.updateDailyStreaks();
+    }
+
+    updateQuickStats() {
+        // Water
+        const waterData = this.storage.get('water_data') || {};
+        const today = new Date().toDateString();
+        const todayWater = waterData[today]?.consumed || 0;
+        const waterGoal = waterData[today]?.goal || 8;
+        document.getElementById('quick-water').textContent = `${todayWater}/${waterGoal}`;
+        
+        // Screen time
+        const screenData = this.storage.get('screen_data') || { seconds: 0 };
+        const screenHours = Math.floor(screenData.seconds / 3600);
+        document.getElementById('quick-screen').textContent = `${screenHours}h`;
+        
+        // Tasks
+        const todos = this.storage.get('todos') || [];
+        const pendingTasks = todos.filter(t => !t.completed).length;
+        document.getElementById('quick-tasks').textContent = `0/${pendingTasks}`;
+        
+        // Update sidebar stats
+        this.updateSidebarStats();
+    }
+
+    updateSidebarStats() {
+        // Workouts this week
+        const workouts = this.storage.get('workouts') || [];
+        const weekAgo = new Date(Date.now() - 7 * 86400000);
+        const weekWorkouts = workouts.filter(w => new Date(w.date) > weekAgo).length;
+        document.getElementById('sidebar-workouts').textContent = weekWorkouts;
+        
+        // Study hours today
+        const studySessions = this.storage.get('study_sessions') || [];
+        const today = new Date().toDateString();
+        const todayStudy = studySessions
+            .filter(s => new Date(s.startTime).toDateString() === today)
+            .reduce((sum, s) => sum + (s.duration || 0), 0);
+        const studyHours = Math.floor(todayStudy / 60);
+        document.getElementById('sidebar-study').textContent = `${studyHours}h`;
+        
+        // Tasks done today
+        const todos = this.storage.get('todos') || [];
+        const tasksDone = todos.filter(t => t.completed && 
+            new Date(t.completedAt || t.created).toDateString() === today).length;
+        document.getElementById('sidebar-tasks').textContent = tasksDone;
+        
+        // Sleep average
+        const sleeps = this.storage.get('sleeps') || [];
+        if (sleeps.length > 0) {
+            const avgSleep = sleeps.reduce((sum, s) => sum + s.duration, 0) / sleeps.length;
+            const avgHours = Math.floor(avgSleep / 60);
+            document.getElementById('sidebar-sleep').textContent = `${avgHours}h`;
+        }
+    }
+
+    checkNotifications() {
+        // Check for water reminders
+        this.checkWaterReminders();
+        
+        // Check for medication reminders
+        this.checkMedicationReminders();
+        
+        // Check for upcoming events
+        this.checkUpcomingEvents();
+    }
+
+    checkWaterReminders() {
+        const settings = this.storage.get('water_settings') || {};
+        if (!settings.remindersEnabled) return;
+        
+        const waterData = this.storage.get('water_data') || {};
+        const today = new Date().toDateString();
+        const todayWater = waterData[today]?.consumed || 0;
+        const goal = waterData[today]?.goal || 8;
+        
+        const percentage = (todayWater / goal) * 100;
+        const hour = new Date().getHours();
+        
+        // Remind at specific times if below certain percentage
+        const reminderTimes = [9, 12, 15, 18, 21]; // 9 AM, 12 PM, 3 PM, 6 PM, 9 PM
+        if (reminderTimes.includes(hour) && percentage < (hour/24) * 100) {
+            this.showNotification(
+                '💧 Time to Hydrate!',
+                `You've only had ${todayWater} glasses today. ${goal - todayWater} more to reach your goal!`,
+                'info'
+            );
+        }
+    }
+
+    autoSave() {
+        // Create backup
+        const backup = {};
+        const keys = ['water_data', 'workouts', 'todos', 'courses', 'grades', 'settings'];
+        
+        keys.forEach(key => {
+            backup[key] = this.storage.get(key);
+        });
+        
+        this.storage.set('last_backup', {
+            data: backup,
+            timestamp: new Date().toISOString()
+        });
+        
+        console.log('Auto-save completed');
+    }
+
+    updateDailyStreaks() {
+        // Check and update streaks at midnight
+        const now = new Date();
+        const lastCheck = this.storage.get('last_streak_check') || '';
+        const today = now.toDateString();
+        
+        if (lastCheck !== today) {
+            // Update all streaks
+            this.updateWaterStreak();
+            this.updateWorkoutStreak();
+            
+            // Save check date
+            this.storage.set('last_streak_check', today);
+        }
+    }
+
+    // Load data methods
+    loadAllData() {
+        this.updateQuickStats();
+        this.updateSidebarStats();
+        this.updateWaterDisplay();
+        this.updateWorkoutDisplay();
+        this.updateTaskDisplay();
+        this.updateEduPlanDisplay();
+    }
+
+    loadTabData(tabId) {
+        switch(tabId) {
+            case 'dashboard':
+                this.updateDashboard();
+                break;
+            case 'water':
+                this.updateWaterTracker();
+                break;
+            case 'workout':
+                this.updateWorkoutTracker();
+                break;
+            case 'taskforge':
+                this.updateTaskForge();
+                break;
+            case 'eduplan':
+                this.updateEduPlan();
+                break;
+        }
+    }
+
+    // Update methods for each module
+    updateDashboard() {
+        this.updateWeeklyChart();
+        this.updateTodayOverview();
+        this.updateUpcomingEvents();
+    }
+
+    updateWaterTracker() {
+        this.updateWaterChart();
+        this.updateWaterHistory();
+        this.updateWaterAchievements();
+    }
+
+    updateWorkoutTracker() {
+        this.updateWorkoutHistory();
+        this.updateWorkoutCharts();
+    }
+
+    updateTaskForge() {
+        this.updateTaskDisplay();
+        this.updateKanbanBoard();
+        this.updateEisenhowerMatrix();
+    }
+
+    updateEduPlan() {
+        this.updateTimetable();
+        this.updateStudyTracker();
+        this.updateHomework();
+        this.updateExams();
+        this.updateGrades();
+    }
+
+    // Chart initialization
+    updateWeeklyChart() {
+        const ctx = document.getElementById('weekly-chart');
+        if (!ctx) return;
+        
+        // Sample data - replace with actual data
+        const data = {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [
+                {
+                    label: 'Water Intake',
+                    data: [6, 8, 7, 9, 8, 7, 8],
+                    borderColor: '#4299e1',
+                    backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Workouts',
+                    data: [1, 2, 1, 3, 2, 1, 2],
+                    borderColor: '#48bb78',
+                    backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Study Hours',
+                    data: [2, 3, 2, 4, 3, 1, 2],
+                    borderColor: '#ed8936',
+                    backgroundColor: 'rgba(237, 137, 54, 0.1)',
+                    tension: 0.4
+                }
+            ]
+        };
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Utility methods
+    formatTime(minutes) {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    }
+
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    }
+
+    calculatePercentage(part, total) {
+        return total > 0 ? Math.round((part / total) * 100) : 0;
+    }
+
+    // Error handling
+    handleError(error, context) {
+        console.error(`Error in ${context}:`, error);
+        this.showToast(`Error: ${error.message}`, 'error');
+        
+        // Log error for debugging
+        const errors = this.storage.get('errors') || [];
+        errors.push({
+            timestamp: new Date().toISOString(),
+            context,
+            error: error.message,
+            stack: error.stack
+        });
+        this.storage.set('errors', errors);
+    }
+
+    // Cleanup
+    cleanup() {
+        // Clear intervals
+        if (this.intervals) {
+            this.intervals.forEach(clearInterval);
+        }
+        
+        // Remove event listeners
+        // (Implement as needed based on your specific listeners)
+    }
+}
+
+// Initialize app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.lifeSphere = new LifeSphere();
+});
+
+// Handle beforeunload for cleanup
+window.addEventListener('beforeunload', () => {
+    if (window.lifeSphere) {
+        window.lifeSphere.cleanup();
+    }
+});
+
+// Handle online/offline status
+window.addEventListener('online', () => {
+    if (window.lifeSphere) {
+        window.lifeSphere.showToast('Back online', 'success');
+    }
+});
+
+window.addEventListener('offline', () => {
+    if (window.lifeSphere) {
+        window.lifeSphere.showToast('You are offline', 'warning');
+    }
+});
+
+// Handle app visibility
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        // App became visible, refresh data
+        if (window.lifeSphere) {
+            window.lifeSphere.updateQuickStats();
+        }
+    }
+});
+
+// Export for module usage
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = LifeSphere;
+}
