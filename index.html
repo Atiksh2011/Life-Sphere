@@ -6,6 +6,7 @@
     <title>LifeSphere - Your All-in-One Life Management Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <header>
@@ -14,15 +15,75 @@
                 <div class="logo">
                     <i>🌐</i> LifeSphere
                 </div>
-                <button id="notification-btn" class="btn-notification">Enable Notifications</button>
+                <div class="header-controls">
+                    <button id="dark-mode-toggle" class="btn-notification">🌙 Dark Mode</button>
+                    <button id="notification-btn" class="btn-notification">🔔 Notifications</button>
+                    <button id="export-data" class="btn-notification">📤 Export Data</button>
+                    <button id="import-data" class="btn-notification">📥 Import Data</button>
+                </div>
             </div>
         </div>
     </header>
 
+    <!-- Quick Stats Bar -->
+    <div class="quick-stats-bar">
+        <div class="container">
+            <div class="quick-stats">
+                <div class="quick-stat">
+                    <span class="stat-icon">💧</span>
+                    <span id="quick-water">0/8</span>
+                </div>
+                <div class="quick-stat">
+                    <span class="stat-icon">📱</span>
+                    <span id="quick-screen">0h</span>
+                </div>
+                <div class="quick-stat">
+                    <span class="stat-icon">📝</span>
+                    <span id="quick-tasks">0/0</span>
+                </div>
+                <div class="quick-stat">
+                    <span class="stat-icon">😴</span>
+                    <span id="quick-sleep">0h</span>
+                </div>
+                <div class="quick-stat">
+                    <span class="stat-icon">🎯</span>
+                    <span id="quick-classes">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="main-content">
+            <!-- Mobile Bottom Navigation -->
+            <div class="mobile-bottom-nav">
+                <button class="mobile-nav-btn active" data-tab="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Home</span>
+                </button>
+                <button class="mobile-nav-btn" data-tab="taskforge">
+                    <span class="nav-icon">⚒️</span>
+                    <span class="nav-label">Tasks</span>
+                </button>
+                <button class="mobile-nav-btn" data-tab="eduplan">
+                    <span class="nav-icon">🎓</span>
+                    <span class="nav-label">Study</span>
+                </button>
+                <button class="mobile-nav-btn" data-tab="health">
+                    <span class="nav-icon">💪</span>
+                    <span class="nav-label">Health</span>
+                </button>
+                <button class="mobile-nav-btn menu-toggle">
+                    <span class="nav-icon">☰</span>
+                    <span class="nav-label">Menu</span>
+                </button>
+            </div>
+
             <div class="sidebar">
-                <h3><i>🧭</i> Navigation</h3>
+                <div class="sidebar-header">
+                    <h3><i>🧭</i> Navigation</h3>
+                    <button class="sidebar-close">&times;</button>
+                </div>
                 <ul class="nav-tabs">
                     <li><a href="#" class="active" data-tab="dashboard"><i>📊</i> Dashboard</a></li>
                     <li><a href="#" data-tab="water"><i>💧</i> Water Tracker</a></li>
@@ -35,108 +96,258 @@
                     <li><a href="#" data-tab="taskforge"><i>⚒️</i> TaskForge</a></li>
                     <li><a href="#" data-tab="eduplan"><i>🎓</i> EduPlan</a></li>
                 </ul>
+                
+                <!-- User Stats Sidebar -->
+                <div class="user-stats">
+                    <h4><i>📈</i> Weekly Stats</h4>
+                    <div class="stat-item">
+                        <span>Workouts:</span>
+                        <span id="sidebar-workouts">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Study Hours:</span>
+                        <span id="sidebar-study">0h</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Tasks Done:</span>
+                        <span id="sidebar-tasks">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Sleep Avg:</span>
+                        <span id="sidebar-sleep">0h</span>
+                    </div>
+                </div>
             </div>
 
             <div class="content-area">
-                <!-- Dashboard Tab -->
+                <!-- Dashboard Tab - Enhanced -->
                 <div id="dashboard" class="tab-content active">
-                    <h2 class="section-title">Life Management Dashboard</h2>
+                    <div class="dashboard-header">
+                        <div class="welcome-section">
+                            <h1 class="section-title">Welcome back!</h1>
+                            <div class="current-time" id="current-time"></div>
+                            <div class="motivational-quote" id="motivational-quote">
+                                "Take care of your body. It's the only place you have to live." - Jim Rohn
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="quick-actions">
+                            <button class="quick-action-btn" data-action="water">
+                                <span class="action-icon">💧</span>
+                                <span class="action-text">Add Water</span>
+                            </button>
+                            <button class="quick-action-btn" data-action="task">
+                                <span class="action-icon">📝</span>
+                                <span class="action-text">Add Task</span>
+                            </button>
+                            <button class="quick-action-btn" data-action="workout">
+                                <span class="action-icon">💪</span>
+                                <span class="action-text">Log Workout</span>
+                            </button>
+                            <button class="quick-action-btn" data-action="study">
+                                <span class="action-icon">📚</span>
+                                <span class="action-text">Study</span>
+                            </button>
+                        </div>
+                    </div>
                     
-                    <!-- Sleep Schedule at the top -->
+                    <!-- Sleep Schedule with Advanced Options -->
                     <div class="sleep-schedule">
-                        <h3 class="section-title">Sleep Schedule</h3>
+                        <h3 class="section-title"><i>😴</i> Sleep Schedule</h3>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="wake-up-time">Wake Up Time</label>
-                                <input type="time" id="wake-up-time" class="form-control">
+                                <input type="time" id="wake-up-time" class="form-control" value="07:00">
                             </div>
                             <div class="form-group">
                                 <label for="bedtime">Bedtime</label>
-                                <input type="time" id="bedtime" class="form-control">
+                                <input type="time" id="bedtime" class="form-control" value="23:00">
                             </div>
+                            <div class="form-group">
+                                <label for="sleep-goal">Target Hours</label>
+                                <select id="sleep-goal" class="form-control">
+                                    <option value="7">7 hours</option>
+                                    <option value="8" selected>8 hours</option>
+                                    <option value="9">9 hours</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="sleep-reminders"> Enable sleep reminders
+                            </label>
                         </div>
                         <button id="save-sleep-schedule" class="btn-primary">Save Schedule</button>
                     </div>
                     
-                    <div class="stats-container">
-                        <div class="stat-card">
-                            <h3>Water Intake</h3>
-                            <div class="value" id="water-today">0/8 glasses</div>
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card water">
+                            <div class="stat-header">
+                                <h3>Water Intake</h3>
+                                <span class="stat-target">Goal: 8 glasses</span>
+                            </div>
+                            <div class="value" id="water-today">0/8</div>
                             <div class="progress-bar">
                                 <div class="progress" id="water-progress" style="width: 0%"></div>
                             </div>
+                            <div class="stat-trend" id="water-trend">↗️ +0% from yesterday</div>
                         </div>
-                        <div class="stat-card">
-                            <h3>Workouts This Week</h3>
-                            <div class="value" id="workouts-week">0 workouts</div>
+                        
+                        <div class="stat-card workout">
+                            <div class="stat-header">
+                                <h3>Workouts This Week</h3>
+                                <span class="stat-target">Goal: 5 workouts</span>
+                            </div>
+                            <div class="value" id="workouts-week">0</div>
+                            <div class="workout-streak">
+                                <span class="streak-icon">🔥</span>
+                                <span id="workout-streak">0 day streak</span>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <h3>Medication Status</h3>
-                            <div class="value" id="meds-today">0/0 taken</div>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Screen Time Today</h3>
+                        
+                        <div class="stat-card screen">
+                            <div class="stat-header">
+                                <h3>Screen Time</h3>
+                                <span class="stat-target">Goal: 4 hours</span>
+                            </div>
                             <div class="value" id="screen-today">0h 0m</div>
+                            <div class="progress-bar">
+                                <div class="progress" id="screen-progress" style="width: 0%"></div>
+                            </div>
+                            <div class="screen-categories">
+                                <span class="category productive">Productive: 0h</span>
+                                <span class="category leisure">Leisure: 0h</span>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <h3>Sleep Last Night</h3>
+                        
+                        <div class="stat-card sleep">
+                            <div class="stat-header">
+                                <h3>Sleep Last Night</h3>
+                                <span class="stat-target">Goal: 8 hours</span>
+                            </div>
                             <div class="value" id="sleep-last">0h 0m</div>
+                            <div class="sleep-quality">
+                                <span class="quality-label">Quality:</span>
+                                <div class="quality-stars">
+                                    <span class="star">★</span>
+                                    <span class="star">★</span>
+                                    <span class="star">★</span>
+                                    <span class="star">★</span>
+                                    <span class="star">★</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <h3>Tasks Completed</h3>
+                        
+                        <div class="stat-card tasks">
+                            <div class="stat-header">
+                                <h3>Tasks Completed</h3>
+                                <span class="stat-target">Today</span>
+                            </div>
                             <div class="value" id="tasks-today">0/0</div>
                             <div class="progress-bar">
                                 <div class="progress" id="tasks-progress" style="width: 0%"></div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <h3 class="section-title">Today's Overview</h3>
-                    <div class="today-overview">
-                        <div class="overview-item">
-                            <h4>Water Intake</h4>
-                            <div class="water-cups">
-                                <div class="cup" data-cup="1">1</div>
-                                <div class="cup" data-cup="2">2</div>
-                                <div class="cup" data-cup="3">3</div>
-                                <div class="cup" data-cup="4">4</div>
-                                <div class="cup" data-cup="5">5</div>
-                                <div class="cup" data-cup="6">6</div>
-                                <div class="cup" data-cup="7">7</div>
-                                <div class="cup" data-cup="8">8</div>
+                            <div class="task-priorities">
+                                <span class="priority high">High: 0</span>
+                                <span class="priority medium">Medium: 0</span>
+                                <span class="priority low">Low: 0</span>
                             </div>
-                            <button id="add-water" class="btn-primary">Add Glass</button>
                         </div>
                         
-                        <div class="overview-item">
-                            <h4>Today's Tasks</h4>
-                            <div id="today-tasks-list">
-                                <!-- Tasks will be populated here -->
+                        <div class="stat-card study">
+                            <div class="stat-header">
+                                <h3>Study Today</h3>
+                                <span class="stat-target">Goal: 2 hours</span>
+                            </div>
+                            <div class="value" id="study-today">0h 0m</div>
+                            <div class="study-subjects">
+                                <span class="subject">Math: 0h</span>
+                                <span class="subject">Science: 0h</span>
                             </div>
                         </div>
                     </div>
                     
-                    <h3 class="section-title">Upcoming Events</h3>
-                    <div class="upcoming-container">
-                        <div class="upcoming-columns">
-                            <div class="upcoming-column">
-                                <h4>Today's Classes</h4>
-                                <div id="today-classes-list">
-                                    <!-- Today's classes will be populated here -->
+                    <!-- Today's Overview with Drag & Drop -->
+                    <div class="today-overview">
+                        <div class="overview-section">
+                            <h3 class="section-title">Today's Water Intake</h3>
+                            <div class="water-visualization">
+                                <div class="water-bottle-large">
+                                    <div class="water-fill-large" id="water-fill-large"></div>
+                                    <div class="water-stats-large">
+                                        <div class="water-consumed-large">
+                                            <span id="water-consumed-large">0</span> / <span id="water-target-large">8</span> glasses
+                                        </div>
+                                        <div class="water-percentage-large" id="water-percentage-large">0%</div>
+                                    </div>
+                                </div>
+                                <div class="water-controls-quick">
+                                    <button class="btn-primary quick-add-water" data-amount="1">+1 Glass</button>
+                                    <button class="btn-secondary quick-add-water" data-amount="0.5">+½ Glass</button>
                                 </div>
                             </div>
-                            <div class="upcoming-column">
-                                <h4>Upcoming Exams</h4>
-                                <div id="upcoming-exams-list">
-                                    <!-- Upcoming exams will be populated here -->
+                        </div>
+                        
+                        <div class="overview-section">
+                            <h3 class="section-title">Today's Tasks</h3>
+                            <div class="task-list-quick" id="today-tasks-list">
+                                <div class="empty-state">
+                                    <p>No tasks for today</p>
+                                    <button class="btn-secondary" id="add-quick-task">Add Task</button>
                                 </div>
                             </div>
-                            <div class="upcoming-column">
-                                <h4>Pending Tasks</h4>
-                                <div id="pending-tasks-list">
-                                    <!-- Pending tasks will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Upcoming Events with Calendar View -->
+                    <div class="upcoming-events">
+                        <h3 class="section-title">Upcoming This Week</h3>
+                        <div class="events-grid">
+                            <div class="event-category">
+                                <h4><i>🎓</i> Today's Classes</h4>
+                                <div class="event-list" id="today-classes-list">
+                                    <div class="empty-state-small">
+                                        No classes today
+                                    </div>
                                 </div>
                             </div>
+                            
+                            <div class="event-category">
+                                <h4><i>📊</i> Upcoming Exams</h4>
+                                <div class="event-list" id="upcoming-exams-list">
+                                    <div class="empty-state-small">
+                                        No exams this week
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="event-category">
+                                <h4><i>📝</i> Pending Homework</h4>
+                                <div class="event-list" id="pending-homework-list">
+                                    <div class="empty-state-small">
+                                        No pending homework
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="event-category">
+                                <h4><i>🔄</i> LifeLoop Events</h4>
+                                <div class="event-list" id="upcoming-events-list">
+                                    <div class="empty-state-small">
+                                        No upcoming events
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Weekly Overview Chart -->
+                    <div class="weekly-overview">
+                        <h3 class="section-title">Weekly Progress</h3>
+                        <div class="chart-container">
+                            <canvas id="weekly-chart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -621,9 +832,17 @@
                     </div>
                 </div>
 
-                <!-- TaskForge Tab -->
+                <!-- TaskForge Tab - Enhanced -->
                 <div id="taskforge" class="tab-content">
-                    <h2 class="section-title">TaskForge - Productivity Suite</h2>
+                    <div class="taskforge-header">
+                        <h2 class="section-title">TaskForge - Productivity Suite</h2>
+                        <div class="view-toggle">
+                            <button class="view-toggle-btn active" data-view="list">📋 List</button>
+                            <button class="view-toggle-btn" data-view="kanban">📊 Kanban</button>
+                            <button class="view-toggle-btn" data-view="matrix">🎯 Matrix</button>
+                        </div>
+                    </div>
+                    
                     <div class="taskforge-container">
                         <div class="taskforge-sidebar">
                             <ul class="taskforge-nav">
@@ -772,9 +991,30 @@
                     </div>
                 </div>
 
-                <!-- EduPlan Tab -->
+                <!-- EduPlan Tab - Enhanced -->
                 <div id="eduplan" class="tab-content">
-                    <h2 class="section-title">EduPlan - Academic Organizer</h2>
+                    <div class="eduplan-header">
+                        <h2 class="section-title">🎓 EduPlan - Academic Organizer</h2>
+                        <div class="eduplan-quick-stats">
+                            <div class="quick-stat-edu">
+                                <span class="stat-icon">📚</span>
+                                <span id="study-today-quick">Today: 0h 0m</span>
+                            </div>
+                            <div class="quick-stat-edu">
+                                <span class="stat-icon">📝</span>
+                                <span id="homework-pending">0 pending</span>
+                            </div>
+                            <div class="quick-stat-edu">
+                                <span class="stat-icon">📊</span>
+                                <span id="exams-upcoming">0 upcoming</span>
+                            </div>
+                            <div class="quick-stat-edu">
+                                <span class="stat-icon">🎯</span>
+                                <span id="gpa-current">GPA: -</span>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="eduplan-container">
                         <div class="eduplan-sidebar">
                             <ul class="eduplan-nav">
@@ -1172,6 +1412,24 @@
     <!-- Notification Container -->
     <div id="notification-container"></div>
 
+    <!-- Enhanced Modals -->
+    <div id="custom-notification" class="notification-modal">
+        <div class="notification-content">
+            <div class="notification-header">
+                <span class="notification-icon">🔔</span>
+                <h3 id="notification-title">Notification</h3>
+                <button class="close-notification">&times;</button>
+            </div>
+            <div class="notification-body">
+                <p id="notification-message"></p>
+            </div>
+            <div class="notification-actions">
+                <button class="btn-primary" id="notification-action">OK</button>
+                <button class="btn-secondary" id="notification-snooze">Snooze</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Medication Alarm Modal -->
     <div id="medication-alarm" class="modal" style="display: none;">
         <div class="modal-content">
@@ -1195,13 +1453,37 @@
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
     <footer>
         <div class="container">
-            <p>&copy; Made by Atiksh</p>
+            <div class="footer-content">
+                <p>&copy; Made by Atiksh</p>
+                <div class="footer-links">
+                    <a href="#" id="export-all-data">Export All Data</a>
+                    <a href="#" id="reset-app">Reset App</a>
+                    <a href="#" id="privacy-settings">Privacy</a>
+                </div>
+            </div>
         </div>
     </footer>
 
+    <!-- Service Worker Debug Panel (for development) -->
+    <div class="sw-debug-panel" id="sw-debug">
+        Service Worker: <span id="sw-status">Checking...</span>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="script.js"></script>
 </body>
 </html>
