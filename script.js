@@ -4076,3 +4076,440 @@ document.addEventListener('visibilitychange', () => {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = LifeSphere;
 }
+// In the LifeSphere class, update the initializeCore method:
+async initializeCore() {
+    console.log('🚀 LifeSphere Enhanced v2.0 Initializing...');
+    
+    try {
+        // 1. Check for service worker support and register
+        await this.registerServiceWorker();
+        
+        // 2. Initialize storage with fallback
+        this.storage = this.initializeStorage();
+        
+        // 3. Set default theme
+        this.setTheme(localStorage.getItem('theme') || 'light');
+        
+        // 4. Initialize time
+        this.updateCurrentTime();
+        setInterval(() => this.updateCurrentTime(), 1000);
+        
+        // 5. Request notification permission
+        await this.requestNotificationPermission();
+        
+        console.log('✅ Core systems initialized');
+    } catch (error) {
+        console.error('❌ Core initialization error:', error);
+        this.showToast('Failed to initialize core systems', 'error');
+    }
+}
+
+// Add these new methods to the LifeSphere class:
+
+/**
+ * Register Service Worker
+ */
+async registerServiceWorker() {
+    // Check if service workers are supported
+    if (!('serviceWorker' in navigator)) {
+        console.warn('Service workers are not supported');
+        return;
+    }
+    
+    try {
+        // Register the service worker
+        const registration = await navigator.serviceWorker.register('/sw.js', {
+            scope: '/'
+        });
+        
+        console.log('✅ Service Worker registered:', registration);
+        
+        // Listen for updates
+        this.setupServiceWorkerUpdates(registration);
+        
+        // Setup message handling
+        this.setupServiceWorkerMessages();
+        
+        // Setup background sync if available
+        this.setupBackgroundSync(registration);
+        
+        // Check if page was loaded via service worker
+        if (navigator.serviceWorker.controller) {
+            console.log('📱 Page is controlled by service worker');
+            this.showToast('App is ready for offline use', 'success');
+        }
+        
+    } catch (error) {
+        console.error('❌ Service Worker registration failed:', error);
+        this.showToast('Offline features unavailable', 'warning');
+    }
+}
+
+/**
+ * Setup Service Worker Update Handling
+ */
+setupServiceWorkerUpdates(registration) {
+    // Check for immediate update
+    if (registration.waiting) {
+        this.showUpdateNotification();
+    }
+    
+    // Listen for updates
+    registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        console.log('🔄 Service Worker update found:', newWorker.state);
+        
+        newWorker.addEventListener('statechange', () => {
+            console.log('Service Worker state changed:', newWorker.state);
+            
+            if (newWorker.state === 'installed') {
+                if (navigator.serviceWorker.controller) {
+                    // New content is available
+                    this.showUpdateNotification();
+                } else {
+                    // First installation
+                    console.log('✅ Service Worker installed for the first time');
+                    this.showToast('App is now ready for offline use!', 'success');
+                }
+            }
+        });
+    });
+    
+    // Track updates
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('🎯 Service Worker controller changed');
+        this.showToast('App updated successfully!', 'success');
+        // Reload to get new content
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+    });
+}
+
+/**
+ * Show Update Notification
+ */
+showUpdateNotification() {
+    // Check if we should show the notification
+    const lastUpdatePrompt = localStorage.getItem('lastUpdatePrompt');
+    const now = Date.now();
+    
+    // Only prompt once per day
+    if (lastUpdatePrompt && (now - parseInt(lastUpdatePrompt)) < 86400000) {
+        return;
+    }
+    
+    // Create update notification
+    const updateDiv = document.createElement('div');
+    updateDiv.className = 'update-notification';
+    updateDiv.innerHTML = `
+        <div class="update-content">
+            <span class="update-icon">🔄</span>
+            <div class="update-text">
+                <strong>Update Available</strong>
+                <p>A new version of LifeSphere is available!</p>
+            </div>
+            <div class="update-actions">
+                <button class="btn-primary" id="update-reload">Update Now</button>
+                <button class="btn-secondary" id="update-later">Later</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(updateDiv);
+    
+    // Save prompt time
+    localStorage.setItem('lastUpdatePrompt', now.toString());
+    
+    // Add event listeners
+    document.getElementById('update-reload').addEventListener('click', () => {
+        // Post message to service worker to skip waiting
+        if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+        }
+        window.location.reload();
+    });
+    
+    document.getElementById('update-later').addEventListener('click', () => {
+        updateDiv.remove();
+    });
+    
+    // Auto-remove after 30 seconds
+    setTimeout(() => {
+        if (document.body.contains(updateDiv)) {
+            updateDiv.remove();
+        }
+    }, 30000);
+}
+
+/**
+ * Setup Service Worker Message Handling
+ */
+setupServiceWorkerMessages() {
+    navigator.serviceWorker.addEventListener('message', event => {
+        const { data } = event;
+        
+        switch (data.type) {
+            case 'SERVICE_WORKER_ERROR':
+                console.error('Service Worker Error:', data.error);
+                this.logError(new Error(data.error), 'Service Worker');
+                break;
+                
+            case 'HEALTH_RESPONSE':
+                console.log('Service Worker health check:', data.status);
+                break;
+                
+            case 'SYNC_STATUS':
+                if (data.status === 'completed') {
+                    this.showToast('Data synced in background', 'success');
+                }
+                break;
+                
+            case 'OFFLINE_DETECTED':
+                this.showToast('You are offline - changes will sync when back online', 'warning');
+                break;
+                
+            case 'CACHE_UPDATED':
+                console.log('Cache updated:', data.cacheName);
+                break;
+        }
+    });
+    
+    // Send initial health check
+    setTimeout(() => {
+        if (navigator.serviceWorker.controller) {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = (event) => {
+                console.log('Service Worker health:', event.data);
+            };
+            navigator.serviceWorker.controller.postMessage(
+                { type: 'HEALTH_CHECK' },
+                [channel.port2]
+            );
+        }
+    }, 5000);
+}
+
+/**
+ * Setup Background Sync
+ */
+setupBackgroundSync(registration) {
+    // Check for background sync support
+    if ('sync' in registration) {
+        // Register for background sync
+        registration.sync.register('sync-data')
+            .then(() => {
+                console.log('✅ Background sync registered');
+            })
+            .catch(err => {
+                console.warn('Background sync registration failed:', err);
+            });
+    }
+    
+    // Check for periodic sync (Chrome only)
+    if ('periodicSync' in registration) {
+        try {
+            registration.periodicSync.register('update-cache', {
+                minInterval: 24 * 60 * 60 * 1000 // 24 hours
+            });
+            console.log('✅ Periodic sync registered');
+        } catch (error) {
+            console.warn('Periodic sync not supported:', error);
+        }
+    }
+}
+
+/**
+ * Request Notification Permission
+ */
+async requestNotificationPermission() {
+    // Check if notifications are supported
+    if (!('Notification' in window)) {
+        console.warn('Notifications not supported');
+        return;
+    }
+    
+    // Check current permission
+    if (Notification.permission === 'granted') {
+        console.log('✅ Notification permission already granted');
+        await this.subscribeToPush();
+        return;
+    }
+    
+    if (Notification.permission === 'denied') {
+        console.warn('Notification permission denied');
+        return;
+    }
+    
+    // Request permission (only show prompt once per session)
+    const hasPrompted = sessionStorage.getItem('notificationPrompted');
+    if (!hasPrompted) {
+        try {
+            const permission = await Notification.requestPermission();
+            sessionStorage.setItem('notificationPrompted', 'true');
+            
+            if (permission === 'granted') {
+                console.log('✅ Notification permission granted');
+                await this.subscribeToPush();
+                this.showToast('Notifications enabled!', 'success');
+            }
+        } catch (error) {
+            console.error('Notification permission error:', error);
+        }
+    }
+}
+
+/**
+ * Subscribe to Push Notifications
+ */
+async subscribeToPush() {
+    if (!('PushManager' in window)) {
+        console.warn('Push notifications not supported');
+        return;
+    }
+    
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        
+        if (subscription) {
+            console.log('✅ Already subscribed to push');
+            return;
+        }
+        
+        // Subscribe to push notifications
+        const vapidPublicKey = 'YOUR_VAPID_PUBLIC_KEY_HERE'; // Get from server
+        const newSubscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey)
+        });
+        
+        console.log('✅ Subscribed to push notifications:', newSubscription);
+        
+        // Send subscription to your server (if you have one)
+        // await this.sendSubscriptionToServer(newSubscription);
+        
+    } catch (error) {
+        console.error('Push subscription failed:', error);
+    }
+}
+
+/**
+ * Helper: Convert VAPID key
+ */
+urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+    
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+/**
+ * Check Online Status
+ */
+checkOnlineStatus() {
+    if (!navigator.onLine) {
+        this.showToast('You are offline - working in offline mode', 'warning');
+        // Update UI for offline mode
+        document.documentElement.classList.add('offline');
+        
+        // Show offline indicator
+        this.showOfflineIndicator();
+    }
+    
+    // Listen for online/offline events
+    window.addEventListener('online', () => {
+        console.log('🌐 App is online');
+        document.documentElement.classList.remove('offline');
+        this.hideOfflineIndicator();
+        this.showToast('Back online! Syncing data...', 'success');
+        
+        // Trigger sync
+        this.triggerDataSync();
+    });
+    
+    window.addEventListener('offline', () => {
+        console.log('📴 App is offline');
+        document.documentElement.classList.add('offline');
+        this.showOfflineIndicator();
+        this.showToast('You are offline', 'warning');
+    });
+}
+
+/**
+ * Show Offline Indicator
+ */
+showOfflineIndicator() {
+    let indicator = document.querySelector('.offline-indicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.className = 'offline-indicator';
+        indicator.innerHTML = `
+            <span class="offline-icon">📶</span>
+            <span class="offline-text">Offline</span>
+        `;
+        document.body.appendChild(indicator);
+    }
+}
+
+/**
+ * Hide Offline Indicator
+ */
+hideOfflineIndicator() {
+    const indicator = document.querySelector('.offline-indicator');
+    if (indicator) {
+        indicator.remove();
+    }
+}
+
+/**
+ * Trigger Data Sync
+ */
+async triggerDataSync() {
+    if (!navigator.onLine || !('serviceWorker' in navigator)) {
+        return;
+    }
+    
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        
+        if ('sync' in registration) {
+            await registration.sync.register('sync-data');
+            console.log('🔄 Background sync triggered');
+            this.showToast('Syncing data...', 'info');
+        }
+    } catch (error) {
+        console.error('Sync trigger failed:', error);
+    }
+}
+
+/**
+ * Log Errors
+ */
+logError(error, context = 'Unknown') {
+    const errorLog = this.storage.get('error_log') || [];
+    errorLog.push({
+        timestamp: new Date().toISOString(),
+        context,
+        message: error.message,
+        stack: error.stack,
+        url: window.location.href,
+        userAgent: navigator.userAgent
+    });
+    
+    // Keep only last 50 errors
+    this.storage.set('error_log', errorLog.slice(-50));
+    
+    // Send to server if online (optional)
+    if (navigator.onLine) {
+        this.reportErrorToServer(error, context);
+    }
+}
