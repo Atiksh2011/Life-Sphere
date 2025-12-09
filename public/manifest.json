@@ -2,44 +2,133 @@
   "name": "LifeSphere",
   "short_name": "LifeSphere",
   "description": "Your All-in-One Life Management Hub",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#667eea",
   "theme_color": "#667eea",
+  "background_color": "#ffffff",
+  "display": "standalone",
   "orientation": "portrait-primary",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+  "scope": "/",
+  "start_url": "/",
+  "id": "/",
+  "dir": "ltr",
+  "lang": "en-US",
+  "categories": [
+    "productivity",
+    "health",
+    "education",
+    "finance",
+    "lifestyle"
   ],
-  "categories": ["productivity", "health", "education"],
   "shortcuts": [
     {
       "name": "Dashboard",
       "short_name": "Home",
       "description": "View your dashboard",
-      "url": "/#dashboard"
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/icons/home-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Add Water",
       "short_name": "Water",
       "description": "Quickly add water intake",
-      "url": "/#water"
+      "url": "/water",
+      "icons": [
+        {
+          "src": "/icons/water-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Add Task",
       "short_name": "Task",
       "description": "Add a new task",
-      "url": "/#taskforge"
+      "url": "/tasks/todo/entry",
+      "icons": [
+        {
+          "src": "/icons/task-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
-  ]
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard View"
+    },
+    {
+      "src": "/screenshots/mobile-dashboard.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile Dashboard"
+    }
+  ],
+  "features": [
+    "Cross Platform",
+    "fast",
+    "simple",
+    "Offline Mode",
+    "Push Notifications"
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }
